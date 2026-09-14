@@ -70,6 +70,24 @@ _profile_of(body::String) = first(_run_of(body))
         end
     end
 
+    @testset "hot-path entry points are resolved once at init" begin
+        # Julia 1.13 accepts only literal or global library names in ccall.
+        hot = (TAUProfile.TAU_START_FPTR, TAUProfile.TAU_STOP_FPTR,
+               TAUProfile.TAU_GET_THREAD_FPTR,
+               TAUProfile.TAU_START_TIMER_FPTR, TAUProfile.TAU_STOP_TIMER_FPTR,
+               TAUProfile.TAU_TRIGGER_USEREVENT_FPTR, TAUProfile.TAU_USEREVENT_FPTR,
+               TAUProfile.TAU_TRIGGER_CONTEXT_EVENT_FPTR,
+               TAUProfile.TAU_DYNAMIC_START_FPTR, TAUProfile.TAU_DYNAMIC_STOP_FPTR)
+        @test TAUProfile._libTAU isa String
+        if _TAU_OK
+            @test all(r -> r[] != C_NULL, hot)
+            @test TAUProfile._libTAU == _TAU_LIB
+        else
+            @test all(r -> r[] == C_NULL, hot)
+            @test TAUProfile._libTAU == ""
+        end
+    end
+
     @testset "TauTimer rejects an empty name in both modes" begin
         @test_throws ArgumentError TauTimer("")
         @test_throws ArgumentError TauTimer("   ")

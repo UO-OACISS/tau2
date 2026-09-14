@@ -33,9 +33,9 @@ function TauTimer(name::AbstractString; type::AbstractString="",
     isempty(strip(name)) && throw(ArgumentError("timer name must not be empty"))
     isempty(strip(group)) && throw(ArgumentError("group name must not be empty"))
     _tau_active() || return TauTimer(C_NULL)
-    grp = ccall((:Tau_get_profile_group, _libTAU[]), Culong, (Cstring,), group)
+    grp = ccall((:Tau_get_profile_group, _libTAU), Culong, (Cstring,), group)
     handle = Ref{Ptr{Cvoid}}(C_NULL)
-    ccall((:Tau_profile_c_timer, _libTAU[]), Cvoid,
+    ccall((:Tau_profile_c_timer, _libTAU), Cvoid,
           (Ptr{Ptr{Cvoid}}, Cstring, Cstring, Culong, Cstring),
           handle, name, type, grp, group)
     return TauTimer(handle[])
@@ -54,7 +54,7 @@ _live(t::TauTimer) = _tau_active() && t.ptr != C_NULL
 _pin_task!() = (current_task().sticky = true; nothing)
 
 # TAU's id for the calling OS thread.
-_tau_thread() = ccall((:Tau_get_thread, _libTAU[]), Cint, ())
+_tau_thread() = ccall(TAU_GET_THREAD_FPTR[], Cint, ())
 
 # ============================================================================
 # Timers
@@ -68,7 +68,7 @@ Start the timer given by `t` on the current thread.
 function tau_start(t::TauTimer)
     _live(t) || return nothing
     _pin_task!()
-    ccall((:Tau_start_timer, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cint, Cint),
+    ccall(TAU_START_TIMER_FPTR[], Cvoid, (Ptr{Cvoid}, Cint, Cint),
           t.ptr, 0, _tau_thread())
     nothing
 end
@@ -81,7 +81,7 @@ Stop the timer given by `t`.
 function tau_stop(t::TauTimer)
     _live(t) || return nothing
     _pin_task!()
-    ccall((:Tau_stop_timer, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cint),
+    ccall(TAU_STOP_TIMER_FPTR[], Cvoid, (Ptr{Cvoid}, Cint),
           t.ptr, _tau_thread())
     nothing
 end
@@ -100,7 +100,7 @@ function tau_get_calls(t::TauTimer)
     _live(t) || return nothing
     _pin_task!()
     calls = Ref{Clong}(0)
-    ccall((:Tau_get_calls, _libTAU[]), Cvoid, (Ptr{Cvoid}, Ptr{Clong}, Cint),
+    ccall((:Tau_get_calls, _libTAU), Cvoid, (Ptr{Cvoid}, Ptr{Clong}, Cint),
           t.ptr, calls, _tau_thread())
     return Int(calls[])
 end
@@ -115,7 +115,7 @@ function tau_get_child_calls(t::TauTimer)
     _live(t) || return nothing
     _pin_task!()
     calls = Ref{Clong}(0)
-    ccall((:Tau_get_child_calls, _libTAU[]), Cvoid, (Ptr{Cvoid}, Ptr{Clong}, Cint),
+    ccall((:Tau_get_child_calls, _libTAU), Cvoid, (Ptr{Cvoid}, Ptr{Clong}, Cint),
           t.ptr, calls, _tau_thread())
     return Int(calls[])
 end
@@ -137,7 +137,7 @@ function tau_get_inclusive(t::TauTimer)
     n == 0 && return Float64[]
     _pin_task!()
     vals = zeros(Float64, max(n, _TAU_MAX_COUNTERS))
-    ccall((:Tau_get_inclusive_values, _libTAU[]), Cvoid,
+    ccall((:Tau_get_inclusive_values, _libTAU), Cvoid,
           (Ptr{Cvoid}, Ptr{Cdouble}, Cint), t.ptr, vals, _tau_thread())
     return vals[1:n]
 end
@@ -155,7 +155,7 @@ function tau_get_exclusive(t::TauTimer)
     n == 0 && return Float64[]
     _pin_task!()
     vals = zeros(Float64, max(n, _TAU_MAX_COUNTERS))
-    ccall((:Tau_get_exclusive_values, _libTAU[]), Cvoid,
+    ccall((:Tau_get_exclusive_values, _libTAU), Cvoid,
           (Ptr{Cvoid}, Ptr{Cdouble}, Cint), t.ptr, vals, _tau_thread())
     return vals[1:n]
 end
@@ -185,7 +185,7 @@ function tau_counter_names()
     _tau_active() || return String[]
     list = Ref{Ptr{Ptr{Cchar}}}(C_NULL)
     n = Ref{Cint}(0)
-    ccall((:Tau_get_counter_info, _libTAU[]), Cvoid,
+    ccall((:Tau_get_counter_info, _libTAU), Cvoid,
           (Ptr{Ptr{Ptr{Cchar}}}, Ptr{Cint}), list, n)
     return _take_c_string_list(list[], n[]; free_strings=true)
 end
@@ -200,7 +200,7 @@ function tau_function_names()
     _tau_active() || return String[]
     list = Ref{Ptr{Ptr{Cchar}}}(C_NULL)
     n = Ref{Cint}(0)
-    ccall((:Tau_the_function_list, _libTAU[]), Cvoid,
+    ccall((:Tau_the_function_list, _libTAU), Cvoid,
           (Ptr{Ptr{Ptr{Cchar}}}, Ptr{Cint}), list, n)
     return _take_c_string_list(list[], n[]; free_strings=false)
 end
@@ -218,7 +218,7 @@ or `t` is null.
 function tau_set_name(t::TauTimer, name::AbstractString)
     isempty(strip(name)) && throw(ArgumentError("timer name must not be empty"))
     _live(t) || return nothing
-    ccall((:Tau_profile_set_name, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cstring), t.ptr, name)
+    ccall((:Tau_profile_set_name, _libTAU), Cvoid, (Ptr{Cvoid}, Cstring), t.ptr, name)
     nothing
 end
 
@@ -230,7 +230,7 @@ is not loaded or `t` is null.
 """
 function tau_set_type(t::TauTimer, type::AbstractString)
     _live(t) || return nothing
-    ccall((:Tau_profile_set_type, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cstring), t.ptr, type)
+    ccall((:Tau_profile_set_type, _libTAU), Cvoid, (Ptr{Cvoid}, Cstring), t.ptr, type)
     nothing
 end
 
@@ -243,7 +243,7 @@ loaded or `t` is null.
 function tau_set_group(t::TauTimer, group::AbstractString)
     isempty(strip(group)) && throw(ArgumentError("group name must not be empty"))
     _live(t) || return nothing
-    ccall((:Tau_profile_set_group_name, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cstring), t.ptr, group)
+    ccall((:Tau_profile_set_group_name, _libTAU), Cvoid, (Ptr{Cvoid}, Cstring), t.ptr, group)
     nothing
 end
 
@@ -269,7 +269,7 @@ end
 function TauEvent(name::AbstractString)
     isempty(strip(name)) && throw(ArgumentError("event name must not be empty"))
     _tau_active() || return TauEvent(C_NULL)
-    ptr = ccall((:Tau_get_userevent, _libTAU[]), Ptr{Cvoid}, (Cstring,), name)
+    ptr = ccall((:Tau_get_userevent, _libTAU), Ptr{Cvoid}, (Cstring,), name)
     return TauEvent(ptr)
 end
 
@@ -288,14 +288,14 @@ function tau_event(name::AbstractString, value::Real)
     isempty(strip(name)) && throw(ArgumentError("event name must not be empty"))
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_trigger_userevent, _libTAU[]), Cvoid, (Cstring, Cdouble), name, value)
+    ccall(TAU_TRIGGER_USEREVENT_FPTR[], Cvoid, (Cstring, Cdouble), name, value)
     nothing
 end
 
 function tau_event(e::TauEvent, value::Real)
     _live(e) || return nothing
     _pin_task!()
-    ccall((:Tau_userevent, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cdouble), e.ptr, value)
+    ccall(TAU_USEREVENT_FPTR[], Cvoid, (Ptr{Cvoid}, Cdouble), e.ptr, value)
     nothing
 end
 
@@ -311,7 +311,7 @@ function tau_context_event(name::AbstractString, value::Real)
     isempty(strip(name)) && throw(ArgumentError("event name must not be empty"))
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_trigger_context_event, _libTAU[]), Cvoid, (Cstring, Cdouble), name, value)
+    ccall(TAU_TRIGGER_CONTEXT_EVENT_FPTR[], Cvoid, (Cstring, Cdouble), name, value)
     nothing
 end
 
@@ -328,7 +328,7 @@ accepted and stored as `string(value)`. Equivalent to `TAU_METADATA` in C.
 function tau_metadata(name::AbstractString, value)
     isempty(strip(name)) && throw(ArgumentError("metadata name must not be empty"))
     _tau_active() || return nothing
-    ccall((:Tau_metadata, _libTAU[]), Cvoid, (Cstring, Cstring), name, string(value))
+    ccall((:Tau_metadata, _libTAU), Cvoid, (Cstring, Cstring), name, string(value))
     nothing
 end
 
@@ -344,7 +344,7 @@ function tau_context_metadata(name::AbstractString, value)
     isempty(strip(name)) && throw(ArgumentError("metadata name must not be empty"))
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_context_metadata, _libTAU[]), Cvoid, (Cstring, Cstring), name, string(value))
+    ccall((:Tau_context_metadata, _libTAU), Cvoid, (Cstring, Cstring), name, string(value))
     nothing
 end
 
@@ -372,7 +372,7 @@ function tau_dynamic_start(name::AbstractString)
     isempty(strip(name)) && throw(ArgumentError("timer name must not be empty"))
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_dynamic_start, _libTAU[]), Cvoid, (Cstring, Cint), name, 0)
+    ccall(TAU_DYNAMIC_START_FPTR[], Cvoid, (Cstring, Cint), name, 0)
     nothing
 end
 
@@ -386,7 +386,7 @@ function tau_dynamic_stop(name::AbstractString)
     isempty(strip(name)) && throw(ArgumentError("timer name must not be empty"))
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_dynamic_stop, _libTAU[]), Cvoid, (Cstring, Cint), name, 0)
+    ccall(TAU_DYNAMIC_STOP_FPTR[], Cvoid, (Cstring, Cint), name, 0)
     nothing
 end
 
@@ -417,14 +417,14 @@ tau_rewrite_and_call(solve, n)      # measured
 """
 function tau_enable_instrumentation()
     _tau_active() || return nothing
-    ccall((:Tau_enable_instrumentation, _libTAU[]), Cvoid, ())
+    ccall((:Tau_enable_instrumentation, _libTAU), Cvoid, ())
     nothing
 end
 
 @doc (@doc tau_enable_instrumentation)
 function tau_disable_instrumentation()
     _tau_active() || return nothing
-    ccall((:Tau_disable_instrumentation, _libTAU[]), Cvoid, ())
+    ccall((:Tau_disable_instrumentation, _libTAU), Cvoid, ())
     nothing
 end
 
@@ -439,7 +439,7 @@ Starts and stops of a timer in a disabled group are ignored. Equivalent to
 function tau_enable_group(group::AbstractString)
     isempty(strip(group)) && throw(ArgumentError("group name must not be empty"))
     _tau_active() || return nothing
-    ccall((:Tau_enable_group_name, _libTAU[]), Culong, (Cstring,), group)
+    ccall((:Tau_enable_group_name, _libTAU), Culong, (Cstring,), group)
     nothing
 end
 
@@ -447,7 +447,7 @@ end
 function tau_disable_group(group::AbstractString)
     isempty(strip(group)) && throw(ArgumentError("group name must not be empty"))
     _tau_active() || return nothing
-    ccall((:Tau_disable_group_name, _libTAU[]), Culong, (Cstring,), group)
+    ccall((:Tau_disable_group_name, _libTAU), Culong, (Cstring,), group)
     nothing
 end
 
@@ -460,14 +460,14 @@ Enable or disable every profile group at once. Equivalent to
 """
 function tau_enable_all_groups()
     _tau_active() || return nothing
-    ccall((:Tau_enable_all_groups, _libTAU[]), Culong, ())
+    ccall((:Tau_enable_all_groups, _libTAU), Culong, ())
     nothing
 end
 
 @doc (@doc tau_enable_all_groups)
 function tau_disable_all_groups()
     _tau_active() || return nothing
-    ccall((:Tau_disable_all_groups, _libTAU[]), Culong, ())
+    ccall((:Tau_disable_all_groups, _libTAU), Culong, ())
     nothing
 end
 
@@ -489,14 +489,14 @@ in the profile directory; `tau_dump(prefix)` writes every thread's data to
 function tau_dump()
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_dump, _libTAU[]), Cint, ())
+    ccall((:Tau_dump, _libTAU), Cint, ())
     nothing
 end
 
 function tau_dump(prefix::AbstractString)
     isempty(strip(prefix)) && throw(ArgumentError("dump prefix must not be empty"))
     _tau_active() || return nothing
-    ccall((:Tau_dump_prefix, _libTAU[]), Cint, (Cstring,), prefix)
+    ccall((:Tau_dump_prefix, _libTAU), Cint, (Cstring,), prefix)
     nothing
 end
 
@@ -512,7 +512,7 @@ function tau_snapshot(name::AbstractString)
     isempty(strip(name)) && throw(ArgumentError("snapshot name must not be empty"))
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_profile_snapshot, _libTAU[]), Cvoid, (Cstring,), name)
+    ccall((:Tau_profile_snapshot, _libTAU), Cvoid, (Cstring,), name)
     nothing
 end
 
@@ -533,7 +533,7 @@ end
 """
 function tau_exit(msg::AbstractString="Julia exit")
     _tau_active() || return nothing
-    ccall((:Tau_exit, _libTAU[]), Cvoid, (Cstring,), msg)
+    ccall((:Tau_exit, _libTAU), Cvoid, (Cstring,), msg)
     nothing
 end
 
@@ -552,7 +552,7 @@ itself under MPI. Equivalent to `TAU_PROFILE_SET_NODE` in C.
 function tau_set_node(node::Integer)
     node < 0 && throw(ArgumentError("node id must not be negative"))
     _tau_active() || return nothing
-    ccall((:Tau_set_node, _libTAU[]), Cvoid, (Cint,), node)
+    ccall((:Tau_set_node, _libTAU), Cvoid, (Cint,), node)
     nothing
 end
 
@@ -565,7 +565,7 @@ Equivalent to `TAU_PROFILE_GET_NODE` in C.
 """
 function tau_get_node()
     _tau_active() || return -1
-    return Int(ccall((:Tau_get_node, _libTAU[]), Cint, ()))
+    return Int(ccall((:Tau_get_node, _libTAU), Cint, ()))
 end
 
 """
@@ -593,7 +593,7 @@ Record the heap memory in use at this point as the user event
 function tau_track_memory_here()
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_track_memory_here, _libTAU[]), Cvoid, ())
+    ccall((:Tau_track_memory_here, _libTAU), Cvoid, ())
     nothing
 end
 
@@ -609,7 +609,7 @@ Equivalent to `TAU_TRACK_MEMORY_FOOTPRINT_HERE` in C.
 function tau_track_memory_footprint_here()
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_track_memory_rss_and_hwm_here, _libTAU[]), Cvoid, ())
+    ccall((:Tau_track_memory_rss_and_hwm_here, _libTAU), Cvoid, ())
     nothing
 end
 
@@ -623,7 +623,7 @@ context event `Memory Headroom Left (MB)`. Equivalent to
 function tau_track_memory_headroom_here()
     _tau_active() || return nothing
     _pin_task!()
-    ccall((:Tau_track_memory_headroom_here, _libTAU[]), Cvoid, ())
+    ccall((:Tau_track_memory_headroom_here, _libTAU), Cvoid, ())
     nothing
 end
 
@@ -638,14 +638,14 @@ in C.
 """
 function tau_enable_tracking_memory()
     _tau_active() || return nothing
-    ccall((:Tau_enable_tracking_memory, _libTAU[]), Cvoid, ())
+    ccall((:Tau_enable_tracking_memory, _libTAU), Cvoid, ())
     nothing
 end
 
 @doc (@doc tau_enable_tracking_memory)
 function tau_disable_tracking_memory()
     _tau_active() || return nothing
-    ccall((:Tau_disable_tracking_memory, _libTAU[]), Cvoid, ())
+    ccall((:Tau_disable_tracking_memory, _libTAU), Cvoid, ())
     nothing
 end
 
@@ -654,12 +654,12 @@ end
 # ============================================================================
 
 # Innermost open timer on the calling thread; C_NULL when no timer is open.
-_current_event() = ccall((:Tau_query_current_event, _libTAU[]), Ptr{Cvoid}, ())
+_current_event() = ccall((:Tau_query_current_event, _libTAU), Ptr{Cvoid}, ())
 
 # Name of the timer behind an event handle; `nothing` for C_NULL.
 function _event_name(event::Ptr{Cvoid})
     event == C_NULL && return nothing
-    s = ccall((:Tau_query_event_name, _libTAU[]), Ptr{Cchar}, (Ptr{Cvoid},), event)
+    s = ccall((:Tau_query_event_name, _libTAU), Ptr{Cchar}, (Ptr{Cvoid},), event)
     return s == C_NULL ? nothing : unsafe_string(s)
 end
 
@@ -690,6 +690,6 @@ function tau_parent_timer_name()
     _pin_task!()
     cur = _current_event()
     cur == C_NULL && return nothing
-    parent = ccall((:Tau_query_parent_event, _libTAU[]), Ptr{Cvoid}, (Ptr{Cvoid},), cur)
+    parent = ccall((:Tau_query_parent_event, _libTAU), Ptr{Cvoid}, (Ptr{Cvoid},), cur)
     return _event_name(parent)
 end

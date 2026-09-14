@@ -12,12 +12,9 @@
 Start a TAU timer with the given name. No-op when libTAU is not loaded.
 """
 function tau_start(name::String)
-    if isempty(_libTAU[])
-        return  # Silently skip if library not loaded
-    end
-
+    _tau_active() || return  # Silently skip if library not loaded
     _pin_task!()
-    ccall((:Tau_start, _libTAU[]), Cvoid, (Cstring,), name)
+    ccall(TAU_START_FPTR[], Cvoid, (Cstring,), name)
 end
 
 """
@@ -26,11 +23,8 @@ end
 Stop a TAU timer with the given name. No-op when libTAU is not loaded.
 """
 function tau_stop(name::String)
-    if isempty(_libTAU[])
-        return  # Silently skip if library not loaded
-    end
-
-    ccall((:Tau_stop, _libTAU[]), Cvoid, (Cstring,), name)
+    _tau_active() || return  # Silently skip if library not loaded
+    ccall(TAU_STOP_FPTR[], Cvoid, (Cstring,), name)
 end
 
 """

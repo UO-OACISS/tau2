@@ -48,10 +48,56 @@ const _exit_hook_ptr = Ref{Ptr{Cvoid}}(C_NULL)
 
 # TAU runtime state 
 
-const _libTAU              = Ref{String}("")
-const _JULIA_BLAS_LIB      = Ref{String}("")
-const TAU_START_FPTR       = Ref{Ptr{Cvoid}}(C_NULL)
-const TAU_STOP_FPTR        = Ref{Ptr{Cvoid}}(C_NULL)
+# Library paths, set once in _init_runtime!.
+# These used to be Refs, but Julia 1.13 now prohibits this in ccall,
+# so are now globals instead.
+global _libTAU::String         = ""
+global _JULIA_BLAS_LIB::String = ""
+
+# Performance-critical TAU entry points.
+# Resolved in _init_runtime! and saved for future use.
+const TAU_START_FPTR                 = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_STOP_FPTR                  = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_GET_THREAD_FPTR            = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_START_TIMER_FPTR           = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_STOP_TIMER_FPTR            = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_TRIGGER_USEREVENT_FPTR     = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_USEREVENT_FPTR             = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_TRIGGER_CONTEXT_EVENT_FPTR = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_DYNAMIC_START_FPTR         = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_DYNAMIC_STOP_FPTR          = Ref{Ptr{Cvoid}}(C_NULL)
+
+const _HOT_FPTRS = (
+    (:Tau_start,                 TAU_START_FPTR),
+    (:Tau_stop,                  TAU_STOP_FPTR),
+    (:Tau_get_thread,            TAU_GET_THREAD_FPTR),
+    (:Tau_start_timer,           TAU_START_TIMER_FPTR),
+    (:Tau_stop_timer,            TAU_STOP_TIMER_FPTR),
+    (:Tau_trigger_userevent,     TAU_TRIGGER_USEREVENT_FPTR),
+    (:Tau_userevent,             TAU_USEREVENT_FPTR),
+    (:Tau_trigger_context_event, TAU_TRIGGER_CONTEXT_EVENT_FPTR),
+    (:Tau_dynamic_start,         TAU_DYNAMIC_START_FPTR),
+    (:Tau_dynamic_stop,          TAU_DYNAMIC_STOP_FPTR),
+)
+
+# Resolve the entry points from `handle`.
+function _resolve_hot_fptrs!(handle::Ptr{Cvoid})
+    unresolved = Symbol[]
+    for (sym, ref) in _HOT_FPTRS
+        ptr = Base.Libc.Libdl.dlsym(handle, sym; throw_error=false)
+        if ptr === nothing
+            push!(unresolved, sym)
+        else
+            ref[] = ptr
+        end
+    end
+    if !isempty(unresolved)
+        for (_, ref) in _HOT_FPTRS
+            ref[] = C_NULL
+        end
+    end
+    return unresolved
+end
 
 const _TASK_OFFSET_FROM_PGCSTACK        = Ref{Int}(0)  # current_task = pgcstack + this
 const _STICKY_BYTE_OFFSET_FROM_PGCSTACK = Ref{Int}(0)  # &task.sticky = pgcstack + this
@@ -59,7 +105,7 @@ const _offsets_ready = Ref(false)                      # true once __init__ comp
 
 const _force_text_hooks = Ref(false)
 
-_tau_active() = !isempty(_libTAU[]) && TAU_START_FPTR[] != C_NULL && TAU_STOP_FPTR[] != C_NULL
+_tau_active() = !isempty(_libTAU) && TAU_START_FPTR[] != C_NULL && TAU_STOP_FPTR[] != C_NULL
 
 function _active_hook_ptrs()
     if _tau_active() && !_force_text_hooks[]
@@ -81,9 +127,9 @@ function _install_julia_blas_hook(tau_lib_path::String)
         @debug "TAU julia_blas shim not found at $blas_lib; skipping BLAS hook."
         return
     end
-    _JULIA_BLAS_LIB[] = blas_lib
+    global _JULIA_BLAS_LIB = blas_lib
     try
-        installed = ccall((:tau_lbt_install, _JULIA_BLAS_LIB[]), Cint, ())
+        installed = ccall((:tau_lbt_install, _JULIA_BLAS_LIB), Cint, ())
         if installed < 0
             @warn "tau_lbt_install returned $installed; BLAS timers will not be captured."
         else
@@ -117,13 +163,15 @@ function _init_runtime!()
     elseif !isfile(tau_lib)
         @warn "TAU library not found at $tau_lib; falling back to stderr logging."
     else
-        _libTAU[] = tau_lib
-        ccall((:Tau_init_initializeTAU, _libTAU[]), Cint, ())
-        ccall((:Tau_create_top_level_timer_if_necessary, _libTAU[]), Cvoid, ())
-        # The ccall/cglobal library position must reference a global
-        # These function pointers will be inserted into and called from instrumented LLVM code
-        TAU_START_FPTR[] = cglobal((:Tau_start, _libTAU[]))
-        TAU_STOP_FPTR[]  = cglobal((:Tau_stop,  _libTAU[]))
-        _install_julia_blas_hook(tau_lib)
+        handle = Base.Libc.Libdl.dlopen(tau_lib)
+        unresolved = _resolve_hot_fptrs!(handle)
+        if !isempty(unresolved)
+            @warn "TAU library at $tau_lib lacks $(join(unresolved, ", ")); falling back to stderr logging."
+        else
+            global _libTAU = tau_lib
+            ccall((:Tau_init_initializeTAU, _libTAU), Cint, ())
+            ccall((:Tau_create_top_level_timer_if_necessary, _libTAU), Cvoid, ())
+            _install_julia_blas_hook(tau_lib)
+        end
     end
 end
