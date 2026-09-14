@@ -87,6 +87,7 @@ fi
 # "legacy" (AbstractInterpreter rewriter, TAUProfile).
 julia_backend=llvm
 julia_backend_explicit=false
+julia_interpreter=""
 
 if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
   on_craycnl=true
@@ -181,6 +182,7 @@ fi
 if [ $julia_wrapper = "true" ] ; then
   echo "        -julia-llvm   Use the LLVM-plugin Julia instrumentation backend (default)"
   echo "        -julia-legacy Use the legacy AbstractInterpreter Julia backend (requires a TAU build with -julia-legacy)"
+  echo "        -tau-julia-interpreter=<\"julia\"> path of julia interpreter (default: the one TAU was configured with)"
 fi
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
@@ -498,6 +500,16 @@ for arg in "$@" ; do
         julia_backend=legacy
         julia_backend_explicit=true
         shift
+        ;;
+      -tau-julia-interpreter=*)
+        if [ $julia_wrapper = "true" ] ; then
+          myarg=`echo $arg | sed 's/-tau-julia-interpreter=//'`
+          julia_interpreter="$myarg"
+          shift
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
         ;;
       -vv)
         verbose=true
@@ -991,6 +1003,34 @@ else
   theBinding=$binding_specified
 fi
 
+if [ $julia_wrapper = "true" ] ; then
+  if [ "x$julia_interpreter" != "x" ] ; then
+    if ! [ -x "$(command -v "$julia_interpreter")" ] ; then
+      echo "tau_julia: ERROR: -tau-julia-interpreter=$julia_interpreter is not executable." 1>&2
+      exit 1
+    fi
+  else
+    options=`echo $theBinding | sed -e 's/shared-//g' `
+    mk=$BASEDIR/lib/Makefile.tau-$options
+    if [ -r "$mk" ] ; then
+      julia_interpreter=`grep "^JULIA_BIN=" $mk | sed -e 's/^JULIA_BIN=//g' | head -n 1`
+    fi
+    if [ "x$julia_interpreter" = "x" ] ; then
+      julia_interpreter=julia
+    elif ! [ -x "$(command -v "$julia_interpreter")" ] ; then
+      echo "tau_julia: WARNING: Julia interpreter $julia_interpreter from $mk is not executable; using julia from PATH." 1>&2
+      julia_interpreter=julia
+    fi
+    if ! [ -x "$(command -v "$julia_interpreter")" ] ; then
+      echo "tau_julia: ERROR: no julia interpreter found. Configure TAU with -julia=<interp> or add julia to PATH." 1>&2
+      exit 1
+    fi
+  fi
+  if [ $verbose = "true" ] ; then
+    echo "Using Julia interpreter: $julia_interpreter"
+  fi
+fi
+
 if [ $verbose = "true" ] ; then
   echo ""
   echo "Program to run : $@"
@@ -1212,7 +1252,7 @@ if [ "$julia_wrapper" = "true" -a ! "x$isPthread" == "x" \
     # User can specify the BLAS preload in $TAU_PRELOAD_BLAS_LIB
     TAUEX_LD_PRELOAD="$TAU_PRELOAD_BLAS_LIB:$TAUEX_LD_PRELOAD"
   else
-    julia_bin=`command -v julia 2>/dev/null`
+    julia_bin=`command -v "$julia_interpreter" 2>/dev/null`
     if [ -n "$julia_bin" ]; then
       julia_libdir=`dirname "$(readlink -f "$julia_bin")"`/../lib
       # Official Julia binaries keep OpenBLAS in lib/julia/ but source builds and
@@ -1754,7 +1794,7 @@ else
     fi
     julia_gdb_cmd=""
     if [ $julia_wrapper = "true" ] ; then
-      julia_gdb_cmd="julia"
+      julia_gdb_cmd="$julia_interpreter"
     fi
     envcmd="set env"
     if [ $apple = 1 ]; then
@@ -1854,7 +1894,6 @@ fi
   fi
     $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
   fi
-  fi
   if [ $memory_debug = "true" ] ; then
     $dryrun export TAU_TRACK_MEMORY_LEAKS=1
     $dryrun export TAU_MEMDBG_PROTECT_ABOVE=1
@@ -1902,15 +1941,15 @@ fi
       $dryrun export TAU_JULIA_BACKEND=$julia_backend
       if [ "${TAU_JULIA_VERSION_CHECK:-0}" = "1" -a -r "$tau_depot/.tau_julia_version" ]; then
           built_ver=$(cat "$tau_depot/.tau_julia_version")
-          run_ver=$(julia -e 'print(string(VERSION))' 2>/dev/null)
+          run_ver=$("$julia_interpreter" -e 'print(string(VERSION))' 2>/dev/null)
           if [ -n "$run_ver" -a "$built_ver" != "$run_ver" ]; then
               echo "tau_julia: WARNING: depot built with Julia $built_ver but running $run_ver" 1>&2
           fi
       fi
       if [ ! -d "$tau_depot/packages" ]; then
-          $dryrun env JULIA_DEPOT_PATH="$tau_depot" julia --project="$backend_env" -e 'using Pkg; Pkg.instantiate()' || true
+          $dryrun env JULIA_DEPOT_PATH="$tau_depot" "$julia_interpreter" --project="$backend_env" -e 'using Pkg; Pkg.instantiate()' || true
       fi
-      $dryrun julia "$@"
+      $dryrun "$julia_interpreter" "$@"
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
     if [ -n "$dryrun" ] ; then

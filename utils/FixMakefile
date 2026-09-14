@@ -594,6 +594,12 @@ case $1 in
         pythonlibrary=`echo $1 | sed -e 's/^pythonlibrary=//'`
 	;;
 
+     juliabin=*)
+        juliabin=`echo $1 | sed -e 's/^juliabin=//'`
+	echo "s,^JULIA_BIN=.*$,JULIA_BIN=$juliabin,g" >> $sedout
+	echo "Using Julia interpreter =" $juliabin
+	;;
+
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	if [ "x$pythonlibrary" != "x"  ] ; then

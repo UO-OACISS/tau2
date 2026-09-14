@@ -803,7 +803,9 @@ usage() {
     echo "-pythonlibrary=<library> ......... Specify name of Python library file."
     echo "                                   e.g. libpython3.10.so"
     echo "-julia ..................... Install Julia LLVM instrumentation library."
-    echo "-julia_legacy ....................... Also install legacy Julia backend."
+    echo "                                           (uses the julia found in PATH)"
+    echo "-julia=<interp> ... Install Julia LLVM library using the named interpreter."
+    echo "-julia_legacy[=<interp>] ............ Also install legacy Julia backend."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
     echo "-starpu[=<dir>] ................................ Enable StarPU support."
@@ -1014,7 +1016,9 @@ for arg in "$@"; do
         echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
         echo "-pythonlibrary=<library> ......... Specify name of Python library file."
         echo "-julia .................... Install Julia LLVM instrumentation library."
-        echo "-julia_legacy ...................... Also install legacy Julia backend."
+        echo "                                           (uses the julia found in PATH)"
+        echo "-julia=<interp> ... Install Julia LLVM library using the named interpreter."
+        echo "-julia_legacy[=<interp>] ............ Also install legacy Julia backend."
         echo "-starpu[=<dir>] ................................ Enable StarPU support."
         echo "-phiprof ................................... Activate Phiprof bindings."
         echo "-llvm_cc   Compiler to build TAU LLVM selective instrumentation plugin."
@@ -1240,6 +1244,7 @@ extrashlibopts=
 pthread=no
 julia=no
 julia_legacy=no
+juliaintv=
 suppress_pthread_create_wrapper=no
 tbb=no
 papithread=no
@@ -1541,6 +1546,26 @@ handle_python_option() {
     python_ver_specified=$([[ -n "$arg_value" ]] && echo "yes" || echo "no")
 }
 
+handle_julia_option() {
+    local arg_value="$1" #full path to interpreter if provided
+
+    if [[ -n "$arg_value" ]]; then
+        if [[ ! -x "$arg_value" || -d "$arg_value" ]]; then
+            echo "Error: Specified Julia interpreter '$arg_value' is not executable or does not exist."
+            exit 1
+        fi
+        juliaintv="$(cd "$(dirname "$arg_value")" && pwd -P)/$(basename "$arg_value")"
+    elif [[ -z "$juliaintv" ]]; then
+        # If no arg to -julia, use julia on $PATH
+        juliaintv=$(command -v julia)
+        if [[ -z "$juliaintv" ]]; then
+            echo "Error: No julia interpreter found in PATH. Use -julia=<interp> to specify one."
+            exit 1
+        fi
+    fi
+    julia=yes
+}
+
 ###############################################################
 # PARSE OPTIONS
 ###############################################################
@@ -1744,14 +1769,25 @@ for arg in "$@"; do
             ;;
 
         -julia|-julia-llvm)
-            julia=yes
+            handle_julia_option ""
+            shift
+            ;;
+
+        -julia=*|-julia-llvm=*)
+            handle_julia_option "${arg#*=}"
             shift
             ;;
 
         -julia_legacy|-julia_ai)
             # Additionally build the legacy AbstractInterpreter backend.
+            handle_julia_option ""
             julia_legacy=yes
-            julia=yes
+            shift
+            ;;
+
+        -julia_legacy=*|-julia_ai=*)
+            handle_julia_option "${arg#*=}"
+            julia_legacy=yes
             shift
             ;;
 
@@ -5336,7 +5372,13 @@ if [ $ittnotify = yes ] ; then
 fi
 
 if [ $julia = yes ] ; then
-    fixmakeargs="$fixmakeargs JULIA"
+    julia_version=`${juliaintv} --version 2>/dev/null | awk '{print $NF}'`
+    if [ "x$julia_version" = "x" ] ; then
+        echo "Error: Julia interpreter ${juliaintv} failed to report its version (julia --version)."
+        exit 1
+    fi
+    echo "Using Julia $julia_version from: ${juliaintv}"
+    fixmakeargs="$fixmakeargs JULIA juliabin=${juliaintv}"
     tauoptions="${tauoptions}-julia"
 fi
 
