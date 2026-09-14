@@ -48,6 +48,8 @@ module P2TestModB
 end
 
 # Test functions for Phase 2 CI replacement tests
+@noinline p2_const_user(x::Int) = x > 0 ? error("constgv") : x
+
 @noinline function p2_replace_add(x::Float64, y::Float64)
     x + y
 end
@@ -188,6 +190,39 @@ no_trace(trace::String, name::String) = !has_entry(trace, name)
         @test TAUProfile._probe_handler_lowering() === lowering   # cached
     else
         @test !TAUProfile._EMIT_LOWERED_HANDLER
+    end
+end
+
+@testset "_emit_native resolves embedded constant globals" begin
+    # Since Julia 1.13.0-DEV.623 jl_emit_native leaves the julia.constgv
+    # globals (type tags, strings, bindings) with null initializers and hands
+    # the object pointers out through jl_get_llvm_gvs/jl_get_llvm_gv_inits.
+    p2_const_user(-1)
+    mi = GPUCompiler.methodinstance(typeof(p2_const_user), Tuple{Int}, Base.get_world_counter())
+    ci = _get_ci_for_mi(mi)
+    @test ci !== nothing
+    src = Base.uncompressed_ir(mi.def)
+    params = Base.CodegenParams(; track_allocations = false, code_coverage = false,
+                                  prefer_specsig = true, gnu_pubnames = false,
+                                  debug_info_kind = Cint(LLVM.API.LLVMDWARFSourceLanguageJulia),
+                                  safepoint_on_entry = true, gcstack_arg = false,
+                                  force_emit_all = true)
+    GPUCompiler.JuliaContext() do ctx
+        emitted = TAUProfile._emit_native(Any[ci, src], params;
+                                          name = "constgv_test", triple = Sys.MACHINE,
+                                          datalayout = nothing, dwarf_version = 4)
+        @test emitted !== nothing
+        nconst = 0
+        for gv in LLVM.globals(emitted.mod)
+            haskey(LLVM.metadata(gv), "julia.constgv") || continue
+            nconst += 1
+            init = LLVM.initializer(gv)
+            @test init !== nothing && !LLVM.isnull(init)
+        end
+        @test nconst > 0
+        # and the map the driver hands to GPUCompiler has a real pointer for each
+        @test length(emitted.gv_to_value) == nconst
+        @test all(p -> p != C_NULL, values(emitted.gv_to_value))
     end
 end
 

@@ -131,28 +131,8 @@ function GPUCompiler.compile_method_instance(@nospecialize(job::TracingPluginJob
     llvm_mod = emitted.mod
     native_code = emitted.native_code
 
-    # Build gv_to_value map
-    gv_to_value = Dict{String, Ptr{Cvoid}}()
-    for gv in LLVM.globals(llvm_mod)
-        if !haskey(LLVM.metadata(gv), "julia.constgv")
-            continue
-        end
-        gv_to_value[LLVM.name(gv)] = C_NULL
-        val = LLVM.initializer(gv)
-        val === nothing && continue
-        while isa(val, LLVM.ConstantExpr)
-            op = LLVM.opcode(val)
-            if op in (LLVM.API.LLVMBitCast, LLVM.API.LLVMPtrToInt,
-                      LLVM.API.LLVMAddrSpaceCast, LLVM.API.LLVMIntToPtr)
-                val = LLVM.operands(val)[1]
-                continue
-            end
-            break
-        end
-        if isa(val, LLVM.ConstantInt)
-            gv_to_value[LLVM.name(gv)] = reinterpret(Ptr{Cvoid}, convert(UInt, val))
-        end
-    end
+    # Julia-managed constant globals, resolved (and initialized on >= 1.13) by _emit_native
+    gv_to_value = emitted.gv_to_value
 
     # Map each compiled MI to its CI and LLVM function names. A CI with no
     # generic-ABI entry (`func`) was not compiled into this module.
