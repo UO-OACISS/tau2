@@ -597,20 +597,28 @@ end
         mi = GPUCompiler.methodinstance(typeof(p2_replace_add), Tuple{Float64, Float64}, Base.get_world_counter())
         ci = _get_ci_for_mi(mi)
 
+        ci_ptr = Base.pointer_from_objref(ci)
+        flags_ptr = Ptr{UInt8}(ci_ptr + TAUProfile._ci_flags_offset)
+
+        # Julia 1.13 keeps a fourth bit (native_cache_valid) in the same byte,
+        # set when the CodeInstance enters the method cache. Simulate it so the
+        # replacement is checked to OR in "invoke matches specptr" rather than
+        # overwrite the byte.
+        unsafe_store!(flags_ptr, unsafe_load(flags_ptr) | 0x08)
+
         # Get the fake fptr and test replacement
         fake_fptr = Ptr{Cvoid}(0xDEADBEEFCAFEBABE)
         _replace_ci_fptr!(ci, fake_fptr)
-
-        # Verify fields were set correctly
-        ci_ptr = Base.pointer_from_objref(ci)
 
         # Check that specptr.fptr1 was set to fake_fptr
         stored_fptr = unsafe_load(Ptr{Ptr{Cvoid}}(ci_ptr + TAUProfile._ci_specptr_offset))
         @test stored_fptr == fake_fptr
 
-        # Check that specsigflags was set to 0x02
-        flags = unsafe_load(Ptr{UInt8}(ci_ptr + TAUProfile._ci_specsigflags_offset))
-        @test flags == 0x02
+        # Bit 1 (invoke matches specptr) set, bit 0 (specsig) clear, bit 3 kept
+        flags = unsafe_load(flags_ptr)
+        @test flags & 0x02 == 0x02
+        @test flags & 0x01 == 0x00
+        @test flags & 0x08 == 0x08
     end
 end
 

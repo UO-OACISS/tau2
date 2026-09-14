@@ -335,10 +335,18 @@ const _ci_specptr_offset = let
     idx === nothing ? error("CodeInstance has no :specptr field") : fieldoffset(Core.CodeInstance, idx)
 end
 
-const _ci_specsigflags_offset = let
-    idx = findfirst(==(:specsigflags), fieldnames(Core.CodeInstance))
-    idx === nothing ? error("CodeInstance has no :specsigflags field") : fieldoffset(Core.CodeInstance, idx)
+# Flags: 
+#   bit 0 = specptr is a specialized signature
+#   bit 1 = invoke matches specptr
+#   bit 2 = from image
+#   bit 3 = native cache valid (added Julia 1.13)
+const _ci_flags_offset = let
+    names = fieldnames(Core.CodeInstance)
+    idx = something(findfirst(==(:flags), names), findfirst(==(:specsigflags), names), 0)
+    idx == 0 ? error("CodeInstance has no :flags or :specsigflags field") : fieldoffset(Core.CodeInstance, idx)
 end
+const _CI_FLAG_SPECPTR_SPECIALIZED    = 0x01
+const _CI_FLAG_INVOKE_MATCHES_SPECPTR = 0x02
 
 # jl_fptr_args function pointer (the generic ABI dispatcher) and
 # jl_fptr_const_return function pointer (used for const-return detection).
@@ -360,8 +368,13 @@ function _replace_ci_fptr!(ci::Core.CodeInstance, fptr::Ptr{Cvoid})
     # 2. Set invoke to jl_fptr_args (generic ABI dispatcher that reads specptr.fptr1)
     unsafe_store!(Ptr{Ptr{Cvoid}}(ci_ptr + _ci_invoke_offset), _jl_fptr_args[])
 
-    # 3. Set specsigflags to 0x02 (bit 1 = invoke ready, bit 0 = 0 = no specsig)
-    unsafe_store!(Ptr{UInt8}(ci_ptr + _ci_specsigflags_offset), 0x02)
+    # 3. Set flags.
+    #    Set bit   1: Mark invoke as matching specptr
+    #    Clear bit 0: the instrumented code uses the generic ABI
+    # Preserve other bits.
+    flags_ptr = Ptr{UInt8}(ci_ptr + _ci_flags_offset)
+    flags = unsafe_load(flags_ptr) & ~_CI_FLAG_SPECPTR_SPECIALIZED
+    unsafe_store!(flags_ptr, flags | _CI_FLAG_INVOKE_MATCHES_SPECPTR)
 
     nothing
 end
