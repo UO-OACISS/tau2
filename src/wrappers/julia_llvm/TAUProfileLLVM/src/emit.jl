@@ -10,7 +10,7 @@
 
 Emit `codeinfos` (alternating CodeInstance/CodeInfo pairs) into a fresh
 ThreadSafeModule via `jl_emit_native` and unwrap the result. Returns
-`(; mod, ts_mod, native_code, method_instances)`, or `nothing` if Julia produced
+`(; mod, ts_mod, native_code, code_instances)`, or `nothing` if Julia produced
 no module. The caller must keep `ts_mod` alive while using `mod`.
 """
 function _emit_native(codeinfos::Vector{Any}, params::Base.CodegenParams;
@@ -49,16 +49,10 @@ function _emit_native(codeinfos::Vector{Any}, params::Base.CodegenParams;
         llvm_mod = mod
     end
 
-    # Get compiled MIs via jl_get_llvm_mis
-    method_instances = Any[]
-    num_mis = Ref{Csize_t}(0)
-    @ccall jl_get_llvm_mis(native_code::Ptr{Cvoid}, num_mis::Ptr{Csize_t},
-                           C_NULL::Ptr{Cvoid})::Nothing
-    resize!(method_instances, num_mis[])
-    @ccall jl_get_llvm_mis(native_code::Ptr{Cvoid}, num_mis::Ptr{Csize_t},
-                           method_instances::Ptr{Cvoid})::Nothing
+    code_instances = Core.CodeInstance[codeinfos[i]::Core.CodeInstance
+                                       for i in 1:2:length(codeinfos)]
 
-    return (; mod = llvm_mod, ts_mod = llvm_ts_mod, native_code, method_instances)
+    return (; mod = llvm_mod, ts_mod = llvm_ts_mod, native_code, code_instances)
 end
 
 """

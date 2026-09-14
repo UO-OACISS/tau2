@@ -156,21 +156,12 @@ function GPUCompiler.compile_method_instance(@nospecialize(job::TracingPluginJob
 
     # Map each compiled MI to its CI and LLVM function names. A CI with no
     # generic-ABI entry (`func`) was not compiled into this module.
-    code_instances = Core.CodeInstance[]
-    for mi in emitted.method_instances
-        ci = GPUCompiler.ci_cache_lookup(cache, mi, job.world, job.world)
-        ci === nothing && continue
-        func, _ = _llvm_names_for_ci(native_code, ci)
-        func === nothing && continue
-        push!(code_instances, ci)
-    end
-    unique!(code_instances)
-
     compiled = Dict()
-    for ci in code_instances
+    for ci in emitted.code_instances
         mi = ci.def::Core.MethodInstance
         haskey(compiled, mi) && continue
         func, specfunc = _llvm_names_for_ci(native_code, ci)
+        func === nothing && continue
         compiled[mi] = (; ci, func, specfunc)
     end
 

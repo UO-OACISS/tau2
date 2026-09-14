@@ -176,6 +176,39 @@ no_trace(trace::String, name::String) = !has_entry(trace, name)
 # Test suite
 # ============================================================================
 
+@testset "_emit_native reports the CodeInstances it was given" begin
+    # jl_emit_native keys its function table by the CodeInstances in the
+    # worklist it is handed, so the driver reads them back from its own input
+    # instead of a version-specific accessor (jl_get_llvm_mis on 1.12,
+    # jl_get_llvm_cis on 1.13).
+    p2_simple_add(1.0, 2.0)
+    p2_replace_add(1.0, 2.0)
+    world = Base.get_world_counter()
+    mi1 = GPUCompiler.methodinstance(typeof(p2_simple_add), Tuple{Float64, Float64}, world)
+    mi2 = GPUCompiler.methodinstance(typeof(p2_replace_add), Tuple{Float64, Float64}, world)
+    ci1 = _get_ci_for_mi(mi1); ci2 = _get_ci_for_mi(mi2)
+    @test ci1 !== nothing && ci2 !== nothing
+    src1 = Base.uncompressed_ir(mi1.def); src2 = Base.uncompressed_ir(mi2.def)
+    params = Base.CodegenParams(; track_allocations = false, code_coverage = false,
+                                  prefer_specsig = true, gnu_pubnames = false,
+                                  debug_info_kind = Cint(LLVM.API.LLVMDWARFSourceLanguageJulia),
+                                  safepoint_on_entry = true, gcstack_arg = false,
+                                  force_emit_all = true)
+    GPUCompiler.JuliaContext() do ctx
+        emitted = TAUProfile._emit_native(Any[ci1, src1, ci2, src2], params;
+                                          name = "emit_test", triple = Sys.MACHINE,
+                                          datalayout = nothing, dwarf_version = 4)
+        @test emitted !== nothing
+        @test emitted.code_instances == [ci1, ci2]
+        @test !haskey(emitted, :method_instances)
+        # Every reported CodeInstance is in the module's function table.
+        for ci in emitted.code_instances
+            func, _ = TAUProfile._llvm_names_for_ci(emitted.native_code, ci)
+            @test func !== nothing
+        end
+    end
+end
+
 @testset "Phase 2: Single-function LLVM emission" begin
     # Test 1: Simple function produces LLVM module
     @testset "simple function produces LLVM module" begin
