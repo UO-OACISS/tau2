@@ -270,13 +270,10 @@ end
     _jit_and_lookup(emit_result) -> Union{Ptr{Cvoid}, Nothing}
 
 Phase 2 convenience form: takes the output of `_emit_single_function` and looks up
-`func_name`, falling back to `specfunc_name`. Returns `nothing` if neither is set.
+`func_name`, the generic-ABI entry. Returns `nothing` when there is none. 
 """
 function _jit_and_lookup(emit_result)
     lookup_name = emit_result.func_name
-    if lookup_name === nothing
-        lookup_name = emit_result.specfunc_name
-    end
     lookup_name === nothing && return nothing
     return _jit_and_lookup(emit_result.ts_mod, lookup_name)
 end

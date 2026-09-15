@@ -228,16 +228,53 @@ end
 # a pass to do it for us.
 const _EMIT_LOWERED_HANDLER = VERSION >= v"1.13.0-DEV.36"
 
-# Handler entry sequence: 
-#   - setjmp symbol
-#   - setjmp arity, its arity, and the handler buffer size in bytes.
-#   - handler buffer size in bytes
-# Determine these by examining IR of small generated example.
-const _HandlerLowering = NamedTuple{(:setjmp_name, :setjmp_nargs, :buf_bytes), Tuple{String, Int, Int}}
+# Handler entry facts read from the IR Julia emits for a small try block:
+#   - setjmp symbol and arity, and the handler buffer size in bytes
+#   - byte offset from pgcstack to the task's current-handler slot (ct->eh)
+const _HandlerLowering = NamedTuple{(:setjmp_name, :setjmp_nargs, :buf_bytes, :eh_offset),
+                                    Tuple{String, Int, Int, Int}}
 const _handler_lowering = Ref{Union{Nothing, _HandlerLowering}}(nothing)
 
 @noinline _probe_may_throw(x::Int) = x < 0 ? error("negative") : x
 _probe_try(x::Int) = try; _probe_may_throw(x); catch; -1; end
+
+function _is_pgcstack_value(v::LLVM.Value)
+    LLVM.name(v) in ("pgcstack", "tls_pgcstack") && return true
+    v isa LLVM.CallInst || return false
+    callee = LLVM.called_operand(v)
+    return callee isa LLVM.Function && LLVM.name(callee) == "julia.get_pgcstack"
+end
+
+# Byte offset of `ptr` from pgcstack through a chain of constant i8 GEPs, or
+# nothing if the chain does not end at pgcstack.
+function _offset_from_pgcstack(ptr::LLVM.Value)
+    offset = 0
+    while !_is_pgcstack_value(ptr)
+        ptr isa LLVM.GetElementPtrInst || return nothing
+        LLVM.LLVMType(LLVM.API.LLVMGetGEPSourceElementType(ptr)) == LLVM.Int8Type() || return nothing
+        ops = LLVM.operands(ptr)
+        (length(ops) == 2 && ops[2] isa LLVM.ConstantInt) || return nothing
+        offset += convert(Int, ops[2])
+        ptr = ops[1]
+    end
+    return offset
+end
+
+# Value under which Julia stores the handler into ct->eh, or nothing
+function _find_handler_entry(f::LLVM.Function)
+    for bb in LLVM.blocks(f), inst in LLVM.instructions(bb)
+        inst isa LLVM.CallInst || continue
+        callee = LLVM.called_operand(inst)
+        callee isa LLVM.Function || continue
+        cname = LLVM.name(callee)
+        if cname == "ijl_enter_handler"
+            return inst, LLVM.operands(inst)[2]
+        elseif cname == "julia.except_enter"
+            return inst, inst
+        end
+    end
+    return nothing
+end
 
 function _probe_handler_lowering()
     cached = _handler_lowering[]
@@ -251,31 +288,58 @@ function _probe_handler_lowering()
     found = nothing
     GC.@preserve emitted begin
         dl = LLVM.datalayout(emitted.mod)
-        for f in LLVM.functions(emitted.mod), bb in LLVM.blocks(f)
-            enter = nothing
-            for inst in LLVM.instructions(bb)
-                inst isa LLVM.CallInst || continue
-                callee = LLVM.called_operand(inst)
-                callee isa LLVM.Function || continue
-                cname = LLVM.name(callee)
-                if cname == "ijl_enter_handler"
-                    enter = inst
-                elseif enter !== nothing && occursin("setjmp", cname)
-                    buf = LLVM.operands(enter)[2]
-                    buf isa LLVM.AllocaInst ||
-                        error("TAUProfile: handler probe: ijl_enter_handler buffer is not an alloca")
-                    ty = LLVM.LLVMType(LLVM.API.LLVMGetAllocatedType(buf))
-                    found = (; setjmp_name = cname,
-                               setjmp_nargs = length(LLVM.operands(inst)) - 1,
-                               buf_bytes = Int(LLVM.storage_size(dl, ty)))
+        for f in LLVM.functions(emitted.mod)
+            entry = _find_handler_entry(f)
+            entry === nothing && continue
+            enter, stored = entry
+            setjmp_name, setjmp_nargs, buf_bytes = "", 0, 0
+            if _EMIT_LOWERED_HANDLER
+                # The setjmp call follows ijl_enter_handler in the same block
+                # and takes the same buffer, an alloca of jl_handler_t.
+                stored isa LLVM.AllocaInst ||
+                    error("TAUProfile: handler probe: ijl_enter_handler buffer is not an alloca")
+                setjmp = nothing
+                past = false
+                for inst in LLVM.instructions(LLVM.parent(enter))
+                    past || (past = inst === enter; continue)
+                    inst isa LLVM.CallInst || continue
+                    callee = LLVM.called_operand(inst)
+                    callee isa LLVM.Function || continue
+                    occursin("setjmp", LLVM.name(callee)) || continue
+                    setjmp = inst
                     break
                 end
+                setjmp === nothing &&
+                    error("TAUProfile: handler probe found ijl_enter_handler without a setjmp call")
+                setjmp_name = LLVM.name(LLVM.called_operand(setjmp))
+                setjmp_nargs = length(LLVM.operands(setjmp)) - 1
+                buf_bytes = Int(LLVM.storage_size(dl,
+                    LLVM.LLVMType(LLVM.API.LLVMGetAllocatedType(stored))))
+                buf_bytes > 0 || error("TAUProfile: handler probe read a zero-sized handler buffer")
             end
-            found === nothing || break
+            # The store of the handler buffer into ct->eh.
+            eh_offset = nothing
+            for bb in LLVM.blocks(f), inst in LLVM.instructions(bb)
+                inst isa LLVM.StoreInst || continue
+                val, ptr = LLVM.operands(inst)
+                if !_EMIT_LOWERED_HANDLER
+                    val isa LLVM.ExtractValueInst || continue
+                    LLVM.operands(val)[1] === stored || continue
+                    LLVM.API.LLVMGetNumIndices(val) == 1 || continue
+                    unsafe_load(LLVM.API.LLVMGetIndices(val)) == 1 || continue
+                else
+                    val === stored || continue
+                end
+                eh_offset = _offset_from_pgcstack(ptr)
+                eh_offset === nothing || break
+            end
+            eh_offset === nothing &&
+                error("TAUProfile: handler probe found no store of the handler buffer into the task")
+            found = (; setjmp_name, setjmp_nargs, buf_bytes, eh_offset)
+            break
         end
     end
-    found === nothing && error("TAUProfile: handler probe found no ijl_enter_handler/setjmp pair in Julia's IR")
-    found.buf_bytes > 0 || error("TAUProfile: handler probe read a zero-sized handler buffer")
+    found === nothing && error("TAUProfile: handler probe found no handler entry in Julia's IR")
     _handler_lowering[] = found
     return found
 end
@@ -289,7 +353,7 @@ so that the exit hook fires on all exit paths including uncaught exceptions.
 Transforms the entry block by:
 1. Keeping pgcstack/safepoint setup + entry hook call in entry_bb
 2. Moving remaining instructions to a new try_body block
-3. Adding exception handler setup (julia.except_enter + ct->eh store)
+3. Adding exception handler setup (handler entry sequence + ct->eh store)
 4. Creating a catch block that fires exit hook then rethrows
 5. Inserting ijl_pop_handler_noexcept before each ret's exit hook
 """
@@ -342,10 +406,10 @@ function _wrap_with_exception_handler!(fn::LLVM.Function, mod::LLVM.Module,
     _fix_phi_incoming_blocks!(fn, entry_bb, try_body_bb)
 
     # --- Declare runtime functions ---
+    lowering = _probe_handler_lowering()
     local except_enter_ft, except_enter_fn, enter_handler_ft, enter_handler_fn,
-          setjmp_ft, setjmp_fn, lowering
+          setjmp_ft, setjmp_fn
     if _EMIT_LOWERED_HANDLER
-        lowering = _probe_handler_lowering()
         enter_handler_ft = LLVM.FunctionType(LLVM.VoidType(), [ptr_type, ptr_type])
         enter_handler_fn = _get_or_declare_fn!(mod, "ijl_enter_handler", enter_handler_ft)
         setjmp_argtypes = lowering.setjmp_nargs == 2 ? [ptr_type, i32_type] : [ptr_type]
@@ -405,9 +469,9 @@ function _wrap_with_exception_handler!(fn::LLVM.Function, mod::LLVM.Module,
             handler_buf = LLVM.extract_value!(builder, except_call, 1, "handler_buf")
         end
 
-        # eh_field = gep i8, pgcstack, 32  (ct->eh is at pgcstack + 32)
+        # eh_field = gep i8, pgcstack, <offset of ct->eh from pgcstack>
         eh_field = LLVM.gep!(builder, i8_type, pgcstack,
-            [LLVM.ConstantInt(LLVM.IntType(64), 32)], "eh_field")
+            [LLVM.ConstantInt(LLVM.IntType(64), lowering.eh_offset)], "eh_field")
 
         # store ptr %handler_buf, ptr %eh_field
         LLVM.store!(builder, handler_buf, eh_field)

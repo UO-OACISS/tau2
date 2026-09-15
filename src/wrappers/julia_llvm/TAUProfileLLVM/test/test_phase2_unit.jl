@@ -123,6 +123,57 @@ function p2_const_return_driver()
     return Base.invokelatest(p2_const_return_val)
 end
 
+
+# Return values carrying GC-tracked pointers (return-roots ABI)
+struct P2RootsPair; s::String; v::Vector{Int}; end
+struct P2RootsUnion; a::Union{Nothing, String}; b::Int; end
+@noinline p2_roots_make(n::Int) = P2RootsPair(string("n=", n), collect(1:n))
+@noinline p2_roots_tuple(n::Int) = (string("t=", n), collect(1:n))
+@noinline p2_roots_union(n::Int) = P2RootsUnion(n > 0 ? string(n) : nothing, n)
+
+function p2_roots_driver(n::Int)
+    p = p2_roots_make(n)
+    t = p2_roots_tuple(n)
+    u = p2_roots_union(n)
+    return (p.s, sum(p.v), t[1], length(t[2]), u.a, u.b)
+end
+
+function p2_roots_dynamic_driver(n::Int)
+    p = Base.invokelatest(p2_roots_make, n)::P2RootsPair
+    t = Base.invokelatest(p2_roots_tuple, n)::Tuple{String, Vector{Int}}
+    u = Base.invokelatest(p2_roots_union, n)::P2RootsUnion
+    return (p.s, sum(p.v), t[1], length(t[2]), u.a, u.b)
+end
+
+# Method redefinition after a Phase 2 patch
+@noinline p2_redef_target(x::Int) = x + 1
+p2_redef_driver(x::Int) = Base.invokelatest(p2_redef_target, x)
+
+# @atomic modify variants: widths, non-native ops, floats, orderings, swap/replace
+mutable struct P2AtomicMix
+    @atomic i8::Int8
+    @atomic u16::UInt16
+    @atomic i32::Int32
+    @atomic f::Float64
+    @atomic m::Int
+    @atomic sw::Int
+end
+P2AtomicMix() = P2AtomicMix(0, 0, 1, 0.0, 0, 0)
+
+@noinline function p2_atomic_mix(c::P2AtomicMix)
+    @atomic c.i8 += Int8(1)
+    @atomic c.u16 += UInt16(2)
+    @atomic c.i32 *= Int32(3)
+    @atomic c.f += 1.5
+    @atomic max(c.m, 7)
+    @atomic :monotonic c.m += 1
+    old = @atomicswap c.sw = 99
+    rep = @atomicreplace c.sw 99 => 5
+    return (c.i8, c.u16, c.i32, c.f, c.m, old, rep.success, c.sw)
+end
+p2_atomic_mix_driver(c::P2AtomicMix) = Base.invokelatest(p2_atomic_mix, c)
+const P2_ATOMIC_MIX_EXPECTED = (Int8(1), UInt16(2), Int32(3), 1.5, 8, 0, true, 5)
+
 # ============================================================================
 # Test helpers
 # ============================================================================
@@ -249,6 +300,158 @@ end
     ir = trace_code(p2_atomic_bump, c)
     @test occursin("atomicrmw", ir) || occursin("cmpxchg", ir)
     @test !occursin("julia.atomicmodify", ir)
+end
+
+@testset "return values with GC roots survive both phases" begin
+    # Specialized entries returning pointer-carrying aggregates take an sret
+    # buffer that codegen roots -- Julia 1.13 marks it with the julia.return_roots
+    # attribute. Instrumentation must leave that ABI intact in Phase 1, and
+    # Phase 2 must route the patched CodeInstance through the generic wrapper.
+    tau_rewrite_reset_exclusions()
+    expected = ("n=4", 10, "t=4", 4, "4", 4)
+
+    ir = trace_code(p2_roots_driver, 4)
+    @test occursin("return_roots", ir)
+    @test occursin("sret", ir)
+
+    result, trace = capture_trace(() -> tau_rewrite_and_call(p2_roots_driver, 4))
+    @test result == expected
+    for name in ("p2_roots_driver", "p2_roots_make", "p2_roots_tuple", "p2_roots_union")
+        @test has_trace(trace, name)
+    end
+
+    result, trace = capture_trace(() -> tau_rewrite_and_call(p2_roots_dynamic_driver, 4))
+    @test result == expected
+    for name in ("p2_roots_make", "p2_roots_tuple", "p2_roots_union")
+        @test has_trace(trace, name)
+    end
+    # The patched CodeInstances must keep working through ordinary dispatch.
+    @test Base.invokelatest(p2_roots_make, 5).s == "n=5"
+    @test Base.invokelatest(p2_roots_tuple, 5)[1] == "t=5"
+    @test Base.invokelatest(p2_roots_union, 0).a === nothing
+end
+
+@testset "Phase 2 never installs a specialized-signature entry as the generic one" begin
+    # _replace_ci_fptr! installs the looked-up pointer as a generic-ABI
+    # (f, args, nargs) entry. A CodeInstance with no generic wrapper must be
+    # left alone rather than patched with its specialized-signature body.
+    p2_roots_make(1)
+    mi = GPUCompiler.methodinstance(typeof(p2_roots_make), Tuple{Int}, Base.get_world_counter())
+    ci = _get_ci_for_mi(mi)
+    @test ci !== nothing
+    GPUCompiler.JuliaContext() do ctx
+        r = _emit_single_function(ci, Base.uncompressed_ir(mi.def))
+        @test r !== nothing
+        @test r.func_name !== nothing
+        @test r.specfunc_name !== nothing
+        no_wrapper = (; r..., func_name = nothing)
+        looked_up = try
+            _jit_and_lookup(no_wrapper)
+        catch err
+            err
+        end
+        @test looked_up === nothing
+    end
+end
+
+@testset "exception handler stores into the task's handler slot" begin
+    # The handler wrapper stores the handler buffer into ct->eh through an
+    # offset from pgcstack. Julia's own try-block IR contains the same store,
+    # so the probe reads the offset from there instead of hardcoding it.
+    lowering = GPUCompiler.JuliaContext() do ctx
+        TAUProfile._probe_handler_lowering()
+    end
+    @test haskey(lowering, :eh_offset)
+    off = lowering.eh_offset
+    @test off > 0 && off % sizeof(Ptr{Cvoid}) == 0
+
+    read_slot() = unsafe_load(Ptr{Ptr{Cvoid}}(ccall(:jl_get_pgcstack, Ptr{UInt8}, ()) + off))
+    before, inside, after = fetch(Threads.@spawn begin
+        a = read_slot()
+        b = try
+            read_slot()
+        catch
+            C_NULL
+        end
+        c = read_slot()
+        (a, b, c)
+    end)
+    @test inside != C_NULL
+    @test inside != before
+    @test after == before
+end
+
+@testset "no constant global is left null in a large module" begin
+    # jl_get_llvm_gvs lists the globals Julia manages, which its commit message
+    # warns need not correspond one-to-one to the julia.constgv globals in the
+    # module. Emission must report any that stayed null rather than let the
+    # JIT fold them to null pointers.
+    mi = GPUCompiler.methodinstance(typeof(p2_spawn_driver), Tuple{Int}, Base.get_world_counter())
+    target = GPUCompiler.NativeCompilerTarget(; jlruntime=true)
+    config = GPUCompiler.CompilerConfig(target, TAUProfile.TracingPluginParams(); kernel=false, validate=false)
+    job = GPUCompiler.CompilerJob(mi, config)
+    GPUCompiler.JuliaContext() do ctx
+        mod, compiled, gv_to_value = GPUCompiler.compile_method_instance(job)
+        @test length(compiled) > 20
+        nconst = count(gv -> haskey(LLVM.metadata(gv), "julia.constgv"), collect(LLVM.globals(mod)))
+        @test nconst > 20
+        @test TAUProfile._unresolved_constant_globals(mod) == String[]
+        @test all(p -> p != C_NULL, values(gv_to_value))
+    end
+end
+
+@testset "atomic modify variants are expanded and behave" begin
+    tau_rewrite_reset_exclusions()
+    c = P2AtomicMix()
+    @test p2_atomic_mix(c) == P2_ATOMIC_MIX_EXPECTED
+
+    # Phase 1
+    ir = trace_code(p2_atomic_mix, P2AtomicMix())
+    @test !occursin("julia.atomicmodify", ir)
+    @test occursin("atomicrmw", ir)
+    @test occursin("cmpxchg", ir)
+    result, trace = capture_trace(() -> tau_rewrite_and_call(p2_atomic_mix, P2AtomicMix()))
+    @test result == P2_ATOMIC_MIX_EXPECTED
+    @test has_trace(trace, "p2_atomic_mix")
+
+    # Phase 2
+    mi = GPUCompiler.methodinstance(typeof(p2_atomic_mix), Tuple{P2AtomicMix}, Base.get_world_counter())
+    ci = _get_ci_for_mi(mi)
+    @test ci !== nothing
+    GPUCompiler.JuliaContext() do ctx
+        r = _emit_single_function(ci, Base.uncompressed_ir(mi.def))
+        @test r !== nothing
+        _lower_julia_intrinsics!(r.mod)
+        @test !occursin("julia.atomicmodify", string(r.mod))
+    end
+    result, trace = capture_trace(() -> tau_rewrite_and_call(p2_atomic_mix_driver, P2AtomicMix()))
+    @test result == P2_ATOMIC_MIX_EXPECTED
+    @test has_trace(trace, "p2_atomic_mix")
+    @test Base.invokelatest(p2_atomic_mix, P2AtomicMix()) == P2_ATOMIC_MIX_EXPECTED
+end
+
+@testset "method redefinition after a Phase 2 patch" begin
+    # Phase 2 overwrites invoke/specptr on a cached CodeInstance. Redefining
+    # the method afterwards must dispatch to the new definition, and the new
+    # CodeInstance must be instrumented in turn.
+    tau_rewrite_reset_exclusions()
+    result, trace = capture_trace(() -> tau_rewrite_and_call(p2_redef_driver, 1))
+    @test result == 2
+    @test has_trace(trace, "p2_redef_target")
+    @test Base.invokelatest(p2_redef_target, 1) == 2
+
+    # Redefine without calling the new method first: Phase 2 only sees code
+    # compiled while it is installed.
+    @eval @noinline p2_redef_target(x::Int) = x + 100
+
+    result, trace = capture_trace(() -> tau_rewrite_and_call(p2_redef_driver, 1))
+    @test result == 101
+    @test has_trace(trace, "p2_redef_target")
+    @test Base.invokelatest(p2_redef_target, 1) == 101
+    # and Phase 1 compiles the new definition too
+    result, trace = capture_trace(() -> tau_rewrite_and_call(p2_redef_target, 1))
+    @test result == 101
+    @test has_trace(trace, "p2_redef_target")
 end
 
 @testset "_emit_native reports the CodeInstances it was given" begin

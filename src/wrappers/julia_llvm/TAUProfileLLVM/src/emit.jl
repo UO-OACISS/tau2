@@ -116,7 +116,30 @@ function _resolve_constant_globals!(mod::LLVM.Module, native_code::Ptr{Cvoid})
             end
         end
     end
+    # Refuse to instrument if there are any null julia.constgv globals left.
+    unresolved = _unresolved_constant_globals(mod)
+    isempty(unresolved) ||
+        error("TAUProfile: jl_emit_native left constant globals without a value: " *
+              join(unresolved, ", "))
     return gv_to_value
+end
+
+"""
+    _unresolved_constant_globals(mod) -> Vector{String}
+
+Names of the module's `julia.constgv` globals that still have no initializer
+or a null one.
+"""
+function _unresolved_constant_globals(mod::LLVM.Module)
+    names = String[]
+    for gv in LLVM.globals(mod)
+        haskey(LLVM.metadata(gv), "julia.constgv") || continue
+        init = LLVM.initializer(gv)
+        if init === nothing || LLVM.isnull(init)
+            push!(names, LLVM.name(gv))
+        end
+    end
+    return names
 end
 
 """
