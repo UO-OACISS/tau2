@@ -170,7 +170,21 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
   // TAU EBS context for the unwind.
   //  unw_getcontext(&uc);
   uc = *(unw_context_t *)context;
+  // Per unw_init_local manpage:
+  //    If the unw_context_t is known to be a signal frame 
+  //    (i.e., from the third argument in a sigaction handler on linux),
+  //    unw_init_local2() should be used for correct initialization
+  //    on some platforms, passing the UNW_INIT_SIGNAL_FRAME flag.
+  // So we use unw_init_local2 with UNW_INIT_SIGNAL_FRAME
+  // (assuming libunwind has unw_init_local2, which has been present
+  // since libunwind 1.3).
+  // This makes libunwind do the unwind based on the exact instruction
+  // provided, instead of the previous instruction.
+#ifdef unw_init_local2
+  unw_init_local2(&cursor, &uc, UNW_INIT_SIGNAL_FRAME);
+#else
   unw_init_local(&cursor, &uc);
+#endif
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
     if ((depthCutoff > 0 && unwindDepth >= depthCutoff) ||
