@@ -31,6 +31,7 @@
 #include <dirent.h>
 #if defined(__linux__)
 #include <link.h>
+#include <sys/auxv.h>
 #endif
 #include <stdint.h>
 
@@ -242,7 +243,7 @@ struct TauBfdModule
 
 struct TauBfdUnit
 {
-  TauBfdUnit() : objopen_counter(-1) {
+  TauBfdUnit() : objopen_counter(-1), executableLoadBias(0), executableLoadBiasKnown(false) {
     executablePath = Tau_bfd_internal_getExecutablePath();
     executableModule = new TauBfdModule;
     executableModule->name = std::string(Tau_bfd_internal_getExecutablePath());
@@ -267,6 +268,12 @@ struct TauBfdUnit
   int objopen_counter;
   char const * executablePath;
   TauBfdModule * executableModule;
+
+  // Runtime load address minus link-time address of the main executable.
+  // Zero for a non-PIE executable. See Tau_bfd_internal_getExecutableLoadBias()
+  unsigned long executableLoadBias;
+  bool executableLoadBiasKnown;
+
   vector<TauBfdAddrMap*> addressMaps;
   vector<TauBfdModule*> modules;
 };
@@ -396,6 +403,52 @@ extern "C"
 void Tau_bfd_register_objopen_counter(objopen_counter_t handle)
 {
   objopen_counter = handle;
+}
+
+#if defined(__linux__) && !defined(TAU_BGP) && !defined(TAU_BGQ)
+static int Tau_bfd_internal_exec_bias_cb(struct dl_phdr_info * info, size_t, void * data)
+{
+  *(unsigned long *)data = (unsigned long)info->dlpi_addr;
+  return 1;  // stop after the first entry (executable)
+}
+
+static bool Tau_bfd_internal_exec_bias_from_auxv(unsigned long & bias)
+{
+  const ElfW(Phdr) * phdr = (const ElfW(Phdr) *)getauxval(AT_PHDR);
+  unsigned long phnum = getauxval(AT_PHNUM);
+  if (!phdr || !phnum) {
+    return false;
+  }
+  for (unsigned long i = 0; i < phnum; ++i) {
+    if (phdr[i].p_type == PT_PHDR) {
+      bias = (unsigned long)phdr - (unsigned long)phdr[i].p_vaddr;
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
+// Returns the executable's load bias, computing it on the first call.
+static unsigned long Tau_bfd_internal_getExecutableLoadBias(TauBfdUnit * unit)
+{
+  if (unit->executableLoadBiasKnown) {
+    return unit->executableLoadBias;
+  }
+  unsigned long bias = 0;
+#if defined(__linux__) && !defined(TAU_BGP) && !defined(TAU_BGQ)
+  if (dl_iterate_phdr(Tau_bfd_internal_exec_bias_cb, &bias) == 0) {
+    // fall back to the aux vector.
+    if (!Tau_bfd_internal_exec_bias_from_auxv(bias)) {
+      bias = 0;
+      TAU_VERBOSE("TAU_BFD: could not determine executable load bias; assuming 0\n");
+    }
+  }
+  TAU_VERBOSE("TAU_BFD: executable load bias is 0x%lx\n", bias);
+#endif
+  unit->executableLoadBias = bias;
+  unit->executableLoadBiasKnown = true;
+  return bias;
 }
 
 //
@@ -771,10 +824,11 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     }
     module = unit->executableModule;
 
-    // Calculate search addresses for executable search
-    // Only the first address is valid for the executable
+    // No mapping contains the address; assume it is in the executable. 
+    // Try the address as-is, then rebased by the load bias (PIE).
+    unsigned long bias = Tau_bfd_internal_getExecutableLoadBias(unit);
     addr0 = probeAddr;
-    addr1 = probeAddr + unit->executableModule->textOffset;
+    addr1 = bias ? probeAddr - bias : 0;
     addr2 = 0;
   }
 
@@ -783,9 +837,8 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   LocateAddressData data(module, info);
   bfd_map_over_sections(module->bfdImage, Tau_bfd_internal_locateAddress, &data);
 
-  // If the data wasn't found where we expected and we are searching
-  // in a module, try a few more addresses
-  if (!data.found && (module != unit->executableModule)) {
+  // If the data wasn't found where we expected, try a few more addresses
+  if (!data.found) {
     // Try the second address
     if (addr1 && addr0 != addr1) {
       info.probeAddr = getProbeAddr(module->bfdImage, addr1);
@@ -796,8 +849,8 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
       info.probeAddr = getProbeAddr(module->bfdImage, addr2);
       bfd_map_over_sections(module->bfdImage, Tau_bfd_internal_locateAddress, &data);
     }
-    // Try the executable
-    if (!data.found && Tau_bfd_internal_loadExecSymTab(unit)) {
+    // If we were searching a module, try the executable
+    if (!data.found && (module != unit->executableModule) && Tau_bfd_internal_loadExecSymTab(unit)) {
       info.probeAddr = getProbeAddr(module->bfdImage, probeAddr);
       bfd_map_over_sections(unit->executableModule->bfdImage, Tau_bfd_internal_locateAddress, &data);
     }
@@ -936,8 +989,7 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, TauBfdIterFn fn)
     return module->processCode;
   }
 
-  // Process the symbol table
-  Tau_bfd_internal_iterateOverSymtab(module, fn, 0);
+  Tau_bfd_internal_iterateOverSymtab(module, fn, Tau_bfd_internal_getExecutableLoadBias(unit));
 
   module->processCode = TAU_BFD_SYMTAB_LOAD_SUCCESS;
   return module->processCode;
