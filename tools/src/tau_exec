@@ -1269,6 +1269,61 @@ if [ "$julia_wrapper" = "true" -a ! "x$isPthread" == "x" \
   fi
 fi
 
+# For Julia, preload the libunwind that Julia's own runtime provides.
+# Julia has patched their libunwind to be ABI-incompatible with upstream
+# libunwind, albeit not in any of the functions that TAU itself uses,
+# so we can substitute TAU's libunwind with Julia's, but we *can't* go
+# the other way -- substituting Julia's libunwind with TAU's will cause
+# Julia to segfault. Optionally ontrolled with:
+#   TAU_JULIA_PRELOAD_UNWIND=0        disable
+#   TAU_JULIA_UNWIND_LIB=<a>[:<b>]    override discovery with explicit paths
+julia_target_bin=""
+if [ "$julia_wrapper" = "true" ]; then
+  julia_target_bin=$(command -v "$julia_interpreter" 2>/dev/null)
+else
+  case "$(basename "${1:-}")" in
+    julia|julia-*|julia.*) julia_target_bin=$(command -v "$1" 2>/dev/null) ;;
+  esac
+fi
+if [ -n "$julia_target_bin" -a "${TAU_JULIA_PRELOAD_UNWIND:-1}" != "0" ]; then
+  unwind_mk=$BASEDIR/lib/Makefile.tau-$(echo $theBinding | sed -e 's/shared-//g')
+  if [ -r "$unwind_mk" ] && grep -q '^UNWIND_LIB_FLAG=.' "$unwind_mk"; then
+    julia_unwind_libs=""
+    if [ -n "${TAU_JULIA_UNWIND_LIB:-}" ]; then
+      julia_unwind_libs="$TAU_JULIA_UNWIND_LIB"
+    else
+      julia_libdir=$(dirname "$(readlink -f "$julia_target_bin")")/../lib
+      for jl_internal in "$julia_libdir"/julia/libjulia-internal.so "$julia_libdir"/libjulia-internal.so \
+                         "$julia_libdir"/julia/libjulia-internal.so.* "$julia_libdir"/libjulia-internal.so.* ; do
+        [ -r "$jl_internal" ] || continue
+        julia_unwind_libs=$(ldd "$jl_internal" 2>/dev/null \
+            | awk '$1 ~ /^libunwind(-[a-z0-9_]+)?\.so\.8$/ && $3 ~ /^\// {print $3}' \
+            | tr '\n' ':' | sed -e 's/:$//')
+        [ -n "$julia_unwind_libs" ] && break
+      done
+      # If Julia's runtime needs only libunwind.so.8 but the same build ships the arch
+      # library next to it, take that one too rather than letting libTAU's copy fill in.
+      if [ -n "$julia_unwind_libs" ] && ! echo "$julia_unwind_libs" | grep -q 'libunwind-'; then
+        julia_unwind_arch=$(dirname "${julia_unwind_libs%%:*}")/libunwind-$(uname -m).so.8
+        [ -r "$julia_unwind_arch" ] && julia_unwind_libs="$julia_unwind_libs:$julia_unwind_arch"
+      fi
+      if [ -z "$julia_unwind_libs" ]; then
+        # e.g. a distribution Julia on the system libunwind
+        julia_unwind_libs=$("$julia_target_bin" --startup-file=no -e 'using Libdl; print(join(filter(l -> occursin(r"^libunwind(-[a-z0-9_]+)?\.so\.8$", basename(l)), dllist()), ":"))' 2>/dev/null)
+      fi
+    fi
+    if [ -n "$julia_unwind_libs" ]; then
+      TAUEX_LD_PRELOAD="$julia_unwind_libs:$TAUEX_LD_PRELOAD"
+      if [ $verbose = "true" ]; then
+        echo "Preloading Julia's libunwind ($(basename "$julia_target_bin")): $julia_unwind_libs"
+      fi
+    elif [ $verbose = "true" ]; then
+      echo "NOTE: could not determine which libunwind $julia_target_bin uses;"
+      echo "      TAU's own libunwind will be the loaded instance. Set TAU_JULIA_UNWIND_LIB to override."
+    fi
+  fi
+fi
+
 # When using Julia, preload the OpenBLAS server wrapper so that we can instrument
 # work on BLAS worker threads. 
 if [ "$julia_wrapper" = "true" -a "${TAU_BLAS_SERVER_HOOK:-1}" != "0" \
