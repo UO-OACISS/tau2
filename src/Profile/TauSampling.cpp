@@ -984,23 +984,29 @@ ExternalRangeNode * lookup_external_range(uintptr_t addr) {
     return NULL;
   }
 
+  // Ranges are keyed by start address in an ordered map, so the only candidate for
+  // addr is the LAST range whose start is <= addr. upper_bound() gives the first
+  // start > addr, so step back one to get it.
+  
   // First, check local cache
-  auto it = local_map->lower_bound(addr);
+  auto it = local_map->upper_bound(addr);
   // If in local cache, return from cache
-  if(it != local_map->end()) {
-    ExternalRangeNode * node = it->second;
+  if(it != local_map->begin()) {
+    ExternalRangeNode * node = (--it)->second;
     if(addr >= node->start && addr <= node->end) {
       return node;
     }
-  } else {
-    // Otherwise, look up in global map
+  }
+
+  // Otherwise, look up in global map.
+  {
     std::lock_guard<std::mutex> guard(TheExternalRangeMapMutex());
-    auto global_it = TheExternalRangeMap().lower_bound(addr);
-    if(global_it != TheExternalRangeMap().end()) {
-      ExternalRangeNode * node = global_it->second;
+    auto global_it = TheExternalRangeMap().upper_bound(addr);
+    if(global_it != TheExternalRangeMap().begin()) {
+      ExternalRangeNode * node = (--global_it)->second;
       if(addr >= node->start && addr <= node->end) {
-        // If match, store in local cache and return
-        local_map->emplace(addr, node);
+        // If match, store in local cache and return.
+        local_map->emplace(node->start, node);
         return node;
       }
     }
