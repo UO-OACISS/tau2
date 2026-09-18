@@ -1600,7 +1600,7 @@ if [ $tau_use_ebs = "true" ] ; then
   if [ "x$tau_ebs_source" != "x" ] ; then
     export TAU_EBS_SOURCE=$tau_ebs_source
   fi
-  if [ "x$tau_ebs_unwind" != "x" ] ; then
+  if [ "x${tau_use_ebs_unwind:-}" = "xtrue" ] ; then
     export TAU_EBS_UNWIND=1
   fi
 fi

@@ -1656,7 +1656,11 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
   }
 
   // ok to be temporary. Hash table on the other end will copy the details.
-  unsigned long pcStack[TAU_SAMP_NUM_ADDRESSES + 1] = { 0 };
+  // Layout: 
+  //   pcStack[0] = count
+  //   pcStack[1] = sample PC,
+  //   pcStack[2..TAU_SAMP_NUM_ADDRESSES] = unwound PCs
+  unsigned long pcStack[TAU_SAMP_NUM_ADDRESSES + 2] = { 0 };
 
 #ifdef TAU_UNWIND
   if (TauEnv_get_ebs_unwind() == 1) {
@@ -1960,6 +1964,21 @@ int Tau_sampling_init(int tid, pid_t pid)
   TauInternalFunctionGuard protects_this_function;
 
   int threshold = TauEnv_get_ebs_period();
+
+#ifdef TAU_UNWIND
+  // Warn if unwind depth exceeds compile-time maximum
+  {
+    static bool depth_warned = false;
+    int requested_depth = TauEnv_get_ebs_unwind_depth();
+    if (!depth_warned && TauEnv_get_ebs_unwind() == 1 && requested_depth > TAU_SAMP_NUM_ADDRESSES) {
+      depth_warned = true;
+      fprintf(stderr, "TAU: Warning: requested EBS unwind depth of %d exceeds maximum of %d; "
+          "will unwind %d frames instead. Rebuild TAU with -useropt=-DTAU_SAMP_NUM_ADDRESSES=%d "
+          "to increase the maximum.\n",
+          requested_depth, TAU_SAMP_NUM_ADDRESSES, TAU_SAMP_NUM_ADDRESSES, requested_depth);
+    }
+  }
+#endif /* TAU_UNWIND */
 
 #if defined(TAU_USE_PGS)
   static pthread_once_t key_initialized = PTHREAD_ONCE_INIT;

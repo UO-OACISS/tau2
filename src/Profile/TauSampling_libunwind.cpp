@@ -149,7 +149,8 @@ void Tau_sampling_unwindTauContext(int tid, void **addresses) {
 
 void Tau_sampling_unwind(int tid, Profiler *profiler,
 			 void *pc, void *context, unsigned long pcStack[]) {
-  // stack points to valid array of max length TAU_SAMP_NUM_ADDRESSES + 1.
+  // stack points to valid array of max length TAU_SAMP_NUM_ADDRESSES + 2:
+  // count, PC, then up to TAU_SAMP_NUM_ADDRESSES unwound callers
   unw_cursor_t cursor;
   unw_context_t uc;
   unw_word_t unwind_ip; //, sp;

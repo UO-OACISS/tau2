@@ -205,7 +205,7 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
     
     #endif
     //Instructions issued
-    std::string snap_string = "Scheduler issued [" ;
+    std::string snap_string = "Arbiter issued [" ;
     if(snapshot.arb_state_issue_brmsg)
     {
         snap_string += " Branch/Message,";
@@ -262,7 +262,7 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
     snap_string+="] ";
     snap_string = (issued==0)? "" : snap_string;
     //Stalls
-    std::string stall_string = "Scheduler stalled [";
+    std::string stall_string = "Instruction stalled [";
     if(snapshot.arb_state_stall_brmsg)
     {
         stall_string += " Branch/Message,";
@@ -313,11 +313,11 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
         stall_string += " Texture,";
         stalled++;
     }
-    stall_string+="] ter an";
+    stall_string+="] ";
     stall_string = (stalled==0)? "" : stall_string;
 
     //std::cout << snap_string  << " " << stall_string << std::endl;
-    std::string stall_snap_string = stall_string + snap_string;
+    std::string stall_snap_string = snap_string + stall_string ;
     return stall_snap_string;
     /*
     ss_debug << "!! SNAPSHOT " ;
@@ -721,9 +721,9 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
                     continue;
                 
-                #ifdef ROCSDK_PC_DEBUG     
-                ss_debug << "ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE" <<std::endl;
-                ss_debug << "(code_obj_id, offset): (" << pc_sample->pc.code_object_id << ", 0x"
+                #ifdef ROCSDK_PC_DEBUG  
+                std::cout << "ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE"
+                       << "(code_obj_id, offset): (" << pc_sample->pc.code_object_id << ", 0x"
                        << std::hex << pc_sample->pc.code_object_offset << "), "
                        << "timestamp: " << std::dec << pc_sample->timestamp << ", "
                        << "timestamp+interval: "<< std::dec << pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle] << ", "

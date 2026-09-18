@@ -29,6 +29,9 @@
 #include <elf-bfd.h>
 #endif
 #include <dirent.h>
+#if defined(__linux__)
+#include <link.h>
+#endif
 #include <stdint.h>
 
 #if defined(HAVE_GNU_DEMANGLE)
@@ -357,12 +360,29 @@ void Tau_delete_bfd_units() {
 typedef int * (*objopen_counter_t)(void);
 objopen_counter_t objopen_counter = NULL;
 
+#if defined(__linux__) && !defined(TAU_BGP) && !defined(TAU_BGQ)
+// Hash to check whether phdrs have changed (for example, if
+// a new library has been loaded since we last checked).
+static int Tau_bfd_internal_phdr_hash_cb(struct dl_phdr_info * info, size_t, void * data)
+{
+  unsigned int * h = (unsigned int *)data;
+  *h = *h * 31u + (unsigned int)(info->dlpi_addr >> 12) + 1u;
+  return 0;
+}
+#endif
+
 int get_objopen_counter(void)
 {
   if (objopen_counter) {
     return *(objopen_counter());
   }
+#if defined(__linux__) && !defined(TAU_BGP) && !defined(TAU_BGQ)
+  unsigned int h = 0;
+  dl_iterate_phdr(Tau_bfd_internal_phdr_hash_cb, &h);
+  return (int)(h & 0x7fffffff);
+#else
   return 0;
+#endif
 }
 
 void set_objopen_counter(int value)
@@ -739,7 +759,9 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     addr2 = addr1 + module->textOffset;
 #else
     addr0 = probeAddr;
-    addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
+    // Module-relative address (link-time VMA). A PT_LOAD segment maps file offset
+    // p_offset at p_vaddr, so the load base of this mapping is start - offset.
+    addr1 = probeAddr - (unit->addressMaps[matchingIdx]->start - unit->addressMaps[matchingIdx]->offset);
     addr2 = addr1 + module->textOffset;
 #endif
   } else {
