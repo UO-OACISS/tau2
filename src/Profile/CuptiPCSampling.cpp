@@ -161,14 +161,45 @@ std::string resolved_sample(  TAUCuptiIdSamples sample, TAUCuptiStalls stalls,
 {
     int status;
     std::stringstream st_sample;
-    st_sample << abi::__cxa_demangle(sample.functionName.c_str(), 0, 0, &status)
-        << " [{" << pCSamplingGetSassToSourceCorrelationParams.dirName
-        << "/" << pCSamplingGetSassToSourceCorrelationParams.fileName
-        << "},{" << pCSamplingGetSassToSourceCorrelationParams.lineNumber << "}]";
-        //<< "; pcOffset: " << sample.pcOffset
-        //<< "; contextUid: " << sample.contextUid
-        //<< "; stallReasons: " << stalls.stallReasonCount;
+    char* demangled_kernel = abi::__cxa_demangle(sample.functionName.c_str(), 0, 0, &status);
+    if(demangled_kernel == nullptr)
+    {
+	static std::string omp_off_string = "nvkernel_";
+        std::string event = "";
+	char* dem_name;
+	if( strncmp(sample.functionName.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
+        {
+            std::string name_aux = sample.functionName;
+            int pos_key=name_aux.find_first_of('_')+1;
+	    event = event + "OMP OFFLOADING ";
+            event = event + name_aux.substr(pos_key,name_aux.find_last_of("F")-pos_key-1).c_str();
+	    event = event + " [{";
+	    event = event + pCSamplingGetSassToSourceCorrelationParams.dirName;
+	    event = event + "/";
+	    event = event +  pCSamplingGetSassToSourceCorrelationParams.fileName;
+	    event = event + "},{";
+	    event = event + std::to_string(pCSamplingGetSassToSourceCorrelationParams.lineNumber);
+	    event = event + "}]";
+
+        }
+	else
+	{
+	   event = sample.functionName;
+	}
+	st_sample << event;
+    }
+    else
+    {
+	st_sample << demangled_kernel
+        	  << " [{" << pCSamplingGetSassToSourceCorrelationParams.dirName
+	          << "/" << pCSamplingGetSassToSourceCorrelationParams.fileName
+	          << "},{" << pCSamplingGetSassToSourceCorrelationParams.lineNumber << "}]";
+	        //<< "; pcOffset: " << sample.pcOffset
+	        //<< "; contextUid: " << sample.contextUid
+        	//<< "; stallReasons: " << stalls.stallReasonCount;
         st_sample  << "]";
+    }
+     //std::cout << "!! " << sample.functionName.c_str() << " -- " << st_sample.str() << std::endl;
     return st_sample.str();
 }
 
@@ -231,7 +262,7 @@ void Tau_store_all_CUPTIPC_samples()
                     sample_string = unresolved_sample(curr_sample.first, curr_sample.second);
                 }
                 else
-                {
+		{
                     sample_string = resolved_sample(curr_sample.first, curr_sample.second, pCSamplingGetSassToSourceCorrelationParams);
                 }
                 free(pCSamplingGetSassToSourceCorrelationParams.fileName);
@@ -249,7 +280,7 @@ void Tau_store_all_CUPTIPC_samples()
         for (auto curr_stall : curr_sample.second.stallReason)
         {
             void* ue = nullptr;
-            std::string this_stall = GetStallReason(curr_stall.first) + " " + sample_string;
+            std::string this_stall = "[cupti sample] " + GetStallReason(curr_stall.first) + " " + sample_string;
             ue = Tau_get_userevent(this_stall.c_str());
             Tau_userevent_thread(ue, (double)(curr_stall.second), taskid);
         }
