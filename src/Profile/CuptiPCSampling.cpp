@@ -280,7 +280,7 @@ void Tau_store_all_CUPTIPC_samples()
         for (auto curr_stall : curr_sample.second.stallReason)
         {
             void* ue = nullptr;
-            std::string this_stall = "[cupti sample] " + GetStallReason(curr_stall.first) + " " + sample_string;
+            std::string this_stall = "[cupti sample] Stall reason [" + GetStallReason(curr_stall.first) + "] " + sample_string;
             ue = Tau_get_userevent(this_stall.c_str());
             Tau_userevent_thread(ue, (double)(curr_stall.second), taskid);
         }
