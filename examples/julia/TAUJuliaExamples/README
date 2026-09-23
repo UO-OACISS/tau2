@@ -480,3 +480,19 @@ variable or pass the `-t` flag to Julia:
 
     tau_julia -T serial,julia,ittnotify,pthread -- -t 4 --project=. ./src/Threads_RewriteInst.jl
 
+
+-----------------------------------------------------
+
+Example 12: TimerOutputs.jl Sections
+
+Many Julia codes already carry `@timeit` sections from TimerOutputs.jl.
+When `tau_julia` is used, sections annotated with `@timeit` will receive
+TAU instrumentation in addition to instrumentation from TimerOutputs.
+
+The example `TimerOutputsExample.jl` demonstrates this:
+
+    tau_julia -T serial,julia,ittnotify,pthread -- --project=. ./src/TimerOutputsExample.jl
+
+Run `pprof -a` to view the results.
+
+

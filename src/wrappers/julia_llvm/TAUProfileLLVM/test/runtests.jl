@@ -17,3 +17,16 @@ end
 if _cuda_in_active_project()
     include("test_cuda_safety.jl")
 end
+
+# The TimerOutputs bridge (src/wrappers/julia_timeroutputs/tau_timeroutputs.jl) runs only when
+# TimerOutputs is a direct dependency of the active project.
+function _timeroutputs_in_active_project()
+    proj = Base.active_project()
+    proj === nothing && return false
+    isfile(proj) || return false
+    return haskey(get(Base.parsed_toml(proj), "deps", Dict{String,Any}()), "TimerOutputs")
+end
+
+if _timeroutputs_in_active_project()
+    include("test_timeroutputs.jl")
+end

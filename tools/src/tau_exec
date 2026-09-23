@@ -88,6 +88,8 @@ fi
 julia_backend=llvm
 julia_backend_explicit=false
 julia_interpreter=""
+# TimerOutputs.jl sections as TAU timers
+tau_timeroutputs=""
 
 if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
   on_craycnl=true
@@ -183,6 +185,7 @@ if [ $julia_wrapper = "true" ] ; then
   echo "        -julia-llvm   Use the LLVM-plugin Julia instrumentation backend (default)"
   echo "        -julia-legacy Use the legacy AbstractInterpreter Julia backend (requires a TAU build with -julia-legacy)"
   echo "        -tau-julia-interpreter=<\"julia\"> path of julia interpreter (default: the one TAU was configured with)"
+  echo "        -[no-]timeroutputs  Whether to instrument TimerOutputs.jl regions"
 fi
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
@@ -745,6 +748,16 @@ for arg in "$@" ; do
         ;;
       -ebs_unwind)
         tau_use_ebs_unwind=true
+        save_arg $arg
+        shift
+        ;;
+      -timeroutputs)
+        tau_timeroutputs=1
+        save_arg $arg
+        shift
+        ;;
+      -no-timeroutputs)
+        tau_timeroutputs=0
         save_arg $arg
         shift
         ;;
@@ -1321,6 +1334,29 @@ if [ -n "$julia_target_bin" -a "${TAU_JULIA_PRELOAD_UNWIND:-1}" != "0" ]; then
       echo "NOTE: could not determine which libunwind $julia_target_bin uses;"
       echo "      TAU's own libunwind will be the loaded instance. Set TAU_JULIA_UNWIND_LIB to override."
     fi
+  fi
+fi
+
+# For Julia targets, load src/wrappers/julia_timeroutputs/tau_timeroutputs.jl
+# to instrument TimerOutputs.jl regions.
+if [ -n "$julia_target_bin" ]; then
+  tau_timeroutputs_hook=$BASEDIR/lib/tau_timeroutputs.jl
+  if [ "${tau_timeroutputs:-${TAU_TIMEROUTPUTS:-1}}" = "0" ]; then
+    [ $verbose = "true" ] && echo "TimerOutputs hook disabled"
+  elif [ ! -r "$tau_timeroutputs_hook" ]; then
+    [ $verbose = "true" ] && echo "NOTE: TimerOutputs hook not installed at $tau_timeroutputs_hook"
+  else
+    if [ "$julia_wrapper" = "true" ]; then
+      set -- -L "$tau_timeroutputs_hook" "$@"
+    else
+      julia_target_arg0=$1
+      shift
+      set -- "$julia_target_arg0" -L "$tau_timeroutputs_hook" "$@"
+    fi
+    [ $verbose = "true" ] && echo "Loading TimerOutputs hook: -L $tau_timeroutputs_hook"
+  fi
+  if [ "$julia_wrapper" != "true" -a -z "$TAU_JULIA_LIB" ]; then
+    export TAU_JULIA_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
   fi
 fi
 
