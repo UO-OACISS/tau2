@@ -1344,7 +1344,12 @@ if [ -n "$julia_target_bin" ]; then
   if [ "${tau_timeroutputs:-${TAU_TIMEROUTPUTS:-1}}" = "0" ]; then
     [ $verbose = "true" ] && echo "TimerOutputs hook disabled"
   elif [ ! -r "$tau_timeroutputs_hook" ]; then
-    [ $verbose = "true" ] && echo "NOTE: TimerOutputs hook not installed at $tau_timeroutputs_hook"
+    # The hook is only installed by configurations built with -julia.
+    if [ "$tau_timeroutputs" = "1" ]; then
+      warn_missing_lib "TimerOutputs hook (tau_timeroutputs.jl)" "-julia" "TimerOutputs.jl instrumentation"
+    elif [ $verbose = "true" ]; then
+      echo "NOTE: TimerOutputs hook not installed at $tau_timeroutputs_hook (requires a TAU build with -julia)"
+    fi
   else
     if [ "$julia_wrapper" = "true" ]; then
       set -- -L "$tau_timeroutputs_hook" "$@"
