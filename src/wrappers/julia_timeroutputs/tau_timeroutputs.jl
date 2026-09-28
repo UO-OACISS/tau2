@@ -10,14 +10,21 @@
 # Environment:
 #   TAU_TIMEROUTPUTS_PREFIX    prepended to every TAU timer name
 #   TAU_TIMEROUTPUTS_REPORT=1  at exit, print the merge of every TimerOutput seen to stderr
+#   TAU_TIMEROUTPUTS_REPORT_EACH=1
+#                              at exit, also print every TimerOutput seen, separately, in
+#                              the order they were first used
+#   TAU_TIMEROUTPUTS_ITERATE=a,b
+#                              sections with these labels get one TAU timer per invocation
 #   TAU_TIMEROUTPUTS_VERBOSE=1 verbose output; print whether TimerOutputs was hooked
 #   TAU_JULIA_LIB              libTAU to dlopen when none is preloaded
 module TAUTimerOutputs
 
 const TO_UUID = Base.UUID("a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f")
 const VERBOSE = get(ENV, "TAU_TIMEROUTPUTS_VERBOSE", "0") != "0"
-const REPORT  = get(ENV, "TAU_TIMEROUTPUTS_REPORT", "0") != "0"
+const REPORT_EACH = get(ENV, "TAU_TIMEROUTPUTS_REPORT_EACH", "0") != "0"
+const REPORT  = REPORT_EACH || get(ENV, "TAU_TIMEROUTPUTS_REPORT", "0") != "0"
 const PREFIX  = get(ENV, "TAU_TIMEROUTPUTS_PREFIX", "")
+const ITERATE = Set{String}(filter(!isempty, String.(strip.(split(get(ENV, "TAU_TIMEROUTPUTS_ITERATE", ""), ',')))))
 const GROUP   = "TimerOutputs"
 
 _say(msg) = println(stderr, "tau_timeroutputs: ", msg)
@@ -63,6 +70,14 @@ function _handle(label::String)
     end
 end
 
+const iterations = Dict{String,Int}()
+
+# "<label>[n]" for the n-th invocation of an ITERATE label.
+@noinline function _iter_handle(label::String)
+    n = @lock hlock (iterations[label] = get(iterations, label, 0) + 1)
+    _handle(string(label, '[', n, ']'))
+end
+
 @noinline function _grow!(tid::Int)
     @lock hlock while length(stacks) < tid
         push!(stacks, Ptr{Cvoid}[])
@@ -79,7 +94,7 @@ end
 function on_push(label::String)
     active || return nothing
     current_task().sticky = true
-    h = _handle(label)
+    h = (isempty(ITERATE) || !(label in ITERATE)) ? _handle(label) : _iter_handle(label)
     push!(_stack(), h)
     ccall(P_START, Cvoid, (Ptr{Cvoid}, Cint, Cint), h, 0, ccall(P_TID, Cint, ()))
     nothing
@@ -95,7 +110,13 @@ function on_pop()
 end
 
 const seen = WeakKeyDict{Any,Nothing}()
-_note(to) = (haskey(seen, to) || (seen[to] = nothing); nothing)
+const seen_order = WeakRef[]     # first-use order, for REPORT_EACH
+function _note(to)
+    haskey(seen, to) && return nothing
+    seen[to] = nothing
+    REPORT_EACH && push!(seen_order, WeakRef(to))
+    nothing
+end
 
 function _report(TO::Module)
     tos = collect(keys(seen))
@@ -108,6 +129,14 @@ function _report(TO::Module)
         println(stderr, "tau_timeroutputs: merged TimerOutputs table ($(length(tos)) timer object(s)):")
         TO.print_timer(stderr, merged)
         println(stderr)
+        if REPORT_EACH
+            live = filter(!isnothing, [w.value for w in seen_order])
+            for (k, to) in enumerate(live)
+                println(stderr, "tau_timeroutputs: timer object $k of $(length(live)) (first-use order):")
+                TO.print_timer(stderr, to)
+                println(stderr)
+            end
+        end
     catch err
         _say("report failed: $err")
     end
@@ -177,7 +206,8 @@ function install(TO::Module)
     installed[] = true
     REPORT && atexit(() -> _report(TO))
     VERBOSE && _say("TimerOutputs $v: sections instrumented with TAU timers (group $GROUP" *
-                    (isempty(PREFIX) ? "" : ", prefix \"$PREFIX\"") * ")")
+                    (isempty(PREFIX) ? "" : ", prefix \"$PREFIX\"") *
+                    (isempty(ITERATE) ? "" : ", per-invocation timers for " * join(sort!(collect(ITERATE)), ", ")) * ")")
     nothing
 end
 

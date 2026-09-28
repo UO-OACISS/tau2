@@ -40,6 +40,7 @@ function _to_run(body::String; mode::Symbol=:dlopen, env=Dict{String,String}(),
         e = copy(ENV)
         delete!(e, "TAU_TIMEROUTPUTS_REPORT"); delete!(e, "TAU_TIMEROUTPUTS_VERBOSE")
         delete!(e, "TAU_TIMEROUTPUTS_PREFIX"); delete!(e, "TAU_CALLPATH")
+        delete!(e, "TAU_TIMEROUTPUTS_ITERATE"); delete!(e, "TAU_TIMEROUTPUTS_REPORT_EACH")
         mode === :plain ? delete!(e, "TAU_JULIA_LIB") : (e["TAU_JULIA_LIB"] = _TO_LIB)
         merge!(e, env)
         outbuf, errbuf = IOBuffer(), IOBuffer()
@@ -159,7 +160,7 @@ println("has_off=", haskey(to, "off"), " has_on=", haskey(to, "on"), " has_notim
         to = TimerOutput()
         @timeit to "x" 1 + 1
         @test TimerOutputs.ncalls(to["x"]) == 1
-        @test isempty(H.handles)   C             # nothing created without TAU
+        @test isempty(H.handles)               # nothing created without TAU
         module_without_version = Module(:NotAPackage)
         err = mktemp() do path, io
             redirect_stderr(io) do
@@ -266,9 +267,32 @@ println("has_off=", haskey(to, "off"), " has_on=", haskey(to, "on"), " has_notim
                 env=Dict("TAU_TIMEROUTPUTS_PREFIX" => "sw: ", "TAU_TIMEROUTPUTS_REPORT" => "1",
                          "TAU_TIMEROUTPUTS_VERBOSE" => "1"))
             @test _calls(rows, "sw: outer") == 3 && !haskey(rows, "outer")
-            @test occursin("sections are TAU timers", err) && occursin("prefix \"sw: \"", err)
+            @test occursin("sections instrumented with TAU timers", err) && occursin("prefix \"sw: \"", err)
             @test occursin("merged TimerOutputs table (3 timer object(s))", err)
             @test occursin("outer", err) && occursin("inner", err)
+        end
+
+        @testset "$mode: per-invocation timers (ITERATE) and per-object report" begin
+            rows, out, err, _ = _to_run(_TOY; mode=mode,
+                env=Dict("TAU_CALLPATH" => "1", "TAU_TIMEROUTPUTS_ITERATE" => " outer ,nosuchlabel",
+                         "TAU_TIMEROUTPUTS_REPORT_EACH" => "1", "TAU_TIMEROUTPUTS_VERBOSE" => "1"))
+            @test occursin("TO outer=3 inner=30 throws=3", out)      # TimerOutputs unchanged
+            @test !haskey(rows, "outer")                              # replaced, not nested
+            for k in 1:3
+                @test _calls(rows, "outer[$k]") == 1
+                @test rows["outer[$k]"][3] == "TimerOutputs"
+                @test _calls(rows, "outer[$k] => inner") == 10         # children split by iteration
+                @test _calls(rows, "outer[$k] => throws") == 1         # closed on exceptional exit
+            end
+            @test !haskey(rows, "outer[4]")
+            @test _calls(rows, "inner") == 30 && _calls(rows, "throws") == 3   # flat = whole run
+            @test sum(rows["outer[$k]"][2] for k in 1:3) >= rows["inner"][2] + rows["throws"][2]
+            @test occursin("per-invocation timers for nosuchlabel, outer", err)
+            @test occursin("merged TimerOutputs table (3 timer object(s))", err)
+            for k in 1:3
+                @test occursin("timer object $k of 3 (first-use order)", err)
+            end
+            @test !occursin("mismatch", lowercase(err)) && !occursin("overlapping", lowercase(err))
         end
 
         @testset "$mode: no TimerOutputs in the environment" begin
