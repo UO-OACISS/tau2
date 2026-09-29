@@ -41,6 +41,7 @@ function _to_run(body::String; mode::Symbol=:dlopen, env=Dict{String,String}(),
         delete!(e, "TAU_TIMEROUTPUTS_REPORT"); delete!(e, "TAU_TIMEROUTPUTS_VERBOSE")
         delete!(e, "TAU_TIMEROUTPUTS_PREFIX"); delete!(e, "TAU_CALLPATH")
         delete!(e, "TAU_TIMEROUTPUTS_ITERATE"); delete!(e, "TAU_TIMEROUTPUTS_REPORT_EACH")
+        delete!(e, "TAU_TIMEROUTPUTS_GCSTATS"); delete!(e, "TAU_JULIA_GC"); delete!(e, "TAU_JULIA_GC_LIB"); delete!(e, "TAU_CALLPATH_DEPTH")
         mode === :plain ? delete!(e, "TAU_JULIA_LIB") : (e["TAU_JULIA_LIB"] = _TO_LIB)
         merge!(e, env)
         outbuf, errbuf = IOBuffer(), IOBuffer()
@@ -50,7 +51,7 @@ function _to_run(body::String; mode::Symbol=:dlopen, env=Dict{String,String}(),
         @test ok == expect_ok
         profs = filter(f -> startswith(f, "profile."), readdir(dir))
         content = join(read(joinpath(dir, p), String) for p in profs)
-        (_rows(content), out, err, profs)
+        (_rows(content), out, err, profs, _events(content))
     end
 end
 
@@ -64,6 +65,24 @@ function _rows(content::String)
 end
 
 _calls(rows, name) = haskey(rows, name) ? rows[name][1] : 0
+
+# User events: name => (count, max, min, mean)
+function _events(content::String)
+    evs = Dict{String,NTuple{4,Float64}}()
+    for m in eachmatch(r"^\"(.*)\" (\d+) ([\d.eE+-]+) ([\d.eE+-]+) ([\d.eE+-]+) [\d.eE+-]+$"m, content)
+        evs[m.captures[1]] = (parse(Float64, m.captures[2]), parse(Float64, m.captures[3]),
+                              parse(Float64, m.captures[4]), parse(Float64, m.captures[5]))
+    end
+    evs
+end
+
+# The event `name` in the context of `path` (a suffix of the context callpath).
+function _ev(evs, name, path)
+    for (k, v) in evs
+        startswith(k, "$name : ") && (endswith(k, " : $path") || endswith(k, " => $path")) && return v
+    end
+    (0.0, 0.0, 0.0, 0.0)
+end
 
 # Three per-"sweep" timers passed down as argument
 const _TOY = """
@@ -125,6 +144,25 @@ to = TimerOutput()
 end
 @timeit to "c" 1 + 1
 println("done")
+"""
+
+# Known allocations in sections, after warming up so compilation is not counted.
+const _GCTOY = """
+using TimerOutputs
+const to = TimerOutput()
+big() = sum(zeros(10^6))                                     # one 8 MB buffer from malloc
+small() = (s = 0.0; for i in 1:1000; s += sum(zeros(100)); end; s)   # pool objects only
+big(); small()
+let w = TimerOutput(); @timeit w "a" (@timeit w "b" big()); end    # compile TimerOutputs' own paths
+@timeit to "top" begin
+    @timeit to "big" big()
+    @timeit to "small" small()
+    @timeit to "gc" GC.gc()
+    @timeit to "outer" (@timeit to "inner" big())
+end
+n = Base.gc_num()
+println("TO big=", TimerOutputs.allocated(to["top"]["big"]), " small=", TimerOutputs.allocated(to["top"]["small"]),
+        " pauses=", n.pause, " gctime=", n.total_time)
 """
 
 const _DISABLED = """
@@ -293,6 +331,71 @@ println("has_off=", haskey(to, "off"), " has_on=", haskey(to, "on"), " has_notim
                 @test occursin("timer object $k of 3 (first-use order)", err)
             end
             @test !occursin("mismatch", lowercase(err)) && !occursin("overlapping", lowercase(err))
+        end
+
+        @testset "$mode: GC counters per section (GCSTATS)" begin
+            rows, out, err, _, evs = _to_run(_GCTOY; mode=mode,
+                env=Dict("TAU_CALLPATH" => "1", "TAU_TIMEROUTPUTS_GCSTATS" => "1", "TAU_TIMEROUTPUTS_VERBOSE" => "1"))
+            m = match(r"TO big=(\d+) small=(\d+)", out)
+            @test m !== nothing
+            to_big, to_small = parse(Int, m[1]), parse(Int, m[2])
+            @test occursin("GC counters as context events", err)
+            @test _calls(rows, "big") == 1 && _calls(rows, "top => big") == 1        # timers unchanged
+            for n in ("Julia allocated bytes", "Julia allocations", "Julia malloc allocations",
+                      "Julia GC collections", "Julia GC full collections", "Julia GC time (s)")
+                @test _ev(evs, n, "big")[1] == 1                                   # one value per section call
+            end
+            # bytes agree with TimerOutputs' own (its window is a little narrower)
+            @test abs(_ev(evs, "Julia allocated bytes", "big")[4] - to_big) < 4096
+            @test abs(_ev(evs, "Julia allocated bytes", "small")[4] - to_small) < 4096
+            @test _ev(evs, "Julia malloc allocations", "big")[4] >= 1              # the 8 MB buffer
+            @test _ev(evs, "Julia malloc allocations", "small")[4] == 0            # pool objects only
+            @test _ev(evs, "Julia allocations", "small")[4] >= 1000
+            @test _ev(evs, "Julia GC collections", "gc")[4] >= 1
+            @test _ev(evs, "Julia GC full collections", "gc")[4] >= 1              # GC.gc() is a full collection
+            @test _ev(evs, "Julia GC time (s)", "gc")[4] > 0
+            # inclusive of nested sections
+            @test _ev(evs, "Julia allocated bytes", "outer")[4] >= _ev(evs, "Julia allocated bytes", "outer => inner")[4] >= 8_000_000
+            @test _ev(evs, "Julia GC collections", "top")[4] >= _ev(evs, "Julia GC collections", "gc")[4]
+            @test !any(k -> startswith(k, "Julia GC pause"), keys(evs))           # GC timer is separate
+            # off by default
+            rows, out, err, _, evs = _to_run(_GCTOY; mode=mode)
+            @test !any(k -> startswith(k, "Julia "), keys(evs))
+        end
+
+        @testset "$mode: garbage collections as a TAU timer (TAU_JULIA_GC)" begin
+            rows, out, err, _, evs = _to_run(_GCTOY; mode=mode,
+                env=Dict("TAU_CALLPATH" => "1", "TAU_JULIA_GC" => "1", "TAU_TIMEROUTPUTS_VERBOSE" => "1"))
+            m = match(r"pauses=(\d+) gctime=(\d+)", out)
+            @test m !== nothing
+            pauses, gctime_us = parse(Int, m[1]), parse(Int, m[2]) / 1000
+            @test occursin("timed as the TAU timer \"Julia GC\"", err)
+            @test haskey(rows, "Julia GC") && rows["Julia GC"][3] == "JULIA_GC"
+            @test pauses <= _calls(rows, "Julia GC") <= pauses + 1                 # every collection, once
+            @test _calls(rows, "gc => Julia GC") >= 1                              # in the triggering context
+            # matches Julia's own GC time (plus finalizers and the callbacks themselves)
+            @test 0.95 * gctime_us <= rows["Julia GC"][2] <= 1.5 * gctime_us + 1000
+            @test _ev(evs, "Julia GC pause (s)", "gc")[1] >= 1
+            @test _ev(evs, "Julia GC pause (s)", "gc")[2] > 0
+            @test _ev(evs, "Julia GC live bytes after collection", "gc")[4] > 0
+            @test !any(k -> startswith(k, "Julia allocated bytes"), keys(evs))     # GCSTATS is separate
+            @test !occursin("overlap", lowercase(err))
+            # off by default
+            rows, out, err, _, evs = _to_run(_GCTOY; mode=mode)
+            @test !haskey(rows, "Julia GC")
+            # the wrapper library is missing: say so, run normally
+            rows, out, err, _ = _to_run(_GCTOY; mode=mode,
+                env=Dict("TAU_JULIA_GC" => "1", "TAU_JULIA_GC_LIB" => "/nonexistent/libTAU-julia-gc.so"))
+            @test occursin("libTAU-julia-gc was not found", err)
+            @test occursin("pauses=", out) && !haskey(rows, "Julia GC")
+            # independent of TimerOutputs
+            mktempdir() do emptyenv
+                write(joinpath(emptyenv, "Project.toml"), "")
+                rows, out, err, _ = _to_run("GC.gc(); GC.gc(); println(\"ok\")"; mode=mode, project=emptyenv,
+                                            env=Dict("TAU_JULIA_GC" => "1"))
+                @test occursin("ok", out)
+                @test _calls(rows, "Julia GC") >= 2
+            end
         end
 
         @testset "$mode: no TimerOutputs in the environment" begin

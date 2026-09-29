@@ -15,7 +15,11 @@
 #                              the order they were first used
 #   TAU_TIMEROUTPUTS_ITERATE=a,b
 #                              sections with these labels get one TAU timer per invocation
+#   TAU_TIMEROUTPUTS_GCSTATS=1 at the end of each section, record Julia's allocation and GC counters
+#                              for it as TAU context events
 #   TAU_TIMEROUTPUTS_VERBOSE=1 verbose output; print whether TimerOutputs was hooked
+#   TAU_JULIA_GC=1             time every garbage collection as the TAU timer "Julia GC"
+#   TAU_JULIA_GC_LIB           libTAU-julia-gc to use instead
 #   TAU_JULIA_LIB              libTAU to dlopen when none is preloaded
 module TAUTimerOutputs
 
@@ -25,6 +29,8 @@ const REPORT_EACH = get(ENV, "TAU_TIMEROUTPUTS_REPORT_EACH", "0") != "0"
 const REPORT  = REPORT_EACH || get(ENV, "TAU_TIMEROUTPUTS_REPORT", "0") != "0"
 const PREFIX  = get(ENV, "TAU_TIMEROUTPUTS_PREFIX", "")
 const ITERATE = Set{String}(filter(!isempty, String.(strip.(split(get(ENV, "TAU_TIMEROUTPUTS_ITERATE", ""), ',')))))
+const GCSTATS = get(ENV, "TAU_TIMEROUTPUTS_GCSTATS", "0") != "0"
+const JULIA_GC = get(ENV, "TAU_JULIA_GC", "0") != "0"
 const GROUP   = "TimerOutputs"
 
 _say(msg) = println(stderr, "tau_timeroutputs: ", msg)
@@ -55,11 +61,14 @@ const _P = _resolve()
 const active = _P !== nothing
 const P_MK, P_START, P_STOP, P_TID, P_GRP, P_INIT, P_TOP, P_GETNODE, P_SETNODE =
     active ? _P : ntuple(_ -> C_NULL, 9)
+const P_GETUE, P_UE = active ? (_dlsym("Tau_get_context_userevent"), _dlsym("Tau_context_userevent")) :
+                               (C_NULL, C_NULL)
 
 const grp     = Ref{Culong}(0)
 const handles = Dict{String,Ptr{Cvoid}}()
 const hlock   = ReentrantLock()
 const stacks  = Vector{Vector{Ptr{Cvoid}}}()
+const gcstacks = Vector{Vector{Base.GC_Num}}()   # Julia's GC counters at each open section's start
 
 function _handle(label::String)
     @lock hlock get!(handles, label) do
@@ -81,6 +90,7 @@ end
 @noinline function _grow!(tid::Int)
     @lock hlock while length(stacks) < tid
         push!(stacks, Ptr{Cvoid}[])
+        push!(gcstacks, Base.GC_Num[])
     end
     nothing
 end
@@ -91,12 +101,36 @@ end
     @inbounds stacks[tid]
 end
 
+@inline _gcstack() = @inbounds gcstacks[Threads.threadid()]
+
+# Julia's GC counters over one section.
+# Base.gc_num() is process-wide and counts allocations across all threads.
+# "malloc allocations" are the GC-managed buffers too large for Julia's pools.
+const GCSTAT_NAMES = ("Julia allocated bytes", "Julia allocations", "Julia malloc allocations",
+                      "Julia GC collections", "Julia GC full collections", "Julia GC time (s)")
+_gcstat_values(d::Base.GC_Diff) =
+    (Float64(d.allocd), Float64(Base.gc_alloc_count(d)), Float64(d.malloc + d.realloc),
+     Float64(d.pause), Float64(d.full_sweep), 1.0e-9 * d.total_time)
+const gcstat_events = fill(C_NULL, length(GCSTAT_NAMES))
+
+@noinline function _gcstats_trigger()
+    now = Base.gc_num()
+    gst = _gcstack()
+    isempty(gst) && return nothing
+    vals = _gcstat_values(Base.GC_Diff(now, pop!(gst)))
+    for i in 1:length(GCSTAT_NAMES)
+        ccall(P_UE, Cvoid, (Ptr{Cvoid}, Cdouble), @inbounds(gcstat_events[i]), vals[i])
+    end
+    nothing
+end
+
 function on_push(label::String)
     active || return nothing
     current_task().sticky = true
     h = (isempty(ITERATE) || !(label in ITERATE)) ? _handle(label) : _iter_handle(label)
     push!(_stack(), h)
     ccall(P_START, Cvoid, (Ptr{Cvoid}, Cint, Cint), h, 0, ccall(P_TID, Cint, ()))
+    GCSTATS && push!(_gcstack(), Base.gc_num())   # last, so the hook's own allocations are excluded
     nothing
 end
 
@@ -104,6 +138,7 @@ function on_pop()
     active || return nothing
     st = _stack()
     isempty(st) && return nothing
+    GCSTATS && _gcstats_trigger()   # before the stop, so the events' context is this section
     h = pop!(st)
     ccall(P_STOP, Cvoid, (Ptr{Cvoid}, Cint), h, ccall(P_TID, Cint, ()))
     nothing
@@ -207,7 +242,8 @@ function install(TO::Module)
     REPORT && atexit(() -> _report(TO))
     VERBOSE && _say("TimerOutputs $v: sections instrumented with TAU timers (group $GROUP" *
                     (isempty(PREFIX) ? "" : ", prefix \"$PREFIX\"") *
-                    (isempty(ITERATE) ? "" : ", per-invocation timers for " * join(sort!(collect(ITERATE)), ", ")) * ")")
+                    (isempty(ITERATE) ? "" : ", per-invocation timers for " * join(sort!(collect(ITERATE)), ", ")) *
+                    (GCSTATS ? ", GC counters as context events" : "") * ")")
     nothing
 end
 
@@ -215,6 +251,52 @@ function _on_package_loaded(id::Base.PkgId)
     id.uuid == TO_UUID || return nothing
     m = get(Base.loaded_modules, id, nothing)
     m === nothing || install(m)
+    nothing
+end
+
+const gc_timed = Ref(false)
+const P_GC_PRE = Ref(C_NULL)
+const P_GC_POST = Ref(C_NULL)
+
+struct DlInfo
+    fname::Cstring
+    fbase::Ptr{Cvoid}
+    sname::Cstring
+    saddr::Ptr{Cvoid}
+end
+
+function _gc_lib()
+    lib = get(ENV, "TAU_JULIA_GC_LIB", "")
+    isempty(lib) || return lib
+    info = Ref{DlInfo}()
+    ccall(:dladdr, Cint, (Ptr{Cvoid}, Ptr{DlInfo}), P_START, info) == 0 && return ""
+    joinpath(dirname(unsafe_string(info[].fname)), "libTAU-julia-gc." * Base.Libc.Libdl.dlext)
+end
+
+# Registers Tau_julia_gc_pre/post from libTAU-julia-gc (src/wrappers/julia_gc) as Julia GC callbacks.
+function _gc_install()
+    lib = _gc_lib()
+    h = isfile(lib) ? Base.Libc.Libdl.dlopen(lib; throw_error=false) : nothing
+    if h === nothing
+        _say("TAU_JULIA_GC=1, but libTAU-julia-gc was not found (\"$lib\"); collections will not be timed.")
+        return nothing
+    end
+    init, pre, post = (Base.Libc.Libdl.dlsym(h, s) for s in (:Tau_julia_gc_init, :Tau_julia_gc_pre, :Tau_julia_gc_post))
+    ccall(init, Cint, (Ptr{Cvoid},), cglobal(:jl_gc_live_bytes)) == 0 || return nothing
+    P_GC_PRE[], P_GC_POST[] = pre, post
+    ccall(:jl_gc_set_cb_pre_gc, Cvoid, (Ptr{Cvoid}, Cint), pre, 1)
+    ccall(:jl_gc_set_cb_post_gc, Cvoid, (Ptr{Cvoid}, Cint), post, 1)
+    gc_timed[] = true
+    atexit(_gc_uninstall)
+    VERBOSE && _say("garbage collections timed as the TAU timer \"Julia GC\"")
+    nothing
+end
+
+function _gc_uninstall()
+    gc_timed[] || return nothing
+    ccall(:jl_gc_set_cb_pre_gc, Cvoid, (Ptr{Cvoid}, Cint), P_GC_PRE[], 0)
+    ccall(:jl_gc_set_cb_post_gc, Cvoid, (Ptr{Cvoid}, Cint), P_GC_POST[], 0)
+    gc_timed[] = false
     nothing
 end
 
@@ -229,6 +311,14 @@ function __init__()
         if opened[] && ccall(P_GETNODE, Cint, ()) < 0
             ccall(P_SETNODE, Cvoid, (Cint,), 0)
         end
+        if GCSTATS
+            for (i, name) in enumerate(GCSTAT_NAMES)
+                ue = Ref{Ptr{Cvoid}}(C_NULL)
+                ccall(P_GETUE, Cvoid, (Ptr{Ptr{Cvoid}}, Cstring), ue, name)
+                gcstat_events[i] = ue[]
+            end
+        end
+        JULIA_GC && _gc_install()
     elseif VERBOSE
         _say("libTAU not found in this process; sections will not be instrumented by TAU..")
     end
