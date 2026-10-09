@@ -1215,7 +1215,7 @@ if [ $track_l0 = "true" ]; then
 
 fi
 
-if [ -v "$ZET_ENABLE_METRICS" ]; then
+if [ "${ZET_ENABLE_METRICS:+set}" = set ]; then
   if [[ "$ZET_ENABLE_METRICS" != "0" ]]; then
      isl0metrics=`echo $theBinding | grep l0metrics`
      if [ "x$isl0metrics" == "x"  ]; then
