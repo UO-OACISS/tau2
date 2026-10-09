@@ -1,0 +1,5 @@
+BEGIN_EXCLUDE_LIST
+"#_internal"
+ns::#
+void g(#*)
+END_EXCLUDE_LIST

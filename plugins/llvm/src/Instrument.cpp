@@ -27,6 +27,7 @@
 
 #include <fstream>
 #include <regex>
+#include <cstring>
 #include <ctype.h>
 
 #include "llvm/ADT/Statistic.h" //
@@ -315,110 +316,71 @@ namespace {
          * put it in the vector or its regex counterpart until the token has been
          * reached.
          */
-        void readUntilToken( std::ifstream& file, StringSet<>& vec, std::vector<std::regex>& vecReg, const char* token ){
-            std::string funcName;
-            std::string s_token( token ); // used by an errs()
-            bool rc = true;
+        enum class ListKind { Function, File, Loop };
 
-            while( std::getline( file, funcName ) ){
-                if( funcName.find_first_not_of(' ') != std::string::npos ) {
-                    /* Exclude whitespace-only lines */
+        static std::string trimLine( const std::string& line ){
+            const char* ws = " \t\r\n\f\v";
+            size_t b = line.find_first_not_of( ws );
+            if( b == std::string::npos ) return std::string();
+            size_t e = line.find_last_not_of( ws );
+            return line.substr( b, e - b + 1 );
+        }
 
-                    if( 0 == funcName.compare( token ) ){
-                        return;
-                    }
-
-                    if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'X' ) ){
-                        if (verbose) errs() << "Include";
-                    } else {
-                        if (verbose) errs() << "Exclude";
-                    }
-                    if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'F' )
-                        &&  s_token.end() == std::find( s_token.begin(), s_token.end(), 'O' ) ){
-                        std::regex par_o( std::string( "\\([\\s]" ) );
-                        std::regex par_c( std::string( "[\\s]\\)" ) );
-                        std::string s_o( std::string(  "(" ) );
-                        std::string s_c( std::string(  ")" ) );
-                        std::string regex_1, regex_0;
-                        std::regex_replace( std::back_inserter( regex_0 ), funcName.begin(), funcName.end(), par_o, s_o );
-                        std::regex_replace( std::back_inserter( regex_1 ), regex_0.begin(), regex_0.end(), par_c, s_c );
-                        funcName =  std::string( regex_1 );
-                        if (verbose) errs() << " function: " << funcName;
-                        /* TODO: trim whitespaces */
-                    } else {
-                        if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'O' ) ){
-                            if (verbose) errs() << " file " << funcName;
-                        } else {
-                            // TODO regex for loops
-                             if (verbose) errs() << " loop " << funcName;
-                       }
-                    }
-
-                    /* The regex wildcards are not the same for filenames and function names. */
-
-                    if( s_token.end() != std::find( s_token.begin(), s_token.end(), 'F' ) ){
-                        /* This is a filename */
-                        if( funcName.end() != std::find( funcName.begin(), funcName.end(), TAU_REGEX_FILE_STAR )
-                                || funcName.end() != std::find( funcName.begin(), funcName.end(), TAU_REGEX_FILE_QUES )){
-
-                            std::regex q( std::string( "[*]" ) );
-                            std::string q_reg( std::string(  "(.*)" ) );
-                            std::string regex_1;
-
-                            std::regex_replace( std::back_inserter( regex_1 ), funcName.begin(), funcName.end(), q, q_reg );
-
-                            std::regex q2( std::string( "[?]" ) );
-                            std::string q2_reg( std::string(  "(.?)" ) );
-                            std::string regex_2;
-
-                            std::regex_replace( std::back_inserter( regex_2 ), regex_1.begin(), regex_1.end(), q2, q2_reg );
-
-                            //errs()<< "regex filename: " << regex_2 << "\n";
-
-                            vecReg.push_back( std::regex( regex_2 ) );
-                            if (verbose) errs() << " (regex)";
-
-                        } else {
-                            vec.insert( funcName );
-                        }
-                    } else {
-                        /* This is a function name */
-                        if( funcName.end() != std::find( funcName.begin(), funcName.end(), TAU_REGEX_STAR ) ) {
-                            /* We need to pre-process this regex: escape the parenthesis */
-                            std::regex par_o( std::string( "\\(" ) );
-                            std::regex par_c( std::string( "\\)" ) );
-                            std::string s_o( std::string(  "\\(" ) );
-                            std::string s_c( std::string(  "\\)" ) );
-                            std::string regex_1, regex_0;
-                            std::regex_replace( std::back_inserter( regex_0 ), funcName.begin(), funcName.end(), par_o, s_o );
-                            std::regex_replace( std::back_inserter( regex_1 ), regex_0.begin(), regex_0.end(), par_c, s_c );
-
-                            /* Escape the stars (pointers) */
-                            std::regex r_s( std::string( "[\\*]" ) );
-                            std::string star( std::string(  "\\*" ) );
-                            std::string regex_2;
-                            std::regex_replace( std::back_inserter( regex_2 ), regex_1.begin(), regex_1.end(), r_s, star );
-
-                            /* Wildcard: replace the # by stars */
-                            std::regex cross( std::string( "[#]" ) );
-                            std::string wildcard( std::string(  ".*" ) );
-                            std::string regex_3;
-                            std::regex_replace( std::back_inserter( regex_3 ), regex_2.begin(), regex_2.end(), cross, wildcard );
-
-                            vecReg.push_back( std::regex( regex_3 ) );
-                            if (verbose) errs() << " (regex)";
-                        } else {
-                            vec.insert( funcName );
-                        }
-                    }
-                    if (verbose) errs() << "\n";
+        /* Translate a TAU wildcard pattern into an anchored regex source:
+         * every character is literal except the wildcards. '?' is exactly one
+         * character, 'star' is the kind-specific multi-character wildcard. */
+        static std::string wildcardToRegex( const std::string& pat, char star ){
+            std::string out;
+            for( char c : pat ){
+                if( c == star ) out += ".*";
+                else if( c == TAU_REGEX_FILE_QUES ) out += ".";
+                else {
+                    if( std::strchr( "\\^$.|+()[]{}*?", c ) ) out += '\\';
+                    out += c;
                 }
             }
+            return out;
+        }
 
-            if( rc ){
-                errs() << "Error while reading the instrumentation list in the input file. Did you close it with " << token << "?\n";
+        /*!
+         * Given an open file, a token and two vectors, read what is coming next and
+         * put it in the vector or its regex counterpart until the token has been
+         * reached. As in the other TAU consumers, lines are trimmed, lines starting
+         * with '#' are comments, blank lines are skipped, and function entries may be
+         * double-quoted. Names without '/' in file and loop lists match the basename.
+         */
+        void readUntilToken( std::ifstream& file, StringSet<>& vec, std::vector<std::regex>& vecReg, const char* token ){
+            std::string line;
+            std::string s_token( token );
+            ListKind kind = ListKind::Function;
+            if( s_token.find( "FILE" ) != std::string::npos ) kind = ListKind::File;
+            else if( s_token.find( "LOOP" ) != std::string::npos ) kind = ListKind::Loop;
+
+            while( std::getline( file, line ) ){
+                std::string entry = trimLine( line );
+                if( entry.empty() || entry[0] == '#' ) continue;
+                if( entry == token ) return;
+
+                if( kind == ListKind::Function && entry[0] == '"' ){
+                    entry.erase( 0, 1 );
+                    size_t q = entry.find( '"' );
+                    if( q != std::string::npos ) entry.erase( q );
+                    if( entry.empty() ) continue;
+                }
+
+                std::string re;
+                if( kind == ListKind::Function ){
+                    re = wildcardToRegex( entry, TAU_REGEX_STAR );
+                } else {
+                    re = wildcardToRegex( entry, TAU_REGEX_FILE_STAR );
+                    if( kind == ListKind::File && entry.find( '/' ) == std::string::npos )
+                        re = "(?:.*/)?" + re;
+                }
+                if( verbose ) errs() << ( s_token.find( 'X' ) == std::string::npos ? "Include " : "Exclude " ) << entry << "\n";
+                vecReg.push_back( std::regex( re ) );
             }
 
+            errs() << "Error while reading the instrumentation list in the input file. Did you close it with " << token << "?\n";
         }
 
 
@@ -443,10 +405,19 @@ namespace {
             s_mapTokenValues[ TAU_BEGIN_LOOP_LIST_NAME ] = begin_loop;
 
             while(std::getline(file, funcName)) {
-                if( funcName.find_first_not_of(' ') != std::string::npos ) {
-                    /* Exclude whitespace-only lines */
+                funcName = trimLine( funcName );
+                /* Skip blank lines and comments */
+                if( !funcName.empty() && funcName[0] != '#' ) {
 
-                    switch( s_mapTokenValues[ funcName ]){
+                    if( funcName == "BEGIN_INSTRUMENT_SECTION" ) {
+                        /* Dyninst-only section: not used here */
+                        std::string sec;
+                        while( std::getline( file, sec ) && trimLine( sec ) != "END_INSTRUMENT_SECTION" ) {}
+                        continue;
+                    }
+
+                    auto tokIt = s_mapTokenValues.find( funcName );
+                    switch( tokIt == s_mapTokenValues.end() ? wrong_token : tokIt->second ){
                         case begin_func_include:
                             if (verbose) errs() << "Included functions: \n";
                             readUntilToken( file, funcsOfInterest, funcsOfInterestRegex, TAU_END_INCLUDE_LIST_NAME );
@@ -473,11 +444,7 @@ namespace {
                             break;
 
                         default:
-                            errs() << "Wrong syntax: the lists must be between ";
-                            errs() << TAU_BEGIN_INCLUDE_LIST_NAME << " and " << TAU_END_INCLUDE_LIST_NAME;
-                            errs() << " for the list of functions to instrument and ";
-                            errs() << TAU_BEGIN_EXCLUDE_LIST_NAME << " and " << TAU_END_EXCLUDE_LIST_NAME;
-                            errs() << " for the list of functions to exclude.\n";
+                            /* Unknown top-level lines are ignored, as in the other consumers */
                             break;
                     }
                 }
@@ -591,28 +558,26 @@ namespace {
             return loc;
         }
 
-        bool includeFunction(StringRef prettycallName, std::string& filename) {
-            if (verbose) errs() << "Func: '" << prettycallName.str() << "' : ";
-            /* This big test was explanded for readability */
-            bool instrumentHere = false;
+        bool includeFile(const std::string& filename) {
             /* Are we including or excluding some files? */
             if( (filesIncl.size() + filesInclRegex.size() + filesExcl.size() + filesExclRegex.size() == 0 ) ){
-                instrumentHere = true;
-            } else {
-                /* Yes: are we in a file where we are instrumenting? */
-                // did not specify a list of files to instrument -> instrument them all, except the excluded ones
-                if( ( ( filesIncl.size() + filesInclRegex.size() == 0)
-                            || ( filesIncl.count( filename ) > 0
-                                || regexFits( filename, filesInclRegex ) ) )
-                        && !( filesExcl.count( filename ) > 0
-                            || regexFits( filename, filesExclRegex ) ) ){
-                    instrumentHere = true;
-                }
+                return true;
             }
+            /* Exclusion wins; an empty include list means every file */
+            if( regexFits( filename, filesExclRegex ) ) return false;
+            return filesInclRegex.empty() || regexFits( filename, filesInclRegex );
+        }
+
+        bool includeFunction(StringRef prettycallName, std::string& filename) {
+            if (verbose) errs() << "Func: '" << prettycallName.str() << "' : ";
             // Not doing this file?  Skip it.
-            if (!instrumentHere) {
+            if (!includeFile(filename)) {
                 return false;
             }
+            return includeFunctionName(prettycallName);
+        }
+
+        bool includeFunctionName(StringRef prettycallName) {
             // Nothing included/excluded?  Instrument it.
             if (funcsOfInterest.size() == 0 &&
                     funcsExcl.size() == 0 &&
@@ -622,36 +587,22 @@ namespace {
                 return true;
             }
 
-            // simple cases...
-            if (verbose) errs() << "Looking up...\n";
-
-            // Is this function explicitly included?  Instrument it.
-            if (funcsOfInterest.size() > 0 && funcsOfInterest.count( prettycallName ) > 0) {
-                if (verbose) errs() << "include Match\n";
-                return true;
-            }
-            // Is this function explicitly excluded?  Skip it.
-            if (funcsExcl.size() > 0 && funcsExcl.count( prettycallName ) > 0) {
-                if (verbose) errs() << "exclude Match\n";
+            // Exclusion wins over inclusion, also for exact names
+            if (funcsExcl.count( prettycallName ) > 0 ||
+                    regexFits( prettycallName, funcsExclRegex, true )) {
+                if (verbose) errs() << "excluded\n";
                 return false;
             }
 
-            // Ok, now it gets complicated...
-
-            if (funcsExclRegex.size() > 0 && regexFits( prettycallName, funcsExclRegex, true )) {
-                if (verbose) errs() << "excluded as regex!\n";
-                return false;
-            }
-
-            if (funcsOfInterestRegex.size() > 0 && regexFits ( prettycallName, funcsOfInterestRegex, true )) {
-                if (verbose) errs() << "included as regex!\n";
-                return true;
-            }
-
+            // Empty include list: everything not excluded is instrumented
             if (funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0) {
-                // finally, if we didn't match to anything, and there weren't any inclusion
-                // conditions, return true by default.
                 if (verbose) errs() << "Default - Returning true!\n";
+                return true;
+            }
+
+            if (funcsOfInterest.count( prettycallName ) > 0 ||
+                    regexFits( prettycallName, funcsOfInterestRegex, true )) {
+                if (verbose) errs() << "included\n";
                 return true;
             }
             return false;
@@ -729,13 +680,11 @@ namespace {
         bool maybeInstrument( const Loop* loop ){
             std::string loc = getFilename( loop ) +  ":" + getLineAndCol( loop );
             if( verbose ) errs() << "Loop: " << loc << "\n";
-            if( loopsIncl.size() + loopsInclRegex.size() == 0 )
-                return false;
-            if( loopsIncl.count( loc ) > 0 )
-                return true;
-            if( regexFits( loc, loopsInclRegex ) )
-                return true;
-            return false;
+            return includeLoop( loc );
+        }
+
+        bool includeLoop( const std::string& loc ){
+            return regexFits( loc, loopsInclRegex );
         }
         
         /*!

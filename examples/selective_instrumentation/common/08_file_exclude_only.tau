@@ -1,0 +1,5 @@
+BEGIN_FILE_EXCLUDE_LIST
+*/headers1/*
+# comment
+*.h
+END_FILE_EXCLUDE_LIST

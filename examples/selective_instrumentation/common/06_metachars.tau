@@ -1,0 +1,10 @@
+# Only # (any string) and ? (one character) are special in function names.
+# Everything else, including regex metacharacters, is literal.
+BEGIN_EXCLUDE_LIST
+operator+
+a.b
+x[0]
+v|w
+cost$
+f?
+END_EXCLUDE_LIST

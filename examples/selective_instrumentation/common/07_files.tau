@@ -1,0 +1,9 @@
+# File lists use * and ? as wildcards. A pattern without / matches the basename.
+BEGIN_FILE_INCLUDE_LIST
+main.c
+util_*.c
+sub/dir_?.c
+END_FILE_INCLUDE_LIST
+BEGIN_FILE_EXCLUDE_LIST
+util_x.c
+END_FILE_EXCLUDE_LIST

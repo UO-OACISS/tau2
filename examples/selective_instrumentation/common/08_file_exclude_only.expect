@@ -1,0 +1,7 @@
+file: /p/headers1/h.c => no
+file: /p/headers2/h.c => yes
+file: foo.h => no
+file: /p/foo.h => no
+file: foo.c => yes
+file: foo.cpp => yes
+file: fooxh => yes

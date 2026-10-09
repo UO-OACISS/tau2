@@ -1,0 +1,7 @@
+func: void compute<double>(double) => yes
+func: void compute<int>(int) => no
+func: initialize(int) => yes
+func: finalize() => no
+file: a.cpp => yes
+file: gen_a.cpp => no
+file: a.c => no

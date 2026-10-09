@@ -1,0 +1,15 @@
+# Typical C++ file mixing all four lists.
+BEGIN_FILE_INCLUDE_LIST
+*.cpp
+END_FILE_INCLUDE_LIST
+BEGIN_FILE_EXCLUDE_LIST
+# generated code
+gen_*.cpp
+END_FILE_EXCLUDE_LIST
+BEGIN_INCLUDE_LIST
+void compute<#>(#)
+initialize(#)
+END_INCLUDE_LIST
+BEGIN_EXCLUDE_LIST
+void compute<int>(int)
+END_EXCLUDE_LIST

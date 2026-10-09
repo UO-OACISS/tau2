@@ -1,0 +1,7 @@
+# BEGIN_LOOPS_LIST is an LLVM-plugin extension; other consumers ignore it.
+BEGIN_LOOPS_LIST
+# comment
+a.c:10
+b.c:*
+c.c:1?
+END_LOOPS_LIST

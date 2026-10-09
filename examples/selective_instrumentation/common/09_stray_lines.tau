@@ -1,0 +1,10 @@
+this line is outside any block and is ignored
+BEGIN_EXCLUDE_LIST
+foo
+END_EXCLUDE_LIST
+another stray line
+# comment between blocks
+
+BEGIN_INCLUDE_LIST
+#
+END_INCLUDE_LIST

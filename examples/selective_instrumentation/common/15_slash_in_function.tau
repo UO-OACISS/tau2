@@ -1,0 +1,4 @@
+# Function names may contain '/' (operator/); only file patterns use the basename rule.
+BEGIN_EXCLUDE_LIST
+Vec operator#
+END_EXCLUDE_LIST
