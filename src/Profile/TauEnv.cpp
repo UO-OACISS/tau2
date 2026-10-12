@@ -110,6 +110,7 @@ using namespace std;
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_DEFAULT_TAU 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
+#define TAU_EBS_JULIA_RESOLVE_DEFAULT 1
 #if (defined (TAU_BGL) || defined(TAU_BGP))
 #define TAU_EBS_PERIOD_DEFAULT 20000 // Kevin made this bigger,
 #else
@@ -322,6 +323,7 @@ static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
 /* This is a malleable default */
 static int env_ebs_keep_unresolved_addr = 0;
+static int env_ebs_julia_resolve = TAU_EBS_JULIA_RESOLVE_DEFAULT;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ompt_resolve_address_eagerly = 1;
@@ -1201,6 +1203,10 @@ int TauEnv_get_sigusr1_action() {
 
 int TauEnv_get_ebs_keep_unresolved_addr() {
   return env_ebs_keep_unresolved_addr;
+}
+
+int TauEnv_get_ebs_julia_resolve() {
+  return env_ebs_julia_resolve;
 }
 
   // *CWL* Only to be used by TAU whenever the desired ebs period violates
@@ -2753,6 +2759,15 @@ void TauEnv_initialize()
     } else {
       env_ebs_keep_unresolved_addr = 0;
       TAU_METADATA("TAU_EBS_KEEP_UNRESOLVED_ADDR", "off");
+    }
+
+    tmp = getconf("TAU_EBS_JULIA_RESOLVE");
+    if (parse_bool(tmp, TAU_EBS_JULIA_RESOLVE_DEFAULT)) {
+      env_ebs_julia_resolve = 1;
+      TAU_METADATA("TAU_EBS_JULIA_RESOLVE", "on");
+    } else {
+      env_ebs_julia_resolve = 0;
+      TAU_METADATA("TAU_EBS_JULIA_RESOLVE", "off");
     }
     
     tmp = getconf("TAU_MEMMGR_MAX_BLOCKS");

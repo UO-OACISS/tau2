@@ -111,6 +111,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled_tau();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
+  int  TAUDECL TauEnv_get_ebs_julia_resolve();
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
   int  TAUDECL TauEnv_get_ebs_period();
   int  TAUDECL TauEnv_get_ebs_inclusive();

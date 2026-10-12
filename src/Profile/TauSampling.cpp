@@ -66,6 +66,10 @@
 #endif
 #endif /* __APPLE__ */
 
+#if !defined(__APPLE__) && !defined(TAU_WINDOWS)
+#include <dlfcn.h> /* dlsym(RTLD_DEFAULT, ...) for the Julia resolver */
+#endif
+
 #ifndef TAU_WINDOWS
 
 #include <TAU.h>
@@ -1036,6 +1040,69 @@ void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char *
   TheExternalRangeMap().emplace(start, node);
 }                                                              
 
+#if !defined(__APPLE__) && !defined(TAU_WINDOWS)
+// Mirror of jl_frame_t from Julia's src/julia_internal.h
+struct Tau_julia_frame_t {
+  char * func_name;
+  char * file_name;
+  int line;
+  void * ci;
+  int fromC;
+  int inlined;
+};
+
+typedef int (*Tau_jl_getFunctionInfo_t)(Tau_julia_frame_t ** frames, uintptr_t pointer, int skipC, int noInline);
+typedef int (*Tau_jl_is_initialized_t)(void);
+
+static Tau_jl_getFunctionInfo_t Tau_sampling_get_julia_resolver() {
+  static Tau_jl_getFunctionInfo_t getFunctionInfo = NULL;
+  static Tau_jl_is_initialized_t isInitialized = NULL;
+  static std::once_flag lookup_once;
+  std::call_once(lookup_once, []() {
+    if (!TauEnv_get_ebs_julia_resolve()) {
+      TAU_VERBOSE("TAU: Julia sample resolution disabled by TAU_EBS_JULIA_RESOLVE\n");
+      return;
+    }
+    getFunctionInfo = (Tau_jl_getFunctionInfo_t)dlsym(RTLD_DEFAULT, "jl_getFunctionInfo");
+    isInitialized = (Tau_jl_is_initialized_t)dlsym(RTLD_DEFAULT, "jl_is_initialized");
+    if (getFunctionInfo == NULL || isInitialized == NULL) {
+      getFunctionInfo = NULL;
+      TAU_VERBOSE("TAU: Julia runtime not found; Julia sample resolution not available\n");
+    } else {
+      TAU_VERBOSE("TAU: Using Julia runtime to resolve unresolved sample addresses\n");
+    }
+  });
+  if (getFunctionInfo == NULL || !isInitialized()) {
+    return NULL;
+  }
+  return getFunctionInfo;
+}
+
+static bool Tau_sampling_resolve_julia(uintptr_t addr, TauBfdInfo & info) {
+  Tau_jl_getFunctionInfo_t getFunctionInfo = Tau_sampling_get_julia_resolver();
+  if (getFunctionInfo == NULL) {
+    return false;
+  }
+  Tau_julia_frame_t * frames = NULL;
+  int n_frames = getFunctionInfo(&frames, addr, 0, 0);
+  bool resolved = false;
+  for (int i = n_frames - 1; i >= 0; --i) {
+    Tau_julia_frame_t & frame = frames[i];
+    if (!resolved && frame.func_name != NULL && !frame.fromC) {
+      resolved = true;
+      info.probeAddr = addr;
+      info.funcname = strdup(frame.func_name);
+      info.filename = frame.file_name != NULL ? strdup(frame.file_name) : "";
+      info.lineno = frame.line > 0 ? frame.line : 0;
+    }
+    free(frame.func_name);
+    free(frame.file_name);
+  }
+  free(frames);
+  return resolved;
+}
+#endif /* !__APPLE__ && !TAU_WINDOWS */
+
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
     char const * childName, char **newShortName, bool addAddress)
@@ -1091,6 +1158,9 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
         node->resolved = false;
       }
       if(!node->resolved) {
+        node->resolved = Tau_sampling_resolve_julia(addr, node->info);
+      }
+      if(!node->resolved) {
         if(is_any_external_range_registered(false)) {
             ExternalRangeNode * external_range = lookup_external_range(addr);  
             if(external_range != NULL) {
@@ -1105,11 +1175,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                 node->info.lineno = 0;
                 for(unsigned int line_entry = 0; line_entry < external_range->line_number_size; ++line_entry) {
                   const ExternalLineNumberInfo & line_info = external_range->line_number_table[line_entry];
-                  uintptr_t candidate_addr = external_range->start + line_info.offset;
-                  if(candidate_addr > addr) {
+                  uintptr_t subrange_end = external_range->start + line_info.offset;
+                  if(subrange_end > addr) {
+                    node->info.lineno = line_info.line_number;
                     break;
                   }
-                  node->info.lineno = line_info.line_number;
                 }
             }
         }
