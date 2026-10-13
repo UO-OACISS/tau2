@@ -1,0 +1,3 @@
+timer: int baz(void) => no
+timer: int foo(int) => yes
+timer: int ns::y(void) => yes

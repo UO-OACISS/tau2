@@ -10,7 +10,7 @@ of the TAU selective-instrumentation (SI) format. Each consumer has a directory 
 | `runtime-plugin/` | disable-instrumentation runtime plugin |
 | `llvm/` | `plugins/llvm/src/Instrument.cpp` |
 | `shell/` | `tau_selectfile.sh`, `tau_rewrite`, `tau_compiler.sh` |
-| `salt/` | placeholder (SALT SI is WIP) |
+| `salt/` | SALT-FM C/C++ (needs `saltfm`; unsupported cases disabled) |
 
 Expect lines: `func: <name> => yes|no`, `file: <path> => yes|no`, `loop: <file:line> => yes|no`
 (yes = instrumented). Run all with `./run_all.sh`; exit 77 from a harness means SKIP.

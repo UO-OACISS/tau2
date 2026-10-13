@@ -1,0 +1,3 @@
+timer: int bar_x(int) => no
+timer: int foo(int) => yes
+timer: int baz(void) => yes

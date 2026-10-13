@@ -41,6 +41,15 @@ string** excludedFunctions;        //to hold the function names that will be exc
 int** countExcluded;               //array to hold number of times a function is excluded
 
 
+//siEntry() formats a function name as a selective instrumentation list entry.
+//A leading '#' would start a comment and a leading '"' starts a quoted entry,
+//so such names are written quoted ("#foo" is read back as the pattern #foo).
+static string siEntry(const string& name){
+  if(!name.empty() && (name[0]=='#' || name[0]=='"'))
+    return "\""+name+"\"";
+  return name;
+}//siEntry()
+
 //putLine() takes a line and writes it out to the file that is currently opened.
 //It prints out an error message and exits if an output error occurs.
 void putLine(string s){
@@ -111,7 +120,7 @@ void select(){
     putLine("# Selective instrumentation: Specify an exclude/include list.\n\n");
     putLine("BEGIN_EXCLUDE_LIST\n");
     for(int i=0; i<number_excluded;i++){
-      putLine((*excludedFunctions[i])+"\n");
+      putLine(siEntry(*excludedFunctions[i])+"\n");
     }//for
     putLine("END_EXCLUDE_LIST\n"); 
     fclose(fp);
@@ -121,7 +130,7 @@ void select(){
     printf("# Selective instrumentation: Specify an exclude/include list.\n\n");
     printf("BEGIN_EXCLUDE_LIST\n");
     for(int i=0; i<number_excluded;i++){
-      printf("%s\n",(*excludedFunctions[i]).c_str());
+      printf("%s\n",siEntry(*excludedFunctions[i]).c_str());
     }//for
     printf("END_EXCLUDE_LIST\n");
   }//else

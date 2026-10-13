@@ -1,0 +1,3 @@
+BEGIN_INCLUDE_LIST
+int foo(int)
+END_INCLUDE_LIST
