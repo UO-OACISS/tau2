@@ -1,0 +1,3 @@
+func: Vec operator/(Vec, double) => no
+func: Vec operator+(Vec, Vec) => no
+func: Vec scale(Vec) => yes

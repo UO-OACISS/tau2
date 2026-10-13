@@ -1,0 +1,5 @@
+func: foo => no
+func: barfoo => no
+func: foobar => yes
+func: void f(int, int) => no
+func: void f(int) => yes

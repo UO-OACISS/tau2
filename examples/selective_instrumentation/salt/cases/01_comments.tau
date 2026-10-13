@@ -1,0 +1,6 @@
+# top-level comment
+BEGIN_EXCLUDE_LIST
+# a comment
+#
+int foo(int)
+END_EXCLUDE_LIST

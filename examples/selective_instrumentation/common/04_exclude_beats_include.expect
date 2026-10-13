@@ -1,0 +1,4 @@
+func: foo => no
+func: bar_y => yes
+func: bar_x => no
+func: baz => no

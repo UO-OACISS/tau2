@@ -1,0 +1,6 @@
+func: foo => no
+func: bar_x => no
+func: baz => yes
+file: skip.cpp => no
+file: dir/skip.cpp => no
+file: keep.cpp => yes

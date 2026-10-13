@@ -1,0 +1,6 @@
+func: anything => yes
+loop: a.c:10 => yes
+loop: a.c:11 => no
+loop: b.c:5 => yes
+loop: c.c:12 => yes
+loop: c.c:2 => no

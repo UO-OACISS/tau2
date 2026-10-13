@@ -1,0 +1,11 @@
+# A comment at the top level
+   # an indented comment
+	# a tab-indented comment
+BEGIN_EXCLUDE_LIST
+# a comment inside a list: must not become a pattern
+#
+foo
+   # indented comment inside a list
+	# tab comment inside a list
+bar
+END_EXCLUDE_LIST

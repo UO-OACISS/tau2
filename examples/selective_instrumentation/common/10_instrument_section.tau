@@ -1,0 +1,9 @@
+# The instrument section is for the PDT/Dyninst source tools; function lists are unaffected.
+BEGIN_INSTRUMENT_SECTION
+loops file="foo.c" routine="#"
+# comment
+static timer name="x" file="y.c" line=1 to line=2
+END_INSTRUMENT_SECTION
+BEGIN_EXCLUDE_LIST
+foo
+END_EXCLUDE_LIST
