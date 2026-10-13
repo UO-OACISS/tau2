@@ -594,6 +594,12 @@ namespace {
                 return false;
             }
 
+	    // Always instrument main (unless excluded)  so TAU initialization/shutdown works.
+    	    if (prettycallName == "main") {
+        	if (verbose) errs() << "including main\n";
+        	return true;
+    	    }   
+
             // Empty include list: everything not excluded is instrumented
             if (funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0) {
                 if (verbose) errs() << "Default - Returning true!\n";
