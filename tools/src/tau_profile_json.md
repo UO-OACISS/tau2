@@ -43,6 +43,33 @@ The validator expects raw `profile.*` text files. It does not read `.ppk`
 archives or compare against fixed metric values, so the same check can be used
 with newly generated or otherwise arbitrary profile directories.
 
+## Summary (`--summary`)
+
+`--summary` adds an optional `Summary` object to each application, in either
+layout, so consumers need not recompute common first-pass statistics:
+`processes`, `threads`, `timer_records`, `counter_records`, and per metric
+(`by_metric`): `total_exclusive_per_thread`, `exclusive_fraction`
+(MPI, IO, ADIOS, USER, OTHER), and the top 10 timers by `top_exclusive` and
+`top_inclusive` (summed calls, plus mean per-thread exclusive and inclusive
+values). It costs a few KB and is omitted by default.
+
+## Timer categories
+
+The `aggr_*` workflow values and `exclusive_fraction` classify each timer
+by its TAU `Group`, which TAU writes as `A | B` and which is split into exact
+tokens: `MPI` is the `MPI` group, `IO` is `TAU_IO`, and `USER` is `TAU_USER` or
+`TAU_DEFAULT`. Each timer is counted once. ADIOS is the only name-based rule,
+because TAU's ADIOS support (`src/Profile/TauADIOS.cpp`) registers `adios_*`
+timers in the generic `TAU_IO` group; they are classified `ADIOS` when the name
+starts with `adios_` (any case) or contains `ADIOS`, and are not also counted
+as `IO`. Timers in none of these groups, such as `OpenMP`, are `OTHER`.
+
+## Record parsing
+
+TAU writes timer and event names with a raw `"%s"` and does not escape quotes,
+so a name may contain `"`. The parser takes the name to end at the last quote
+before the numeric values (and optional `GROUP="..."`), so such names survive.
+
 ## Versioning and provenance
 
 `Workflow metadata.profile-json-version` identifies this layout (`1.0`, or

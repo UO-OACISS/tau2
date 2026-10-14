@@ -326,6 +326,49 @@ class TauProfileToJsonTests(unittest.TestCase):
         self.assertEqual(2, len(tables))
         self.assertEqual(records, tau_prof2json._decode_tables(tables, []))
 
+    def test_quotes_in_names_are_preserved(self):
+        for line, name, group in (
+            ('"say "hi" [{f.c} {1,2}]" 3 0 1 2 0 GROUP="TAU_USER"', 'say "hi" [{f.c} {1,2}]', "TAU_USER"),
+            ('"a" b" 1 0 2 3 0 GROUP="TAU_PARAM | TAU_USER" ', 'a" b', "TAU_PARAM | TAU_USER"),
+            ('"event "x"" 4 9 1 5 30', 'event "x"', None),
+        ):
+            parsed = tau_prof2json._quoted_record(line, "p", 1)
+            self.assertEqual((name, group), (parsed[0], parsed[2]))
+
+    def test_timer_categories_use_groups_and_adios_name(self):
+        def timer(name, group):
+            return {"Function": name, "Group": group}
+
+        category = tau_prof2json._timer_category
+        self.assertEqual("MPI", category(timer("MPI_Send()", "MPI")))
+        self.assertEqual("IO", category(timer("read()", "TAU_IO")))
+        self.assertEqual("ADIOS", category(timer("adios_open", "TAU_IO")))
+        self.assertEqual("USER", category(timer("f", "TAU_PARAM | TAU_USER")))
+        self.assertEqual("OTHER", category(timer("g", "OpenMP")))
+        self.assertEqual("OTHER", category(timer("MPI_not_a_group", "TAU_MPI_X")))
+
+    def test_summary_is_precomputed_and_schema_valid(self):
+        for extra in ([], ["--compact"]):
+            output = StringIO()
+            with redirect_stdout(output), redirect_stderr(StringIO()):
+                tau_prof2json.main(["--summary"] + extra + [self.profile_dir])
+            result = json.loads(output.getvalue())
+            summary = result[self.profile_dir]["Summary"]
+            self.assertEqual((1, 1), (summary["processes"], summary["threads"]))
+            metric = summary["by_metric"]["TIME"]
+            self.assertEqual("main", metric["top_exclusive"][1]["Function"])
+            self.assertAlmostEqual(7 / 10.5, metric["exclusive_fraction"]["MPI"], 5)
+            if jsonschema is not None:
+                name = "tau_profile_json%s.schema.json" % (
+                    "_compact" if extra else ""
+                )
+                with open(os.path.join(TOOLS_SRC, name), encoding="utf-8") as f:
+                    jsonschema.validate(result, json.load(f))
+        without = StringIO()
+        with redirect_stdout(without), redirect_stderr(StringIO()):
+            tau_prof2json.main([self.profile_dir])
+        self.assertNotIn("Summary", json.loads(without.getvalue())[self.profile_dir])
+
     def test_legacy_entry_point_uses_the_same_parser(self):
         legacy_path = os.path.join(TOOLS_SRC, "tau_prof_to_json.py")
         output_path = os.path.join(self.temp_dir.name, "legacy.json")

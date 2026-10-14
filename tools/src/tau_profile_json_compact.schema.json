@@ -163,6 +163,93 @@
         },
         "Metric": {
           "type": "string"
+        },
+        "Summary": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "processes",
+        "threads",
+        "timer_records",
+        "counter_records",
+        "by_metric"
+      ],
+      "properties": {
+        "processes": {
+          "type": "integer"
+        },
+        "threads": {
+          "type": "integer"
+        },
+        "timer_records": {
+          "type": "integer"
+        },
+        "counter_records": {
+          "type": "integer"
+        },
+        "by_metric": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "total_exclusive_per_thread",
+              "exclusive_fraction",
+              "top_exclusive",
+              "top_inclusive"
+            ],
+            "properties": {
+              "total_exclusive_per_thread": {
+                "type": "number"
+              },
+              "exclusive_fraction": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "top_exclusive": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              },
+              "top_inclusive": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "summaryTimer": {
+      "type": "object",
+      "required": [
+        "Function",
+        "Calls",
+        "Mean Exclusive",
+        "Mean Inclusive"
+      ],
+      "properties": {
+        "Function": {
+          "type": "string"
+        },
+        "Calls": {
+          "type": "number"
+        },
+        "Mean Exclusive": {
+          "type": "number"
+        },
+        "Mean Inclusive": {
+          "type": "number"
         }
       },
       "additionalProperties": false

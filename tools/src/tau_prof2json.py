@@ -50,17 +50,18 @@ def _quoted_record(line, path, line_number):
     line = line.strip()
     if not line.startswith('"'):
         raise ValueError("{}:{}: expected a quoted record".format(path, line_number))
-    end_quote = line.find('"', 1)
-    if end_quote < 0:
+    # TAU writes names with a raw "%s" and never escapes quotes, so the closing
+    # quote is the last one before the numeric values (and optional GROUP).
+    group = None
+    group_start = line.rfind(' GROUP="')
+    if group_start >= 0 and line.endswith('"'):
+        group = line[group_start + len(' GROUP="') : -1]
+        line = line[:group_start]
+    end_quote = line.rfind('"')
+    if end_quote < 1:
         raise ValueError("{}:{}: unterminated quoted record".format(path, line_number))
     name = line[1:end_quote]
-    remainder = line[end_quote + 1 :].strip()
-    group = None
-    group_match = re.search(r'\s+GROUP="(.*)"\s*$', remainder)
-    if group_match:
-        group = group_match.group(1)
-        remainder = remainder[: group_match.start()].strip()
-    return name, remainder.split(), group
+    return name, line[end_quote + 1 :].split(), group
 
 
 def _parse_timer(line, dimensions, path, line_number):
@@ -303,13 +304,35 @@ def _load_directory(indir):
     return application, parsed_profiles
 
 
+def _group_tokens(group):
+    return {token.strip() for token in (group or "").split("|")}
+
+
+def _timer_category(timer):
+    """Classify a timer using TAU groups; only ADIOS needs a name rule.
+
+    TauADIOS.cpp puts adios_* timers in the generic TAU_IO group, so ADIOS
+    cannot be told apart from POSIX I/O by group alone.
+    """
+    name = timer["Function"]
+    groups = _group_tokens(timer.get("Group"))
+    if name.lower().startswith("adios_") or "ADIOS" in name:
+        return "ADIOS"
+    if "MPI" in groups:
+        return "MPI"
+    if "TAU_IO" in groups:
+        return "IO"
+    if groups & {"TAU_USER", "TAU_DEFAULT"}:
+        return "USER"
+    return "OTHER"
+
+
 def _sum_by_group(profiles):
     group_times = OrderedDict()
     group_calls = OrderedDict()
     for profile in profiles:
         for timer in profile["Timers"]:
-            group = timer.get("Group", "")
-            key = "ADIOS" if "ADIOS" in timer["Function"] else group
+            key = _timer_category(timer)
             if timer["Exclusive Time"] is not None:
                 group_times[key] = (
                     group_times.get(key, 0) + timer["Exclusive Time"]
@@ -339,6 +362,59 @@ def _sum_by_group(profiles):
                 continue
             event_totals[key] = event_totals.get(key, 0) + average
     return group_times, group_calls, event_totals
+
+
+SUMMARY_TOP = 10
+
+
+def _summarize(application, profiles):
+    """Precompute the first-pass statistics analysts otherwise derive."""
+    summary = OrderedDict()
+    summary["processes"] = len({p["process index"] for p in profiles})
+    summary["threads"] = len(profiles)
+    summary["timer_records"] = len(application["Timers"])
+    summary["counter_records"] = len(application["Counters"])
+    by_metric = OrderedDict()
+    for metric in application["Metrics"]:
+        selected = [p for p in profiles if p["Metric"] == metric]
+        functions = OrderedDict()
+        for profile in selected:
+            for timer in profile["Timers"]:
+                entry = functions.setdefault(
+                    timer["Function"], {"calls": 0, "excl": 0, "incl": 0}
+                )
+                entry["calls"] += timer["Calls"] or 0
+                entry["excl"] += timer["Exclusive Time"] or 0
+                entry["incl"] += timer["Inclusive Time"] or 0
+        threads = max(len(selected), 1)
+        rows = [
+            OrderedDict(
+                (
+                    ("Function", name),
+                    ("Calls", _cell(entry["calls"])),
+                    ("Mean Exclusive", _cell(entry["excl"] / threads)),
+                    ("Mean Inclusive", _cell(entry["incl"] / threads)),
+                )
+            )
+            for name, entry in functions.items()
+        ]
+        times, _, _ = _sum_by_group(selected)
+        total = sum(times.values())
+        info = OrderedDict()
+        info["total_exclusive_per_thread"] = _cell(total / threads)
+        info["exclusive_fraction"] = OrderedDict(
+            (name, round(times.get(name, 0) / total, 6) if total else 0)
+            for name in ("MPI", "IO", "ADIOS", "USER", "OTHER")
+        )
+        info["top_exclusive"] = sorted(
+            rows, key=lambda row: row["Mean Exclusive"], reverse=True
+        )[:SUMMARY_TOP]
+        info["top_inclusive"] = sorted(
+            rows, key=lambda row: row["Mean Inclusive"], reverse=True
+        )[:SUMMARY_TOP]
+        by_metric[metric] = info
+    summary["by_metric"] = by_metric
+    return summary
 
 
 def _workflow_instance(workflow):
@@ -488,21 +564,11 @@ def _build_workflow_component(workflow, component_name, application, profiles):
     _, calls, event_totals = _sum_by_group(profiles)
     time_group_totals, _, _ = _sum_by_group(time_profiles)
     threads = max(len(profiles), 1)
-    comm_calls = sum(value for name, value in calls.items() if "MPI" in name)
-    comm_time = sum(
-        value for name, value in time_group_totals.items() if "MPI" in name
-    )
-    io_time = sum(
-        value for name, value in time_group_totals.items() if "TAU_IO" in name
-    )
-    adios_time = sum(
-        value for name, value in time_group_totals.items() if "ADIOS" in name
-    )
-    user_time = sum(
-        value
-        for name, value in time_group_totals.items()
-        if "TAU_USER" in name or "TAU_DEFAULT" in name
-    )
+    comm_calls = calls.get("MPI", 0)
+    comm_time = time_group_totals.get("MPI", 0)
+    io_time = time_group_totals.get("IO", 0)
+    adios_time = time_group_totals.get("ADIOS", 0)
+    user_time = time_group_totals.get("USER", 0)
     for name, value in (
         ("aggr_communication_calls", comm_calls),
         ("aggr_communication_time", comm_time / threads),
@@ -723,6 +789,12 @@ def parse_args(arguments):
         "-o", "--outfile", help="Output JSON file (default: stdout)", default="-"
     )
     parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Add a precomputed Summary per application: counts, top timers "
+        "and category time fractions (MPI, IO, ADIOS, USER, OTHER)",
+    )
+    parser.add_argument(
         "--compact",
         action="store_true",
         help="Emit the compact, token-efficient layout (columnar tables, "
@@ -752,6 +824,8 @@ def main(arguments=None):
     for indir in args.indir:
         print("Processing: {}".format(indir), file=sys.stderr)
         application, profiles = _load_directory(indir)
+        if args.summary:
+            application["Summary"] = _summarize(application, profiles)
         output[indir] = application
         for metric in application["Metrics"]:
             metric_names[metric] = None
