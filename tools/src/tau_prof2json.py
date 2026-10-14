@@ -17,6 +17,7 @@ ATTRIBUTE_RE = re.compile(
     re.DOTALL,
 )
 PROFILE_NAME_RE = re.compile(r"^profile\.(\d+)\.(\d+)\.(\d+)$")
+FORMAT_VERSION = "1.0"
 TIME_METRICS = {"TIME", "P_WALL_CLOCK_TIME", "P_VIRTUAL_TIME"}
 
 
@@ -234,6 +235,20 @@ def _profile_sort_key(filename):
     return tuple(int(value) for value in match.groups()) if match else (sys.maxsize,)
 
 
+def _thread_name(profile, known_names):
+    if profile["context index"]:
+        name = "Rank {}, Context {}, Thread {}".format(
+            profile["process index"], profile["context index"], profile["thread index"]
+        )
+    else:
+        name = "Rank {}, Thread {}".format(
+            profile["process index"], profile["thread index"]
+        )
+    if name in known_names:
+        name = "{}, Metric {}".format(name, profile["Metric"])
+    return name
+
+
 def _load_directory(indir):
     if not os.path.isdir(indir):
         raise ValueError("{}: not a profile directory".format(indir))
@@ -270,24 +285,14 @@ def _load_directory(indir):
                     ("Metric", profile["Metric"]),
                     ("Profile Format", profile["Profile Format"]),
                     ("Metadata", profile["Metadata"]),
-                    ("Timers", profile["Timers"]),
-                    ("Aggregates", profile["Aggregates"]),
-                    ("Counters", profile["Counters"]),
+                    ("Timer Count", len(profile["Timers"])),
+                    ("Aggregate Count", len(profile["Aggregates"])),
+                    ("Counter Count", len(profile["Counters"])),
                     ("Additional Profile Data", profile["Additional Profile Data"]),
                 )
             )
         )
-        thread_name = "Rank {}, Thread {}".format(
-            profile["process index"], profile["thread index"]
-        )
-        if profile["context index"]:
-            thread_name = "Rank {}, Context {}, Thread {}".format(
-                profile["process index"],
-                profile["context index"],
-                profile["thread index"],
-            )
-        if thread_name in application["metadata"]:
-            thread_name = "{}, Metric {}".format(thread_name, profile["Metric"])
+        thread_name = _thread_name(profile, application["metadata"])
         application["metadata"][thread_name] = profile["Metadata"]
         metrics[profile["Metric"]] = None
         for section in ("Timers", "Aggregates", "Counters"):
@@ -398,6 +403,7 @@ def _build_workflow_component(workflow, component_name, application, profiles):
     app_id = _application_for(workflow, component_name, app_name)
 
     timestamps = []
+    end_estimated = False
     time_profiles = [
         profile
         for profile in profiles
@@ -421,6 +427,7 @@ def _build_workflow_component(workflow, component_name, application, profiles):
                 end = int(end)
             elif time_profiles:
                 end = int(start) + int(max_inclusive)
+                end_estimated = True
             else:
                 end = None
             timestamps.append((int(start), end, thread_metadata))
@@ -453,6 +460,8 @@ def _build_workflow_component(workflow, component_name, application, profiles):
     if start_timestamp is not None:
         component["start-timestamp"] = str(start_timestamp)
         component["end-timestamp"] = str(end_timestamp)
+        if end_estimated:
+            component["end-timestamp-estimated"] = True
     if local_time is not None:
         component["Local-Time"] = local_time
     component["Processes"] = len({profile["process index"] for profile in profiles})
@@ -470,6 +479,8 @@ def _build_workflow_component(workflow, component_name, application, profiles):
     if start_timestamp is not None:
         instance["start-timestamp"] = str(start_timestamp)
         instance["end-timestamp"] = str(end_timestamp)
+        if end_estimated:
+            instance["end-timestamp-estimated"] = True
     if local_time is not None:
         instance["Local-Time"] = local_time
     instances.append(instance)
@@ -532,6 +543,172 @@ def _metrics(workflow, metric_names):
     workflow["Metrics"] = metrics
 
 
+COMPACT_VERSION = FORMAT_VERSION + "-compact"
+APPLICATION_SECTIONS = ("metadata", "Timers", "Aggregates", "Counters", "Profiles")
+
+
+def _cell(value):
+    if isinstance(value, float) and value.is_integer() and abs(value) < 2**53:
+        return int(value)
+    return value
+
+
+def _same(left, right):
+    return json.dumps(left) == json.dumps(right)
+
+
+def _encode_run(run, indexed, strings):
+    keys = list(run[0])
+    constants = OrderedDict()
+    if len(run) > 1:
+        for key in keys:
+            if all(_same(record[key], run[0][key]) for record in run):
+                constants[key] = _cell(run[0][key])
+    columns = [key for key in keys if key not in constants]
+    table = OrderedDict()
+    if constants:
+        table["constants"] = constants
+    table["columns"] = columns
+    coded = [key for key in columns if key in indexed]
+    if coded:
+        table["indexed"] = coded
+    table["rows"] = [
+        [
+            strings.setdefault(record[key], len(strings))
+            if key in indexed
+            else _cell(record[key])
+            for key in columns
+        ]
+        for record in run
+    ]
+    return table
+
+
+def _encode_tables(records, indexed, strings):
+    """Encode records as tables; a new table starts when the key set changes."""
+    tables = []
+    run = []
+    for record in records:
+        if run and list(record) != list(run[0]):
+            tables.append(_encode_run(run, indexed, strings))
+            run = []
+        run.append(record)
+    if run:
+        tables.append(_encode_run(run, indexed, strings))
+    return tables
+
+
+def _decode_tables(tables, strings):
+    records = []
+    for table in tables:
+        constants = table.get("constants", {})
+        columns = table["columns"]
+        coded = set(table.get("indexed", ()))
+        for row in table["rows"]:
+            record = OrderedDict(constants)
+            for column, value in zip(columns, row):
+                record[column] = strings[value] if column in coded else value
+            records.append(record)
+    return records
+
+
+def _compact_application(application):
+    strings = OrderedDict()
+    metadata = application["metadata"]
+    first = next(iter(metadata.values()), {})
+    common = OrderedDict(
+        (key, value)
+        for key, value in first.items()
+        if all(key in other and _same(other[key], value) for other in metadata.values())
+    )
+    result = OrderedDict()
+    result["common_metadata"] = common
+    result["thread_metadata"] = OrderedDict(
+        (
+            name,
+            OrderedDict((k, v) for k, v in values.items() if k not in common),
+        )
+        for name, values in metadata.items()
+    )
+    profiles = []
+    known = OrderedDict()
+    for profile in application["Profiles"]:
+        name = _thread_name(profile, known)
+        known[name] = None
+        record = OrderedDict(
+            (key, value) for key, value in profile.items() if key != "Metadata"
+        )
+        record["Thread"] = name
+        profiles.append(record)
+    sections = OrderedDict()
+    sections["Timers"] = _encode_tables(
+        application["Timers"], {"Function", "Group"}, strings
+    )
+    sections["Aggregates"] = _encode_tables(
+        application["Aggregates"], {"Function", "Group"}, strings
+    )
+    sections["Counters"] = _encode_tables(
+        application["Counters"], {"Counter"}, strings
+    )
+    result["strings"] = list(strings)
+    result.update(sections)
+    result["Profiles"] = _encode_tables(profiles, set(), strings)
+    for key, value in application.items():
+        if key not in APPLICATION_SECTIONS:
+            result[key] = value
+    return result
+
+
+def _expand_application(compact):
+    strings = compact["strings"]
+    common = compact["common_metadata"]
+    metadata = OrderedDict()
+    for name, values in compact["thread_metadata"].items():
+        metadata[name] = OrderedDict(common)
+        metadata[name].update(values)
+    result = OrderedDict()
+    result["metadata"] = metadata
+    for section in ("Timers", "Aggregates", "Counters"):
+        result[section] = _decode_tables(compact[section], strings)
+    result["Profiles"] = _decode_tables(compact["Profiles"], strings)
+    for profile in result["Profiles"]:
+        profile["Metadata"] = OrderedDict(metadata[profile.pop("Thread")])
+    for key, value in compact.items():
+        if key not in result and key not in (
+            "common_metadata",
+            "thread_metadata",
+            "strings",
+        ):
+            result[key] = value
+    return result
+
+
+def compact_output(output):
+    """Convert converter output to the token-efficient compact layout."""
+    result = OrderedDict()
+    for key, value in output.items():
+        if key == "Workflow metadata":
+            value = OrderedDict(value)
+            value["profile-json-version"] = COMPACT_VERSION
+            result[key] = value
+        else:
+            result[key] = _compact_application(value)
+    return result
+
+
+def expand_compact(compact):
+    """Losslessly restore the full layout from compact_output() data."""
+    result = OrderedDict()
+    for key, value in compact.items():
+        if key == "Workflow metadata":
+            value = OrderedDict(value)
+            value["profile-json-version"] = FORMAT_VERSION
+            result[key] = value
+        else:
+            result[key] = _expand_application(value)
+    return result
+
+
 def parse_args(arguments):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -544,6 +721,12 @@ def parse_args(arguments):
     )
     parser.add_argument(
         "-o", "--outfile", help="Output JSON file (default: stdout)", default="-"
+    )
+    parser.add_argument(
+        "--compact",
+        action="store_true",
+        help="Emit the compact, token-efficient layout (columnar tables, "
+        "string dictionary, no indentation); see tau_profile_json.md",
     )
     return parser.parse_args(arguments)
 
@@ -561,6 +744,7 @@ def main(arguments=None):
     workflow.setdefault("Application-instance", [])
 
     output = OrderedDict()
+    workflow["profile-json-version"] = FORMAT_VERSION
     output["Workflow metadata"] = workflow
     workflow_start = None
     workflow_end = None
@@ -581,7 +765,14 @@ def main(arguments=None):
         _workflow_instance(workflow)["execution_time"] = workflow_end - workflow_start
     _metrics(workflow, metric_names)
 
-    json_output = json.dumps(output, indent=2, allow_nan=False)
+    if args.compact:
+        output = compact_output(output)
+    json_output = json.dumps(
+        output,
+        indent=None if args.compact else 2,
+        separators=(",", ":") if args.compact else None,
+        allow_nan=False,
+    )
     if args.outfile == "-":
         sys.stdout.write(json_output)
         sys.stdout.write("\n")

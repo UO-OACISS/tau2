@@ -181,13 +181,43 @@ def validate_external_directory(profile_dir):
             with open(schema_path, encoding="utf-8") as schema_file:
                 jsonschema.validate(result, json.load(schema_file))
 
+        compact_path = os.path.join(temporary_directory, "compact.json")
+        subprocess.run(
+            [
+                sys.executable,
+                os.path.join(TOOLS_SRC, "tau_prof2json.py"),
+                "--compact",
+                "-o",
+                compact_path,
+                profile_dir,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        with open(compact_path, encoding="utf-8") as compact_file:
+            compact = json.load(compact_file)
+        if jsonschema is not None:
+            compact_schema = os.path.join(
+                TOOLS_SRC, "tau_profile_json_compact.schema.json"
+            )
+            with open(compact_schema, encoding="utf-8") as schema_file:
+                jsonschema.validate(compact, json.load(schema_file))
+        if tau_prof2json.expand_compact(compact) != result:
+            raise AssertionError("compact JSON does not expand to the full JSON")
+
         application = result[profile_dir]
     expected_profiles = [
         _reference_profile(os.path.join(profile_dir, filename))
         for filename in filenames
     ]
-    if application["Profiles"] != expected_profiles:
-        raise AssertionError("JSON per-profile records differ from source profiles")
+    for entry, expected in zip(application["Profiles"], expected_profiles):
+        for key in ("process index", "context index", "thread index", "Metric"):
+            if entry[key] != expected[key]:
+                raise AssertionError("JSON {} differs for {}".format(key, entry["Filename"]))
+        for section in ("Timer", "Aggregate", "Counter"):
+            if entry[section + " Count"] != len(expected[section + "s"]):
+                raise AssertionError("JSON {} count differs".format(section))
     for section in ("Timers", "Aggregates", "Counters"):
         expected_records = [
             record
@@ -273,6 +303,28 @@ class TauProfileToJsonTests(unittest.TestCase):
         self.assertEqual(12, component["aggr_communication_sent_bytes"])
         self.assertEqual(12, component["aggr_communication_recv_bytes"])
         self.assertIn("Processing:", errors.getvalue())
+
+    def test_compact_layout_is_lossless(self):
+        output = StringIO()
+        with redirect_stdout(output), redirect_stderr(StringIO()):
+            tau_prof2json.main([self.profile_dir])
+        full = json.loads(output.getvalue())
+        compact = json.loads(json.dumps(tau_prof2json.compact_output(full)))
+        application = compact[self.profile_dir]
+        self.assertEqual(
+            "1.0-compact", compact["Workflow metadata"]["profile-json-version"]
+        )
+        self.assertLessEqual(
+            {"main", "MPI_Send()", "TAU_USER", "MPI"}, set(application["strings"])
+        )
+        self.assertEqual(["Function", "Group"], application["Timers"][0]["indexed"])
+        self.assertEqual(full, tau_prof2json.expand_compact(compact))
+
+    def test_compact_tables_split_when_record_keys_differ(self):
+        records = [{"a": 1, "b": 2}, {"a": 1}, {"a": 3}]
+        tables = tau_prof2json._encode_tables(records, set(), {})
+        self.assertEqual(2, len(tables))
+        self.assertEqual(records, tau_prof2json._decode_tables(tables, []))
 
     def test_legacy_entry_point_uses_the_same_parser(self):
         legacy_path = os.path.join(TOOLS_SRC, "tau_prof_to_json.py")

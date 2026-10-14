@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TAU profile JSON output (compact layout)",
+  "description": "Output of tools/src/tau_prof2json.py --compact. Expand to the full layout with tau_prof2json.expand_compact().",
+  "type": "object",
+  "required": [
+    "Workflow metadata"
+  ],
+  "properties": {
+    "Workflow metadata": {
+      "$ref": "#/$defs/workflowMetadata"
+    }
+  },
+  "patternProperties": {
+    "^(?!Workflow metadata$).+": {
+      "$ref": "#/$defs/applicationProfile"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "workflowMetadata": {
+      "type": "object",
+      "required": [
+        "Workflow Instance",
+        "Workflow Component",
+        "Application",
+        "Application-instance",
+        "Metrics",
+        "profile-json-version"
+      ],
+      "properties": {
+        "profile-json-version": {
+          "const": "1.0-compact"
+        },
+        "Workflow Instance": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          ]
+        },
+        "Workflow Component": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Application": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Application-instance": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Metrics": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "columns",
+        "rows"
+      ],
+      "properties": {
+        "constants": {
+          "type": "object"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "indexed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "applicationProfile": {
+      "type": "object",
+      "required": [
+        "common_metadata",
+        "thread_metadata",
+        "strings",
+        "Timers",
+        "Aggregates",
+        "Counters",
+        "Profiles",
+        "Metrics"
+      ],
+      "properties": {
+        "common_metadata": {
+          "type": "object"
+        },
+        "thread_metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "strings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Timers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Aggregates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Counters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Metric": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

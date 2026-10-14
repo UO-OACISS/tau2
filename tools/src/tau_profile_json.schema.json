@@ -156,9 +156,9 @@
         "Metric",
         "Profile Format",
         "Metadata",
-        "Timers",
-        "Aggregates",
-        "Counters",
+        "Timer Count",
+        "Aggregate Count",
+        "Counter Count",
         "Additional Profile Data"
       ],
       "properties": {
@@ -187,29 +187,23 @@
         "Metadata": {
           "$ref": "#/$defs/profileMetadata"
         },
-        "Timers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/timerRecord"
-          }
-        },
-        "Aggregates": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/timerRecord"
-          }
-        },
-        "Counters": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/userEventRecord"
-          }
-        },
         "Additional Profile Data": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "Timer Count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Aggregate Count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Counter Count": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "additionalProperties": false
@@ -275,9 +269,13 @@
         "Workflow Component",
         "Application",
         "Application-instance",
-        "Metrics"
+        "Metrics",
+        "profile-json-version"
       ],
       "properties": {
+        "profile-json-version": {
+          "type": "string"
+        },
         "Workflow Instance": {
           "oneOf": [
             {
