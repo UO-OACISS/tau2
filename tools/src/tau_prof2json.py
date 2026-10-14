@@ -1,5 +1,28 @@
 #!/usr/bin/env python3
-"""Convert TAU text profile directories to JSON."""
+"""Convert TAU text profile directories to JSON.
+
+Each input directory (containing profile.<node>.<context>.<thread> files, or the
+MULTI__<metric> subdirectory for one metric of a multi-metric run) becomes one
+application object in the output JSON. The top-level object contains "Workflow 
+metadata" plus one key per input directory.
+
+Application object (default layout; schema: tau_profile_json.schema.json):
+  metadata   per-thread profile metadata attributes
+  Timers     one record per timer per thread: process/context/thread index,
+             Metric, Function, Calls, Subroutines, Exclusive Time,
+             Inclusive Time, Profile Calls, Group
+  Aggregates timer aggregate records, same fields as Timers
+  Counters   user-event records: Counter, Num Events, Max/Min/Mean/SumSqr Value
+  Profiles   one entry per source file (indices, Metric, Metadata, record
+             counts, any unparsed trailing lines)
+  Metrics    metric names found. NaN/Inf values are written as null.
+
+Workflow metadata gets "profile-json-version" and one Workflow Component per
+directory with derived aggr_* values (execution/communication/IO/ADIOS time
+and byte totals). These are computed here, not measured by TAU. When a
+profile lacks an Ending Timestamp it is estimated from the longest inclusive
+time and "end-timestamp-estimated" is set.
+"""
 
 import argparse
 import html
@@ -775,15 +798,51 @@ def expand_compact(compact):
     return result
 
 
+EPILOG = """\
+layouts:
+  default   self-describing JSON: one dictionary per record.
+  --compact token-efficient JSON (profile-json-version "1.0-compact",
+            schema: tau_profile_json_compact.schema.json). Timers,
+            Aggregates, Counters and Profiles are lists of tables:
+              {"constants": {...}, "columns": [...], "rows": [[...], ...]}
+            Each row holds values in "columns" order; "constants" are values
+            shared by every row (read them as extra columns). Columns listed
+            in "indexed" (Function and Group; Counter) are integers indexing
+            the application's "strings" list. "common_metadata" holds
+            attributes shared by all threads and "thread_metadata" only the
+            per-thread differences; a Profiles row names its thread in
+            "Thread".
+            tau_prof2json.expand_compact() restores the default layout
+            exactly.
+  --summary adds "Summary" to each application in either layout: process,
+            thread and record counts and, per metric, mean exclusive time per
+            thread, the exclusive-time fraction in MPI/IO/ADIOS/USER/OTHER,
+            and the top 10 timers by mean exclusive and inclusive time.
+
+workflow file (-w): optional JSON describing the workflow (Workflow Instance,
+Workflow Component, Application, inputs/outputs, dependency graph). It is
+prepared by hand; components are matched to directories by path or basename
+and filled with the derived values above.
+
+examples:
+  tau_prof2json.py -o app.json run1/
+  tau_prof2json.py --compact --summary -w workflow.json run1/ run2/
+"""
+
+
 def parse_args(arguments):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "indir",
         help="One or more directories containing TAU text profiles",
         nargs="+",
     )
     parser.add_argument(
-        "-w", "--workflow", help="Workflow metadata input file (JSON)", default=None
+        "-w", "--workflow", help="Workflow description to merge in (JSON, see below)", default=None
     )
     parser.add_argument(
         "-o", "--outfile", help="Output JSON file (default: stdout)", default="-"
@@ -798,7 +857,7 @@ def parse_args(arguments):
         "--compact",
         action="store_true",
         help="Emit the compact, token-efficient layout (columnar tables, "
-        "string dictionary, no indentation); see tau_profile_json.md",
+        "string dictionary, no indentation); see layouts below",
     )
     return parser.parse_args(arguments)
 
