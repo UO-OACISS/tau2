@@ -1,0 +1,6 @@
+func: compute_a => yes
+func: compute => yes
+func: main => yes
+func: compute_skip => no
+func: other => no
+func: maint => no

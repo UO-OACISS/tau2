@@ -1,0 +1,7 @@
+this line is not part of any block
+BEGIN_INSTRUMENT_SECTION
+loops file="x.c" routine="foo"
+END_INSTRUMENT_SECTION
+BEGIN_EXCLUDE_LIST
+int foo(int)
+END_EXCLUDE_LIST

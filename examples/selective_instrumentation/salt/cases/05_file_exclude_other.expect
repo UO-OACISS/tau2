@@ -1,0 +1,2 @@
+timer: int foo(int) => yes
+timer: int baz(void) => yes

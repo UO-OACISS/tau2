@@ -2432,9 +2432,13 @@ else
                    if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
 		     if [ "x$tauSelectFile" != "x" ] ; then
-                        optExcludeFuncsList=$(sed -n '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p' "$tauSelectFile" | \
-                          grep -v 'BEGIN_EXCLUDE_LIST\|END_EXCLUDE_LIST' | \
-                          grep -v -e '^#' -e '^$' | \
+                        # Drop leading whitespace and comment/blank lines, unquote "entries", and drop
+                        # wildcard entries (# and ?): GNU's exclude list only takes literal names.
+                        optExcludeFuncsList=$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^#/d' -e '/^$/d' "$tauSelectFile" | \
+                          sed -n '/^BEGIN_EXCLUDE_LIST$/,/^END_EXCLUDE_LIST$/p' | \
+                          grep -v '^BEGIN_EXCLUDE_LIST$\|^END_EXCLUDE_LIST$' | \
+                          sed -e 's/^"\([^"]*\)".*/\1/' | \
+                          grep -v '[#?]' | \
                           tr '\n' ',' | \
                           sed 's/,$//')
 			#Gnu does not match function signatures reliably. Use a minimal token instead

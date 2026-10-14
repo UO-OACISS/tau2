@@ -1,0 +1,3 @@
+func: foo => yes
+func: main => yes
+file: any.c => yes

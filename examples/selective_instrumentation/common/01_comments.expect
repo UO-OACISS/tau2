@@ -1,0 +1,5 @@
+func: foo => no
+func: bar => no
+func: baz => yes
+func: comment => yes
+func: a => yes

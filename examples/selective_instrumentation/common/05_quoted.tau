@@ -1,0 +1,5 @@
+# A quoted entry may start with #, which would otherwise be a comment.
+BEGIN_EXCLUDE_LIST
+"#foo"
+"void f(int, int)"
+END_EXCLUDE_LIST

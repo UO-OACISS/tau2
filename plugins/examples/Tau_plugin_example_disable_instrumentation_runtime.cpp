@@ -49,6 +49,32 @@ extern "C" void Tau_profile_set_group(void *ptr, TauGroup_t group);
 
 using namespace std;
 
+/* Read one line of an SI file. Lines longer than the buffer are truncated (the
+ * rest is discarded) instead of leaving the stream in a failed state that would
+ * silently drop the remainder of the file. Returns false at end of file. */
+static bool siGetLine(istream& in, char *line)
+{
+  in.getline(line, INBUF_SIZE);
+  if (in.fail() && !in.eof() && in.gcount() == INBUF_SIZE - 1) {
+    in.clear();
+    in.ignore(100000000, '\n');
+  }
+  return in.gcount() > 0;
+}
+
+/* Strip trailing whitespace (including '\r' from DOS line endings) in place and
+ * return a pointer to the first non-whitespace character. */
+static char *siTrimLine(char *line)
+{
+  size_t len = strlen(line);
+  while (len > 0 && isspace((unsigned char)line[len - 1]))
+    line[--len] = '\0';
+  while (isspace((unsigned char)*line))
+    ++line;
+  return line;
+}
+
+
 #define BEGIN_EXCLUDE_TOKEN      "BEGIN_EXCLUDE_LIST"
 #define END_EXCLUDE_TOKEN        "END_EXCLUDE_LIST"
 #define BEGIN_INCLUDE_TOKEN      "BEGIN_INCLUDE_LIST"
@@ -89,22 +115,18 @@ int processInstrumentationRequests(char *fname)
   printf("Inside processInstrumentationRequests\n");
 #endif /* DEBUG */
 
-  while (input.getline(line, INBUF_SIZE) || input.gcount()) {
+  while (siGetLine(input, line)) {
     lineno++;
     /* Skip whitespace at the beginning of line */
-    inbuf = line;
-    while (isspace(*inbuf))
-      ++inbuf;
+    inbuf = siTrimLine(line);
 
     if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
 
     if (strcmp(inbuf, BEGIN_EXCLUDE_TOKEN) == 0) {
-      while (input.getline(line, INBUF_SIZE) || input.gcount()) {
+      while (siGetLine(input, line)) {
         lineno++;
         /* Skip whitespace at the beginning of line */
-        inbuf = line;
-        while (isspace(*inbuf))
-          ++inbuf;
+        inbuf = siTrimLine(line);
 
         if (strcmp(inbuf, END_EXCLUDE_TOKEN) == 0) break; /* Found the end of exclude list. */
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -130,12 +152,10 @@ int processInstrumentationRequests(char *fname)
     }
 
     if (strcmp(inbuf, BEGIN_INCLUDE_TOKEN) == 0) {
-      while (input.getline(line, INBUF_SIZE) || input.gcount()) {
+      while (siGetLine(input, line)) {
         lineno++;
         /* Skip whitespaces at the beginning of line */
-        inbuf = line;
-        while (isspace(*inbuf))
-          ++inbuf;
+        inbuf = siTrimLine(line);
 
         if (strcmp(inbuf, END_INCLUDE_TOKEN) == 0) break; /* Found the end of exclude list. */
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -161,12 +181,10 @@ int processInstrumentationRequests(char *fname)
     }
 
     if (strcmp(inbuf, BEGIN_FILE_INCLUDE_TOKEN) == 0) {
-      while (input.getline(line, INBUF_SIZE) || input.gcount()) {
+      while (siGetLine(input, line)) {
         lineno++;
         /* Skip whitespaces at the beginning of line */
-        inbuf = line;
-        while (isspace(*inbuf))
-          ++inbuf;
+        inbuf = siTrimLine(line);
 
         if (strcmp(inbuf, END_FILE_INCLUDE_TOKEN) == 0) break; /* Found the end of file include list. */
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -178,12 +196,10 @@ int processInstrumentationRequests(char *fname)
     }
 
     if (strcmp(inbuf, BEGIN_FILE_EXCLUDE_TOKEN) == 0) {
-      while (input.getline(line, INBUF_SIZE) || input.gcount()) {
+      while (siGetLine(input, line)) {
         lineno++;
         /* Skip whitespaces at the beginning of line */
-        inbuf = line;
-        while (isspace(*inbuf))
-          ++inbuf;
+        inbuf = siTrimLine(line);
 
         if (strcmp(inbuf, END_FILE_EXCLUDE_TOKEN) == 0) break; /* Found the end of file exclude list. */
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -192,12 +208,10 @@ int processInstrumentationRequests(char *fname)
     }
 
     if (strcmp(inbuf, BEGIN_INSTRUMENT_SECTION) == 0) {
-      while (input.getline(line, INBUF_SIZE) || input.gcount()) {
+      while (siGetLine(input, line)) {
         lineno++;
         /* Skip whitespaces at the beginning of line */
-        inbuf = line;
-        while (isspace(*inbuf))
-          ++inbuf;
+        inbuf = siTrimLine(line);
 
         if (strcmp(inbuf, END_INSTRUMENT_SECTION) == 0) break; /* Found the end of file exclude list. */
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -347,7 +361,7 @@ bool wildcardCompare(char *wild, char *string, char kleenestar)
   char *mp = NULL;
 
   // if the wildcard does not contain path information, strip it from the other string
-  if (!strchr(wild, TAU_DIR_CHARACTER)) {
+  if (kleenestar == '*' && !strchr(wild, TAU_DIR_CHARACTER)) {
     while (strchr(string, TAU_DIR_CHARACTER)) {    // remove path
       string = strchr(string, TAU_DIR_CHARACTER) + 1;
     }

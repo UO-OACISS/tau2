@@ -1,0 +1,8 @@
+func: foo_internal => no
+func: _internal => no
+func: ns::x => no
+func: ns::sub::y => no
+func: foo => yes
+func: internal_foo => yes
+func: void g(int*) => no
+func: void g(int) => yes
