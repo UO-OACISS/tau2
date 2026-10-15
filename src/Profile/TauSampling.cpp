@@ -963,9 +963,9 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 }
 
 #ifdef TAU_BFD
-int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname);
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, unsigned long probeAddr, char const * funcname);
 #else /* TAU_BFD */
-int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, unsigned long probeAddr, char const * funcname) {
   return 10;
 }
 #endif /* TAU_BFD */
@@ -1225,7 +1225,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
                 tag, childName, resolvedInfo.funcname,
-                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), resolvedInfo.funcname));
+                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), addr, resolvedInfo.funcname));
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + strlen(childName) +
                     strlen(resolvedInfo.funcname) +
@@ -1258,7 +1258,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(resolvedInfo.filename) + 32);
             sprintf(buff, "[%s] %s [{%s} {%d}]",
                 tag, resolvedInfo.funcname,
-                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), resolvedInfo.funcname));
+                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), addr, resolvedInfo.funcname));
             *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + 2);
             sprintf(*newShortName, "%s", resolvedInfo.funcname);
         } else { // Line resolution

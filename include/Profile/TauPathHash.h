@@ -397,42 +397,24 @@ std::pair<unsigned long *, T> *TauPathHashTable<T>::nextIter()
     //    printf("Iteration count of %d has hit limit of %d\n", iterCount, numElements);
     return NULL ;
   }
-  // Need to search later table entries.
-  //   This test relies on short-cicruiting.
-  //   iterPtr == NULL means we just started.
-  //   iterPtr->next == NULL means we are at the end of a chain.
-  if ((iterPtr == NULL) || (iterPtr->next == NULL)) {
-    bool found = false;
-    iterTblIdx++; // go to next table
-    while (iterTblIdx < tableSize) {
-      if (table[iterTblIdx] != NULL) {
-	// only increment iterTblIdx if false
-	found = true;
-	break;
-      }
+  if ((iterPtr != NULL) && (iterPtr->next != NULL)) {
+    // Somewhere in a chain: continue along it.
+    iterPtr = iterPtr->next;
+  } else {
+    // Move on to the next non-empty bucket.
+    if (iterPtr != NULL) {
       iterTblIdx++;
     }
-    if (found) {
-      iterPtr = table[iterTblIdx];
-      //      printf("IterPtr found in table entry at %p\n", iterPtr);
-      pair_t * item = new pair_t(iterPtr->pair->key, iterPtr->pair->value);
-      //      printf("Found key %p value %d\n", item->first, item->second);
-      iterCount++;
-      return item;
-    } else {
-      //      printf("Nothing found in table!\n");
+    while ((iterTblIdx < tableSize) && (table[iterTblIdx] == NULL)) {
+      iterTblIdx++;
+    }
+    if (iterTblIdx >= tableSize) {
       return NULL;
     }
-  } else { // somewhere in a chain
-    // This condition must be true:
-    //   iterPtr != NULL && iterPtr->next != NULL
-    iterPtr = iterPtr->next;
-    //    printf("IterPtr found in chain at %p\n", iterPtr);
-    pair_t * item = new pair_t(iterPtr->pair->key, iterPtr->pair->value);
-    //      printf("Found key %p value %d\n", item->first, item->second);
-    iterCount++;
-    return item;
+    iterPtr = table[iterTblIdx];
   }
+  iterCount++;
+  return new pair_t(iterPtr->pair->key, iterPtr->pair->value);
 }
 
 //#endif /* _AIX */
