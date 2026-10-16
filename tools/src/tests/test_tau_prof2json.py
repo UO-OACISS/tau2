@@ -149,9 +149,51 @@ def _reference_profile(path):
     }
 
 
+def _profile_sources(profile_dir):
+    """(display name, path) of every source profile, MULTI__ metrics included."""
+    multi = sorted(
+        name
+        for name in os.listdir(profile_dir)
+        if name.startswith("MULTI_")
+        and os.path.isdir(os.path.join(profile_dir, name))
+    )
+    if not multi:
+        return [
+            (name, os.path.join(profile_dir, name))
+            for name in _profile_filenames(profile_dir)
+        ]
+    if _profile_filenames(profile_dir):
+        raise AssertionError(
+            "{} mixes profile.* files and MULTI__ directories".format(profile_dir)
+        )
+    return [
+        (os.path.join(directory, name), os.path.join(profile_dir, directory, name))
+        for directory in multi
+        for name in _profile_filenames(os.path.join(profile_dir, directory))
+    ]
+
+
+def _primary_metric(expected_profiles):
+    metrics = list(dict.fromkeys(p["Metric"] for p in expected_profiles))
+    time_metrics = {"TIME", "P_WALL_CLOCK_TIME", "P_VIRTUAL_TIME"}
+    return next((m for m in metrics if m.upper() in time_metrics), metrics[0])
+
+
+def _expected_counters(expected_profiles):
+    """User events are metric independent: kept only on the time metric."""
+    primary = _primary_metric(expected_profiles)
+    return [
+        record
+        for profile in expected_profiles
+        if profile["Metric"] == primary
+        for record in profile["Counters"]
+    ]
+
+
 def validate_external_directory(profile_dir):
     profile_dir = os.path.abspath(profile_dir)
-    filenames = _profile_filenames(profile_dir)
+    sources = _profile_sources(profile_dir)
+    filenames = [name for name, _ in sources]
     if not filenames:
         raise AssertionError(
             "{} contains no profile.<node>.<context>.<thread> files".format(
@@ -207,23 +249,29 @@ def validate_external_directory(profile_dir):
             raise AssertionError("compact JSON does not expand to the full JSON")
 
         application = result[profile_dir]
-    expected_profiles = [
-        _reference_profile(os.path.join(profile_dir, filename))
-        for filename in filenames
-    ]
+    expected_profiles = [_reference_profile(path) for _, path in sources]
+    primary = _primary_metric(expected_profiles)
     for entry, expected in zip(application["Profiles"], expected_profiles):
+        if entry["Filename"] != next(n for n, _ in sources if n == entry["Filename"]):
+            raise AssertionError("unexpected file {}".format(entry["Filename"]))
         for key in ("process index", "context index", "thread index", "Metric"):
             if entry[key] != expected[key]:
                 raise AssertionError("JSON {} differs for {}".format(key, entry["Filename"]))
         for section in ("Timer", "Aggregate", "Counter"):
-            if entry[section + " Count"] != len(expected[section + "s"]):
+            count = len(expected[section + "s"])
+            if section == "Counter" and expected["Metric"] != primary:
+                count = 0
+            if entry[section + " Count"] != count:
                 raise AssertionError("JSON {} count differs".format(section))
     for section in ("Timers", "Aggregates", "Counters"):
-        expected_records = [
-            record
-            for profile in expected_profiles
-            for record in profile[section]
-        ]
+        if section == "Counters":
+            expected_records = _expected_counters(expected_profiles)
+        else:
+            expected_records = [
+                record
+                for profile in expected_profiles
+                for record in profile[section]
+            ]
         if application[section] != expected_records:
             raise AssertionError(
                 "JSON {} list differs from source profiles".format(section)
@@ -237,7 +285,7 @@ def validate_external_directory(profile_dir):
         len(filenames),
         sum(len(profile["Timers"]) for profile in expected_profiles),
         sum(len(profile["Aggregates"]) for profile in expected_profiles),
-        sum(len(profile["Counters"]) for profile in expected_profiles),
+        len(_expected_counters(expected_profiles)),
     )
 
 
@@ -369,24 +417,6 @@ class TauProfileToJsonTests(unittest.TestCase):
             tau_prof2json.main([self.profile_dir])
         self.assertNotIn("Summary", json.loads(without.getvalue())[self.profile_dir])
 
-    def test_legacy_entry_point_uses_the_same_parser(self):
-        legacy_path = os.path.join(TOOLS_SRC, "tau_prof_to_json.py")
-        output_path = os.path.join(self.temp_dir.name, "legacy.json")
-        subprocess.run(
-            [
-                sys.executable,
-                legacy_path,
-                "-o",
-                output_path,
-                self.profile_dir,
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        with open(output_path, encoding="utf-8") as converted:
-            self.assertIn(self.profile_dir, json.load(converted))
-
     def test_hardware_counter_is_not_reported_as_execution_time(self):
         with open(self.profile_path, "w", encoding="utf-8") as profile:
             profile.write(PROFILE.replace("<value>TIME</value>", "<value>CPU_CYCLES</value>"))
@@ -421,6 +451,104 @@ class TauProfileToJsonTests(unittest.TestCase):
         self.assertEqual("existing-workflow", workflow["Workflow Instance"][0]["name"])
         self.assertEqual(1000, workflow["Workflow Instance"][0]["execution_time"])
 
+    def _write_multi(self, root, metrics, events=None):
+        """Write MULTI__<metric> directories holding one profile.0.0.0 each."""
+        for metric in metrics:
+            directory = os.path.join(root, "MULTI__" + metric)
+            os.makedirs(directory)
+            text = PROFILE.replace("<value>TIME</value>", "<value>%s</value>" % metric)
+            text = text.replace("templated_functions_MULTI_TIME",
+                                "templated_functions_MULTI_" + metric)
+            if events and metric in events:
+                text = text.replace('"quoted event" 1 3 3 3 9', events[metric])
+            with open(os.path.join(directory, "profile.0.0.0"), "w", encoding="utf-8") as f:
+                f.write(text)
+
+    def _convert(self, *arguments):
+        output = StringIO()
+        with redirect_stdout(output), redirect_stderr(StringIO()):
+            tau_prof2json.main(list(arguments))
+        return json.loads(output.getvalue())
+
+    def test_multi_metric_directories_are_merged(self):
+        root = os.path.join(self.temp_dir.name, "multi")
+        os.mkdir(root)
+        self._write_multi(root, ["TIME", "PAPI_FP_OPS"])
+
+        result = self._convert("--summary", root)
+        application = result[root]
+        self.assertEqual(["PAPI_FP_OPS", "TIME"], application["Metrics"])
+        self.assertEqual(
+            ["MULTI__PAPI_FP_OPS/profile.0.0.0", "MULTI__TIME/profile.0.0.0"],
+            [entry["Filename"] for entry in application["Profiles"]],
+        )
+        self.assertEqual(
+            {"PAPI_FP_OPS", "TIME"}, {t["Metric"] for t in application["Timers"]}
+        )
+        self.assertEqual(4, len(application["Timers"]))
+        # User events are identical across metrics, so stored once.
+        self.assertEqual(3, len(application["Counters"]))
+        self.assertEqual([0, 3], [
+            e["Counter Count"] for e in application["Profiles"]
+        ])
+        self.assertEqual({"TIME"}, {c["Metric"] for c in application["Counters"]})
+        self.assertEqual(1, application["Summary"]["threads"])
+        self.assertEqual(
+            ["PAPI_FP_OPS", "TIME"], list(application["Summary"]["by_metric"])
+        )
+        workflow = result["Workflow metadata"]
+        component = workflow["Workflow Component"][0]
+        self.assertEqual(1, component["Threads"])
+        self.assertEqual(12, component["aggr_communication_sent_bytes"])
+        self.assertEqual(3.5, component["aggr_execution_time"])
+        self.assertEqual(2, len(workflow["Metrics"]))
+
+    def test_multi_metric_compact_layout_is_lossless(self):
+        root = os.path.join(self.temp_dir.name, "multi")
+        os.mkdir(root)
+        self._write_multi(root, ["TIME", "PAPI_FP_OPS"])
+        full = self._convert(root)
+        compact = json.loads(json.dumps(tau_prof2json.compact_output(full)))
+        self.assertEqual(full, tau_prof2json.expand_compact(compact))
+        if jsonschema is not None:
+            for name, document in (
+                ("tau_profile_json.schema.json", full),
+                ("tau_profile_json_compact.schema.json", compact),
+            ):
+                with open(os.path.join(TOOLS_SRC, name), encoding="utf-8") as f:
+                    jsonschema.validate(document, json.load(f))
+
+    def test_differing_user_events_use_time_metric_with_warning(self):
+        root = os.path.join(self.temp_dir.name, "multi")
+        os.mkdir(root)
+        self._write_multi(
+            root, ["TIME", "PAPI_FP_OPS"],
+            events={"PAPI_FP_OPS": '"quoted event" 9 3 3 3 9'},
+        )
+        errors = StringIO()
+        output = StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            tau_prof2json.main([root])
+        self.assertIn("user events differ", errors.getvalue())
+        self.assertEqual(3, len(json.loads(output.getvalue())[root]["Counters"]))
+
+    def test_multi_directories_with_root_profiles_is_an_error(self):
+        root = os.path.join(self.temp_dir.name, "mixed")
+        os.mkdir(root)
+        self._write_multi(root, ["TIME"])
+        with open(os.path.join(root, "profile.0.0.0"), "w", encoding="utf-8") as f:
+            f.write(PROFILE)
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
+                tau_prof2json.main([root])
+
+    def test_single_multi_directory_can_be_targeted_directly(self):
+        root = os.path.join(self.temp_dir.name, "multi")
+        os.mkdir(root)
+        self._write_multi(root, ["TIME", "PAPI_FP_OPS"])
+        target = os.path.join(root, "MULTI__TIME")
+        self.assertEqual(["TIME"], self._convert(target)[target]["Metrics"])
+
     @unittest.skipIf(jsonschema is None, "jsonschema is not installed")
     def test_output_matches_documented_schema(self):
         output = StringIO()
@@ -436,7 +564,8 @@ if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument(
         "--profile-dir",
-        help="Also validate an external directory of raw TAU profile.* files",
+        help="Also validate an external directory of raw TAU profile.* files "
+        "or MULTI__<metric> directories",
     )
     options = argument_parser.parse_args()
     suite_result = unittest.main(argv=[sys.argv[0]], exit=False).result

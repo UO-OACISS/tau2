@@ -164,7 +164,7 @@
       "properties": {
         "Filename": {
           "type": "string",
-          "pattern": "^profile\\.\\d+\\.\\d+\\.\\d+$"
+          "pattern": "^(MULTI_+[^/]+/)?profile\\.\\d+\\.\\d+\\.\\d+$"
         },
         "process index": {
           "type": "integer",

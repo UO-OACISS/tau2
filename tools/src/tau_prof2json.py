@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Convert TAU text profile directories to JSON.
 
-Each input directory (containing profile.<node>.<context>.<thread> files, or the
-MULTI__<metric> subdirectory for one metric of a multi-metric run) becomes one
-application object in the output JSON. The top-level object contains "Workflow 
+Each input directory (containing profile.<node>.<context>.<thread> files, or
+MULTI__<metric> subdirectories from a multi-metric run) becomes one
+application object in the output JSON. All MULTI__ metrics are merged into that
+one object; user events (identical across metrics) are stored once per thread, under
+the time metric (or the first metric if none is a time metric).
+A directory holding both profile.* files and MULTI__ directories is an error. The top-level object contains "Workflow 
 metadata" plus one key per input directory.
 
 Application object (default layout; schema: tau_profile_json.schema.json):
@@ -40,6 +43,7 @@ ATTRIBUTE_RE = re.compile(
     re.DOTALL,
 )
 PROFILE_NAME_RE = re.compile(r"^profile\.(\d+)\.(\d+)\.(\d+)$")
+MULTI_DIR_RE = re.compile(r"^MULTI_+.+$")
 FORMAT_VERSION = "1.0"
 TIME_METRICS = {"TIME", "P_WALL_CLOCK_TIME", "P_VIRTUAL_TIME"}
 
@@ -273,20 +277,76 @@ def _thread_name(profile, known_names):
     return name
 
 
-def _load_directory(indir):
-    if not os.path.isdir(indir):
-        raise ValueError("{}: not a profile directory".format(indir))
-    profiles = sorted(
+def _profile_files(directory):
+    return sorted(
         (
             name
-            for name in os.listdir(indir)
+            for name in os.listdir(directory)
             if PROFILE_NAME_RE.fullmatch(name)
-            and os.path.isfile(os.path.join(indir, name))
+            and os.path.isfile(os.path.join(directory, name))
         ),
         key=_profile_sort_key,
     )
-    if not profiles:
-        raise ValueError("{}: no TAU profile.* files found".format(indir))
+
+
+def _metric_sources(indir):
+    """Return (subdirectory prefix, directory) pairs holding profile files.
+
+    A directory with MULTI__<metric> subdirectories is a multi-metric run and
+    all of them are read. Mixing them with profile.* files in the same
+    directory is ambiguous and rejected.
+    """
+    multi = sorted(
+        name
+        for name in os.listdir(indir)
+        if MULTI_DIR_RE.fullmatch(name) and os.path.isdir(os.path.join(indir, name))
+    )
+    if not multi:
+        return [("", indir)]
+    if _profile_files(indir):
+        raise ValueError(
+            "{}: contains both profile.* files and MULTI__ metric directories "
+            "({}); it is ambiguous which to convert. Target one of them "
+            "directly or remove the other".format(indir, ", ".join(multi))
+        )
+    return [(name, os.path.join(indir, name)) for name in multi]
+
+
+def _counter_values(counters):
+    return [
+        OrderedDict((k, v) for k, v in counter.items() if k != "Metric")
+        for counter in counters
+    ]
+
+
+def _unique_threads(profiles):
+    return {
+        (p["process index"], p["context index"], p["thread index"]) for p in profiles
+    }
+
+
+def _primary_profiles(profiles):
+    """Profiles of one metric (a time metric if present).
+
+    Calls do not depend on the metric, so aggregating them over every metric
+    would count them several times.
+    """
+    metrics = list(OrderedDict((p["Metric"], None) for p in profiles))
+    chosen = next((m for m in metrics if m.upper() in TIME_METRICS), None)
+    if chosen is None and metrics:
+        chosen = metrics[0]
+    return [p for p in profiles if p["Metric"] == chosen]
+
+
+def _load_directory(indir):
+    if not os.path.isdir(indir):
+        raise ValueError("{}: not a profile directory".format(indir))
+    sources = []
+    for prefix, directory in _metric_sources(indir):
+        names = _profile_files(directory)
+        if not names:
+            raise ValueError("{}: no TAU profile.* files found".format(directory))
+        sources.extend((prefix, directory, name) for name in names)
 
     application = OrderedDict()
     application["metadata"] = OrderedDict()
@@ -296,13 +356,41 @@ def _load_directory(indir):
     application["Profiles"] = []
     metrics = OrderedDict()
     parsed_profiles = []
-    for filename in profiles:
-        profile = parse_profile(os.path.join(indir, filename))
+    loaded = [
+        (prefix, directory, filename, parse_profile(os.path.join(directory, filename)))
+        for prefix, directory, filename in sources
+    ]
+    # User events do not depend on the metric. Keep them on the primary
+    # (time) metric's profiles only; other metrics' copies are dropped.
+    primary = _primary_profiles([item[3] for item in loaded])
+    primary_metric = primary[0]["Metric"] if primary else None
+    primary_counters = {
+        (p["process index"], p["context index"], p["thread index"]): _counter_values(
+            p["Counters"]
+        )
+        for p in primary
+    }
+    for prefix, directory, filename, profile in loaded:
+        thread_key = (
+            profile["process index"],
+            profile["context index"],
+            profile["thread index"],
+        )
+        if profile["Metric"] != primary_metric and thread_key in primary_counters:
+            if not _same(primary_counters[thread_key], _counter_values(profile["Counters"])):
+                print(
+                    "warning: {}: user events differ from metric {}; using "
+                    "those".format(
+                        os.path.join(directory, filename), primary_metric
+                    ),
+                    file=sys.stderr,
+                )
+            profile["Counters"] = []
         parsed_profiles.append(profile)
         application["Profiles"].append(
             OrderedDict(
                 (
-                    ("Filename", filename),
+                    ("Filename", os.path.join(prefix, filename) if prefix else filename),
                     ("process index", profile["process index"]),
                     ("context index", profile["context index"]),
                     ("thread index", profile["thread index"]),
@@ -394,7 +482,7 @@ def _summarize(application, profiles):
     """Precompute the first-pass statistics analysts otherwise derive."""
     summary = OrderedDict()
     summary["processes"] = len({p["process index"] for p in profiles})
-    summary["threads"] = len(profiles)
+    summary["threads"] = len(_unique_threads(profiles))
     summary["timer_records"] = len(application["Timers"])
     summary["counter_records"] = len(application["Counters"])
     by_metric = OrderedDict()
@@ -564,7 +652,7 @@ def _build_workflow_component(workflow, component_name, application, profiles):
     if local_time is not None:
         component["Local-Time"] = local_time
     component["Processes"] = len({profile["process index"] for profile in profiles})
-    component["Threads"] = len(profiles)
+    component["Threads"] = len(_unique_threads(profiles))
 
     instances = workflow.setdefault("Application-instance", [])
     instance = OrderedDict(
@@ -584,9 +672,11 @@ def _build_workflow_component(workflow, component_name, application, profiles):
         instance["Local-Time"] = local_time
     instances.append(instance)
 
-    _, calls, event_totals = _sum_by_group(profiles)
-    time_group_totals, _, _ = _sum_by_group(time_profiles)
-    threads = max(len(profiles), 1)
+    _, calls, _ = _sum_by_group(_primary_profiles(profiles))
+    # Counters are already stored once per thread, so use every profile.
+    _, _, event_totals = _sum_by_group(profiles)
+    time_group_totals, _, _ = _sum_by_group(_primary_profiles(time_profiles))
+    threads = max(len(_unique_threads(profiles)), 1)
     comm_calls = calls.get("MPI", 0)
     comm_time = time_group_totals.get("MPI", 0)
     io_time = time_group_totals.get("IO", 0)
