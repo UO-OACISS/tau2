@@ -3697,7 +3697,7 @@ fi
 if [ "x$python_ver_specified" = "xno" -a "x$pythoninc" != "x" ]; then
   if [ -f $pythoninc/../bin/python ]; then
     pythonintv=$pythoninc/../bin/python
-    pythonbin=$pythonbin/../bin
+    pythonbin=$pythoninc/../bin
     python_ver_specified=yes
   fi
 fi
@@ -12392,8 +12392,8 @@ build_perfstubs() {
         git submodule update --init --recursive perfstubs
     fi
     perfstubs_include_file=perfstubs/perfstubs.mk
-    Python3_BIN_DIR=`dirname ${pythonintv}`
-    Python3_ROOT_DIR=`dirname ${Python3_BIN_DIR}`
+    # CMake runs from the perfstubs directory, so it needs an absolute path
+    Python3_EXE=`cd $(dirname ${pythonintv}) && pwd`/`basename ${pythonintv}`
     rm -f ${perfstubs_include_file}
     touch ${perfstubs_include_file}
     echo "CC=${c_compiler}" >> ${perfstubs_include_file}
@@ -12401,8 +12401,9 @@ build_perfstubs() {
     echo "PREFIX=${targetdir}" >> ${perfstubs_include_file}
     echo "TAUARCH=${architecture}" >> ${perfstubs_include_file}
     echo "TAUOPTIONS=${tauoptions}" >> ${perfstubs_include_file}
-    # Let CMake find Python
-    echo "TAUPYTHON=-DPERFSTUBS_WITH_PYTHON=TRUE -DPython3_FIND_STRATEGY=LOCATION -DCMAKE_PREFIX_PATH=${Python3_ROOT_DIR}" >> ${perfstubs_include_file}
+    # Pass the full path to exactly the same Python interpreter TAU was configured with;
+    # otherwise CMake might pick some other Python on the path.
+    echo "TAUPYTHON=-DPERFSTUBS_WITH_PYTHON=TRUE -DPython3_EXECUTABLE=${Python3_EXE} -DPython3_FIND_VIRTUALENV=STANDARD" >> ${perfstubs_include_file}
     cp etc/Makefile.perfstubs perfstubs/Makefile
     fixmakeargs="$fixmakeargs PerfStubs "
     make -C perfstubs clean
