@@ -39,7 +39,7 @@ sub trim($)
   }
 
 
-if (@ARGV == 0) {
+sub print_variables() {
     print "TAUROOT=$TAUROOT\n";
     print "TAUARCH=$TAUARCH\n";
     print "BASEDIR=$BASEDIR\n";
@@ -50,6 +50,48 @@ if (@ARGV == 0) {
     print "PYTHONINT=$PYTHONINT\n";
     print "APEX_LIB_DIR=$APEX_LIB_DIR\n";
     print "ZEROSUM_LIB_DIR=$ZEROSUM_LIB_DIR\n";
+}
+
+# --config=<cfg> prints the variables for the specified configuration from Makefile.tau-<cfg>.
+my $config;
+my @rest;
+foreach my $arg (@ARGV) {
+    if ($arg =~ /^--config=(.*)$/) {
+        $config = $1;
+    } else {
+        push @rest, $arg;
+    }
+}
+
+if (defined $config) {
+    my $mk;
+    if (basename($config) =~ /^Makefile\.tau-/) {
+        $mk = $config;
+    } else {
+        my $opts = basename($config);
+        $opts =~ s/^(shared|bindings)-//;
+        $mk = "$BASEDIR/lib/Makefile.tau-$opts";
+    }
+    if (@rest > 0 || ! -r $mk) {
+        warn "Error: no TAU configuration '$config' in $BASEDIR/lib\n";
+        exit 1;
+    }
+    # Empty when the configuration does not record a Python interpreter
+    $PYTHONINT = "";
+    open(my $fh, '<', $mk) or die "Error: cannot read $mk\n";
+    while (my $line = <$fh>) {
+        if ($line =~ /^PYTHON_BIN\s*=\s*(.*?)\s*$/) {
+            $PYTHONINT = $1;
+            last;
+        }
+    }
+    close($fh);
+    print_variables();
+    exit 0;
+}
+
+if (@ARGV == 0) {
+    print_variables();
     exit 0
 }
 
