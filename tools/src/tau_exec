@@ -1325,7 +1325,7 @@ julia_target_bin=""
 if [ "$julia_wrapper" = "true" ]; then
   julia_target_bin=$(command -v "$julia_interpreter" 2>/dev/null)
 else
-  case "$(basename "${1:-}")" in
+  case "$(basename -- "${1:-}")" in
     julia|julia-*|julia.*) julia_target_bin=$(command -v "$1" 2>/dev/null) ;;
   esac
 fi
