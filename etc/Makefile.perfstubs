@@ -17,7 +17,7 @@ all : $(BUILDDIR)/CMakeCache.txt
 install: all
 	$(MAKE) -C $(BUILDDIR) install
 	mkdir -p $(PYMODULEDIR)
-	cp -f $(INSTALLDIR)/lib/perfstubs.so $(PYMODULEDIR)/perfstubs.so
+	mv -f $(INSTALLDIR)/lib/perfstubs.so $(PYMODULEDIR)/perfstubs.so
 
 clean:
 	rm -rf $(BUILDDIR)
