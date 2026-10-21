@@ -24,12 +24,13 @@ fi
 eval `tau-config`
 
 scriptname=`basename $0`
-#Get the interpreter from tau-config
+# Fallback interpreter, used when the selected configuration does not record
+# its own. tau-config's PYTHONINT is from the most recent configure.
 python_interpreter=$(tau-config | grep "PYTHONINT" | sed 's/^PYTHONINT=//')
 #Check if the interpreter exists and if it is python3 or not
 #if the interpreter does not exist, use the old interpreter setting lines
 if [ -x "$(command -v $python_interpreter)" ] ; then
-    if [[ "$(python3 -V)" =~ "Python 3" ]] ; then
+    if [[ "$("$python_interpreter" -V 2>&1)" =~ "Python 3" ]] ; then
 	found=yes
     else
 	found=no
@@ -51,18 +52,8 @@ else
 	fi
 fi
 
-# For Python < 3.12, use the old python support
-python_module_name=tau_python_wrapper
-if [ $found == "yes" ]; then
-    python_version=`${python_interpreter} --version 2>&1 | awk '{print $NF}'`
-    version_array=( ${python_version//./ } )
-    if [ "${version_array[0]}" == 3 ] ; then
-        if [ "${version_array[1]}" -gt 11 ] ; then
-            # For Python >= 3.12, use the new python support
-            python_module_name=pstubs
-        fi
-    fi
-fi
+python_interpreter_explicit=false
+python_filter=""
 
 if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
@@ -177,9 +168,7 @@ usage()
 if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
   echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
-if [ $python_module_name = "pstubs" ] ; then
-  echo "        -tau-python-filter=<\"filename\"> name of selective measurement JSON file"
-fi
+  echo "        -tau-python-filter=<\"filename\"> name of selective measurement JSON file (Python 3.12 or newer)"
 fi
 if [ $julia_wrapper = "true" ] ; then
   echo "        -julia-llvm   Use the LLVM-plugin Julia instrumentation backend (default)"
@@ -851,6 +840,7 @@ for arg in "$@" ; do
         if [ $python_wrapper = "true" ] ; then
           myarg=`echo $arg | sed 's/-tau-python-interpreter=//'`
           python_interpreter="$myarg"
+          python_interpreter_explicit=true
           save_arg $arg
           shift
         else
@@ -860,16 +850,10 @@ for arg in "$@" ; do
         ;;
       -tau-python-filter=*)
         if [ $python_wrapper = "true" ] ; then
-            if [ $python_module_name = "pstubs" ] ; then
-                myarg=`echo $arg | sed 's/-tau-python-filter=//'`
-                python_filter="$myarg"
-                export PERFSTUBS_PYTHON_FILTER_FILENAME=$python_filter
-                save_arg $arg
-                shift
-            else
-                echo "Unknown option: $arg" >&2
-                exit 1
-            fi
+            myarg=`echo $arg | sed 's/-tau-python-filter=//'`
+            python_filter="$myarg"
+            save_arg $arg
+            shift
         else
             echo "Unknown option: $arg" >&2
             exit 1
@@ -1041,6 +1025,53 @@ if [ $julia_wrapper = "true" ] ; then
   fi
   if [ $verbose = "true" ] ; then
     echo "Using Julia interpreter: $julia_interpreter"
+  fi
+fi
+
+if [ $python_wrapper = "true" ] ; then
+  python_major_minor() {
+    "$1" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null
+  }
+  # Empty for configurations that do not record their interpreter.
+  cfg_python=`tau-config --config=$theBinding 2>/dev/null | sed -n 's/^PYTHONINT=//p'`
+  if [ "x$cfg_python" != "x" ] && [ $python_interpreter_explicit = "false" ] ; then
+    if [ -x "$(command -v "$cfg_python")" ] ; then
+      python_interpreter=$cfg_python
+    else
+      mk=$BASEDIR/lib/Makefile.tau-`echo $theBinding | sed -e 's/^shared-//'`
+      echo "tau_python: WARNING: Python interpreter $cfg_python from $mk is not executable; using $python_interpreter." 1>&2
+      cfg_python=""
+    fi
+  fi
+  python_version=`python_major_minor "$python_interpreter"`
+  if [ "x$python_version" = "x" ] ; then
+    echo "tau_python: ERROR: cannot run Python interpreter $python_interpreter." 1>&2
+    exit 1
+  fi
+  # For Python < 3.12, use the old python support
+  python_module_name=tau_python_wrapper
+  version_array=( ${python_version//./ } )
+  if [ "${version_array[0]}" == 3 ] && [ "${version_array[1]}" -gt 11 ] ; then
+    python_module_name=pstubs
+  fi
+  if [ "x$cfg_python" != "x" ] ; then
+    cfg_python_version=`python_major_minor "$cfg_python"`
+    if [ "x$cfg_python_version" != "x" ] && [ "$cfg_python_version" != "$python_version" ] ; then
+      echo "tau_python: ERROR: $python_interpreter is Python $python_version, but this TAU configuration was built for Python $cfg_python_version." 1>&2
+      echo "tau_python: Select a configuration built for Python $python_version with -T." 1>&2
+      exit 1
+    fi
+  fi
+  if [ "x$python_filter" != "x" ] ; then
+    if [ $python_module_name = "pstubs" ] ; then
+      export PERFSTUBS_PYTHON_FILTER_FILENAME=$python_filter
+    else
+      echo "tau_python: ERROR: -tau-python-filter requires Python 3.12 or newer." 1>&2
+      exit 1
+    fi
+  fi
+  if [ $verbose = "true" ] ; then
+    echo "Using Python interpreter: $python_interpreter ($python_module_name)"
   fi
 fi
 
