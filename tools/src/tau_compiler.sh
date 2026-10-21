@@ -83,6 +83,8 @@ declare -i tauPreProcessor=$TRUE
 declare -i optMICOffload=$FALSE
 
 headerInstFlag=""
+# Never inherit a list of files to delete from the environment
+filesToClean=""
 preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
 defaultSaltParser="saltfm"
@@ -2086,7 +2088,7 @@ else
           fi
 
           # First we remove the pdb file, otherwise the parse may fail and we can get confused
-          /bin/rm -f $pdbOutputFile
+          /bin/rm -f "$pdbOutputFile"
 
           if [ $optCompInst == $FALSE -a $optSaltInst == $FALSE ]; then
               if [ $disablePdtStep == $FALSE ]; then
@@ -2112,7 +2114,7 @@ else
                                 # See ISO/IEC DIS 1539-1:2017 (E) 14.2.1 R1406
                                 if grep -i -q '\(^\|;\)[[:blank:]]*end module' "$origFileName" > /dev/null 2>&1 ; then
                                     evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser to generate Fortran module file."
-                                    evalWithDebugMessage "rm -f $instFileName ${instFileName%.inst.*}.pdb" \
+                                    evalWithDebugMessage "rm -f \"$instFileName\" \"${instFileName%.inst.*}.pdb\"" \
                                                          "Removing $instFileName and ${instFileName%.inst.*}.pdb since $origFileName is in TAU's exclude list"
                                 fi
                                 ;;
@@ -2149,7 +2151,8 @@ else
           fi
 
           if [  ! -e $pdbOutputFile  -a $disablePdtStep == $FALSE -a $reusingInstFile == $FALSE ]; then
-              printError "$PDTPARSER" "$pdtCmd"
+              # Name the parser alone; $pdtParserF may carry options
+              printError "${pdtCmd%% *}" "$pdtCmd"
               break
           fi
           tempCounter=tempCounter+1
@@ -2177,6 +2180,8 @@ else
                   echoIfDebug "\tNo SALT parser passed, setting optSaltParser to ${defaultSaltParser}"
                   optSaltParser="${defaultSaltParser}"
               fi
+              # Never compile a stale output if the parser fails to write one
+              evalWithDebugMessage "/bin/rm -f \"$tempInstFileName\"" "Removing old $tempInstFileName"
               tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output=$tempInstFileName"
               saltSelectFile="$(sed -e 's/^[ \t]*//'<<<"${optTauSelectFile}")" # strip leading spaces
               saltSelectFile="$(sed -e 's/^-f //'<<<"${saltSelectFile}")" # strip leading "-f "
@@ -2195,11 +2200,14 @@ else
               fi
               tauCmd="$tauCmd $optTau $optCompile $optDefs $optIncludes $argsRemaining"
               tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
+              instrumentor=$optSaltParser
           else
+              instrumentor=$optTauInstr
               tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
               tauCmd="$tauCmd $optTau $optTauSelectFile"
           fi
 
+          instrumentorStatus=0
           if [ $disablePdtStep == $FALSE -o $optSaltInst == $TRUE ]; then
               echoIfDebug "reuseFiles=$reuseFiles, source $tempInstFileName, output ${arrFileName[$tempCounter]}"
           	if [ $reuseFiles == $TRUE -a $tempInstFileName -nt ${arrFileName[$tempCounter]} ]; then
@@ -2211,6 +2219,7 @@ else
                 evalWithDebugMessage "ls -l $tempInstFileName;" "Reusing pre-instrumented file $tempInstFileName."
               else
                 evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
+                instrumentorStatus=$?
               fi
               if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}.$$ ]; then
                 evalWithDebugMessage "mv ${arrFileName[$tempCounter]}.$$ ${arrFileName[$tempCounter]}" "Moving temporary file"
@@ -2219,16 +2228,16 @@ else
               echoIfDebug "Not instrumenting source code. PDT not available."
           fi
 
-          if [ $? -ne 0 ]; then
-              echoIfVerbose "Error: tau_instrumentor failed"
-              printError "$optTauInstr" "$tauCmd"
+          if [ $instrumentorStatus -ne 0 ]; then
+              echoIfVerbose "Error: $instrumentor failed"
+              printError "$instrumentor" "$tauCmd"
               break
           fi
 
           echoIfDebug "Looking for tau file $tempInstFileName"
           if [  ! -e $tempInstFileName ]; then
               echoIfVerbose "Error: Tried Looking for file: $tempInstFileName"
-              printError "$optTauInstr" "$tauCmd"
+              printError "$instrumentor" "$tauCmd"
               break
           fi
 
@@ -2493,7 +2502,7 @@ else
               else
 
               if [ $cleanUpOpariFileLater == $TRUE ]; then
-                evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file after failed PDT stage"
+                evalWithDebugMessage "/bin/rm -f \"${arrFileName[$tempCounter]}\"" "cleaning opari file after failed PDT stage"
               fi
               echoIfVerbose "Looking for file: $outputFile "
               if [ $hasAnOutputFile == $TRUE ]; then
@@ -2646,38 +2655,40 @@ else
 
   if [ $needToCleanPdbInstFiles == $TRUE ]; then
       tempCounter=0
-      while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
+      # Under -optCompInst, arrTau holds the source files themselves (even if
+      # -optSaltInst is also set), so never clean them.
+      while [[ $tempCounter -lt $numFiles && ( $disablePdtStep == $FALSE || ( $optSaltInst == $TRUE && $optCompInst == $FALSE ) ) ]]; do
           tmpname="${arrTau[$tempCounter]##*/}"
           if [ $reusingInstFile == $FALSE ]; then
-            evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
+            evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning inst file"
             tmpname="`echo $tmpname | sed -e 's/\.inst//'`"
             if [ $continueBeforeOMP == $TRUE ] ; then
-              evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning continue file"
+              evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning continue file"
               tmpname="`echo $tmpname | sed -e 's/\.continue//'`"
             fi
             if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
               if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
           	tmpname="`echo $tmpname | sed -e 's/\.chk\.pomp//'`"
               fi
-              evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning pp file"
+              evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning pp file"
               tmpname="`echo $tmpname | sed -e 's/\.pp//'`"
             fi
             if [ $pdbFileSpecified == $FALSE ]; then
-              evalWithDebugMessage "/bin/rm -f ${arrPdb[$tempCounter]##*/}" "cleaning PDB file"
+              evalWithDebugMessage "/bin/rm -f \"${arrPdb[$tempCounter]##*/}\"" "cleaning PDB file"
               if [ $preprocess == $TRUE -o $opari == $TRUE ]; then
           	secondPDB=`echo $outputFile | sed -e 's/\.o/\.pdb/'`
-          	evalWithDebugMessage "/bin/rm -f $secondPDB" "cleaning PDB file"
+                evalWithDebugMessage "/bin/rm -f \"$secondPDB\"" "cleaning PDB file"
               fi
             fi
             if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
               if [ $errorStatus == $FALSE ]; then
-                evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
+                evalWithDebugMessage "/bin/rm -f \"${arrFileName[$tempCounter]}\"" "cleaning opari file"
               fi
               cleanUpOpariFileLater=$TRUE
             fi
           else
           if [ $copyInsteadOfInstrument == $TRUE ]; then
-              evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
+              evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning inst file"
           else
               echoIfDebug "Not cleaning up instrumented files: reusingInstFile=$reusingInstFile"
           fi
@@ -2744,8 +2755,10 @@ else
     fi
 
     evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+    regularStatus=$?
+    # -optRevert: report the regular compile; the default mode keeps exit 1
     if [ $revertForced == $TRUE ] ; then
-        errorStatus=0
+        errorStatus=$regularStatus
     fi
       break;
   fi
