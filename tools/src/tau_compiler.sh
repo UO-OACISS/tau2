@@ -2177,6 +2177,8 @@ else
                   echoIfDebug "\tNo SALT parser passed, setting optSaltParser to ${defaultSaltParser}"
                   optSaltParser="${defaultSaltParser}"
               fi
+              # Never compile a stale output if the parser fails to write one
+              evalWithDebugMessage "/bin/rm -f $tempInstFileName" "Removing old $tempInstFileName"
               tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output=$tempInstFileName"
               saltSelectFile="$(sed -e 's/^[ \t]*//'<<<"${optTauSelectFile}")" # strip leading spaces
               saltSelectFile="$(sed -e 's/^-f //'<<<"${saltSelectFile}")" # strip leading "-f "
@@ -2648,7 +2650,9 @@ else
 
   if [ $needToCleanPdbInstFiles == $TRUE ]; then
       tempCounter=0
-      while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
+      # Under -optCompInst, arrTau holds the source files themselves (even if
+      # -optSaltInst is also set), so never clean them.
+      while [[ $tempCounter -lt $numFiles && ( $disablePdtStep == $FALSE || ( $optSaltInst == $TRUE && $optCompInst == $FALSE ) ) ]]; do
           tmpname="${arrTau[$tempCounter]##*/}"
           if [ $reusingInstFile == $FALSE ]; then
             evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
