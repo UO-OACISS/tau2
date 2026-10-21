@@ -11939,6 +11939,14 @@ if [ $python = yes ] ; then
         fi
         fixmakeargs="$fixmakeargs PSTUBS"
     fi
+    # a venv's bin/python must stay as given for its site-packages to apply.
+    python_bin_abs=$pythonintv
+    case "$python_bin_abs" in
+        */*) ;;
+        *) python_bin_abs=`command -v $python_bin_abs` ;;
+    esac
+    python_bin_abs=`cd $(dirname ${python_bin_abs}) && pwd`/`basename ${python_bin_abs}`
+    fixmakeargs="$fixmakeargs pythonbin=${python_bin_abs}"
     tauoptions="${tauoptions}-python"
 fi
 if [ $cuda = yes ] ; then

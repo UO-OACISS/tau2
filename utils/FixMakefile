@@ -590,6 +590,12 @@ case $1 in
 	echo "Using Python include dir =" $pythoninc
 	;;
 
+     pythonbin=*)
+        pythonbin=`echo $1 | sed -e 's/^pythonbin=//'`
+	echo "s,^PYTHON_BIN=.*$,PYTHON_BIN=$pythonbin,g" >> $sedout
+	echo "Using Python interpreter =" $pythonbin
+	;;
+
      pythonlibrary=*)
         pythonlibrary=`echo $1 | sed -e 's/^pythonlibrary=//'`
 	;;
