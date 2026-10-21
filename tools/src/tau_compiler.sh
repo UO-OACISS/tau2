@@ -2149,7 +2149,8 @@ else
           fi
 
           if [  ! -e $pdbOutputFile  -a $disablePdtStep == $FALSE -a $reusingInstFile == $FALSE ]; then
-              printError "$PDTPARSER" "$pdtCmd"
+              # Name the parser alone; $pdtParserF may carry options
+              printError "${pdtCmd%% *}" "$pdtCmd"
               break
           fi
           tempCounter=tempCounter+1
@@ -2197,7 +2198,9 @@ else
               fi
               tauCmd="$tauCmd $optTau $optCompile $optDefs $optIncludes $argsRemaining"
               tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
+              instrumentor=$optSaltParser
           else
+              instrumentor=$optTauInstr
               tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
               tauCmd="$tauCmd $optTau $optTauSelectFile"
           fi
@@ -2224,15 +2227,15 @@ else
           fi
 
           if [ $instrumentorStatus -ne 0 ]; then
-              echoIfVerbose "Error: tau_instrumentor failed"
-              printError "$optTauInstr" "$tauCmd"
+              echoIfVerbose "Error: $instrumentor failed"
+              printError "$instrumentor" "$tauCmd"
               break
           fi
 
           echoIfDebug "Looking for tau file $tempInstFileName"
           if [  ! -e $tempInstFileName ]; then
               echoIfVerbose "Error: Tried Looking for file: $tempInstFileName"
-              printError "$optTauInstr" "$tauCmd"
+              printError "$instrumentor" "$tauCmd"
               break
           fi
 
