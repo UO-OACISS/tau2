@@ -2200,6 +2200,7 @@ else
               tauCmd="$tauCmd $optTau $optTauSelectFile"
           fi
 
+          instrumentorStatus=0
           if [ $disablePdtStep == $FALSE -o $optSaltInst == $TRUE ]; then
               echoIfDebug "reuseFiles=$reuseFiles, source $tempInstFileName, output ${arrFileName[$tempCounter]}"
           	if [ $reuseFiles == $TRUE -a $tempInstFileName -nt ${arrFileName[$tempCounter]} ]; then
@@ -2211,6 +2212,7 @@ else
                 evalWithDebugMessage "ls -l $tempInstFileName;" "Reusing pre-instrumented file $tempInstFileName."
               else
                 evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
+                instrumentorStatus=$?
               fi
               if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}.$$ ]; then
                 evalWithDebugMessage "mv ${arrFileName[$tempCounter]}.$$ ${arrFileName[$tempCounter]}" "Moving temporary file"
@@ -2219,7 +2221,7 @@ else
               echoIfDebug "Not instrumenting source code. PDT not available."
           fi
 
-          if [ $? -ne 0 ]; then
+          if [ $instrumentorStatus -ne 0 ]; then
               echoIfVerbose "Error: tau_instrumentor failed"
               printError "$optTauInstr" "$tauCmd"
               break
