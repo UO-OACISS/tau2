@@ -2755,8 +2755,10 @@ else
     fi
 
     evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+    regularStatus=$?
+    # -optRevert: report the regular compile; the default mode keeps exit 1
     if [ $revertForced == $TRUE ] ; then
-        errorStatus=0
+        errorStatus=$regularStatus
     fi
       break;
   fi
