@@ -1,564 +1,1081 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+"""Convert TAU text profile directories to JSON.
 
-"""A python script to convert TAU profiles to JSON
+Each input directory (containing profile.<node>.<context>.<thread> files, or
+MULTI__<metric> subdirectories from a multi-metric run) becomes one
+application object in the output JSON. All MULTI__ metrics are merged into that
+one object; user events (identical across metrics) are stored once per thread, under
+the time metric (or the first metric if none is a time metric).
+A directory holding both profile.* files and MULTI__ directories is an error. The top-level object contains "Workflow 
+metadata" plus one key per input directory.
+
+Application object (default layout; schema: tau_profile_json.schema.json):
+  metadata   per-thread profile metadata attributes
+  Timers     one record per timer per thread: process/context/thread index,
+             Metric, Function, Calls, Subroutines, Exclusive Time,
+             Inclusive Time, Profile Calls, Group
+  Aggregates timer aggregate records, same fields as Timers
+  Counters   user-event records: Counter, Num Events, Max/Min/Mean/SumSqr Value
+  Profiles   one entry per source file (indices, Metric, Metadata, record
+             counts, any unparsed trailing lines)
+  Metrics    metric names found. NaN/Inf values are written as null.
+
+Workflow metadata gets "profile-json-version" and one Workflow Component per
+directory with derived aggr_* values (execution/communication/IO/ADIOS time
+and byte totals). These are computed here, not measured by TAU. When a
+profile lacks an Ending Timestamp it is estimated from the longest inclusive
+time and "end-timestamp-estimated" is set.
 """
 
-from __future__ import print_function
-import os
-import sys
 import argparse
+import html
 import json
+import math
+import os
+import re
+import sys
 from collections import OrderedDict
 
-workflow_metadata_str = "Workflow metadata"
-metadata_str = "metadata"
-global_data = None
-have_workflow_file = False
-group_totals = None
-group_counts = None
-workflow_start = 0
-workflow_end = 0
 
-"""
-    Parse the "invalid" TAU XML
-"""
+METADATA_RE = re.compile(r"<metadata>(.*?)</metadata>", re.DOTALL)
+ATTRIBUTE_RE = re.compile(
+    r"<attribute>\s*<name>(.*?)</name>\s*<value>(.*?)</value>\s*</attribute>",
+    re.DOTALL,
+)
+PROFILE_NAME_RE = re.compile(r"^profile\.(\d+)\.(\d+)\.(\d+)$")
+MULTI_DIR_RE = re.compile(r"^MULTI_+.+$")
+FORMAT_VERSION = "1.0"
+TIME_METRICS = {"TIME", "P_WALL_CLOCK_TIME", "P_VIRTUAL_TIME"}
+
+
 def parse_tau_xml(instring):
-    mydict = OrderedDict()
-    tmp = instring
-    metadata_tokens = tmp.split("<metadata>",1)
-    metadata_tokens = metadata_tokens[1].split("</metadata>",1)
-    tmp = metadata_tokens[0]
-    while len(tmp) > 0:
-        attribute_tokens = tmp.split("<attribute>",1)
-        attribute_tokens = attribute_tokens[1].split("</attribute>",1)
-        attribute = attribute_tokens[0]
-        tmp = attribute_tokens[1]
-        name_tokens = attribute.split("<name>",1)
-        name_tokens = name_tokens[1].split("</name>",1)
-        name = name_tokens[0]
-        value_tokens = name_tokens[1].split("<value>",1)
-        value_tokens = value_tokens[1].split("</value>",1)
-        value = value_tokens[0]
-        # print(name,value)
-        if name == "Metric Name":
-            continue
-        mydict[name] = value
-        if tmp == "</metadata>":
-            break
-    return mydict       
+    """Parse the metadata fragment embedded in a TAU profile header."""
+    metadata = OrderedDict()
+    match = METADATA_RE.search(instring)
+    if not match:
+        return metadata
+    for attribute in ATTRIBUTE_RE.finditer(match.group(1)):
+        name = html.unescape(attribute.group(1))
+        value = html.unescape(attribute.group(2))
+        metadata[name] = value
+    return metadata
 
-"""
-This method will parse the arguments.
-"""
-def parse_args(arguments):
-    global workflow_metadata_str
-    global metadata_str
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('indir', help="One or more input directories (can be raw TAU profiles or generated from tau_coalesce)", nargs='+')
-    parser.add_argument('-w', '--workflow', help="Workflow Metadata file (JSON)",
-                        default=None)
-    parser.add_argument('-o', '--outfile', help="Output file instead of print to stdout (optional)",
-                        default=sys.stdout, type=argparse.FileType('w'))
 
-    args = parser.parse_args(arguments)
-    # print(args)
-    return args
+def _number(value, path, line_number):
+    try:
+        if re.fullmatch(r"[+-]?\d+", value):
+            return int(value)
+        number = float(value)
+        return number if math.isfinite(number) else None
+    except ValueError as error:
+        raise ValueError(
+            "{}:{}: invalid numeric value {!r}".format(path, line_number, value)
+        ) from error
 
-def extract_workflow_metadata(component_name, thread_name, max_inclusive):
-    global global_data
-    global have_workflow_file
-    global workflow_metadata_str
-    global workflow_start
-    global workflow_end
-    # This is the root rank/thread for an application, so extract some key info
-    workflow_dict = global_data[workflow_metadata_str]
-    app_dict = global_data[component_name][metadata_str][thread_name]
-    start_time_stamp = app_dict["Starting Timestamp"]
-    end_time_stamp = None
-    if "Ending Timestamp" not in app_dict:
-        end_time_stamp = str(long(start_time_stamp) + max_inclusive)
+
+def _quoted_record(line, path, line_number):
+    line = line.strip()
+    if not line.startswith('"'):
+        raise ValueError("{}:{}: expected a quoted record".format(path, line_number))
+    # TAU writes names with a raw "%s" and never escapes quotes, so the closing
+    # quote is the last one before the numeric values (and optional GROUP).
+    group = None
+    group_start = line.rfind(' GROUP="')
+    if group_start >= 0 and line.endswith('"'):
+        group = line[group_start + len(' GROUP="') : -1]
+        line = line[:group_start]
+    end_quote = line.rfind('"')
+    if end_quote < 1:
+        raise ValueError("{}:{}: unterminated quoted record".format(path, line_number))
+    name = line[1:end_quote]
+    return name, line[end_quote + 1 :].split(), group
+
+
+def _parse_timer(line, dimensions, path, line_number):
+    name, values, group = _quoted_record(line, path, line_number)
+    if len(values) < 4:
+        raise ValueError(
+            "{}:{}: timer record requires calls, subroutines, exclusive and "
+            "inclusive values".format(path, line_number)
+        )
+    result = OrderedDict(dimensions)
+    result["Function"] = name
+    labels = ("Calls", "Subroutines", "Exclusive Time", "Inclusive Time")
+    for label, value in zip(labels, values):
+        result[label] = _number(value, path, line_number)
+    if len(values) >= 5:
+        result["Profile Calls"] = _number(values[4], path, line_number)
+    if group is not None:
+        result["Group"] = group
+    if len(values) > 5:
+        result["Additional Values"] = [
+            _number(value, path, line_number) for value in values[5:]
+        ]
+    return result
+
+
+def _parse_user_event(line, dimensions, path, line_number):
+    name, values, _ = _quoted_record(line, path, line_number)
+    if len(values) < 5:
+        raise ValueError(
+            "{}:{}: user event requires event count, max, min, mean and "
+            "sum-of-squares".format(path, line_number)
+        )
+    result = OrderedDict(dimensions)
+    result["Counter"] = name
+    labels = ("Num Events", "Max Value", "Min Value", "Mean Value", "SumSqr Value")
+    for label, value in zip(labels, values):
+        result[label] = _number(value, path, line_number)
+    if len(values) > 5:
+        result["Additional Values"] = [
+            _number(value, path, line_number) for value in values[5:]
+        ]
+    return result
+
+
+def _next_nonempty(lines, index):
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+    return index
+
+
+def _section_count(line, section, path, line_number):
+    match = re.fullmatch(r"\s*(\d+)\s+{}".format(re.escape(section)), line.strip())
+    if not match:
+        raise ValueError(
+            "{}:{}: expected '<count> {}' section header".format(
+                path, line_number, section
+            )
+        )
+    return int(match.group(1))
+
+
+def _read_records(lines, index, count, parser, dimensions, path, section):
+    records = []
+    for _ in range(count):
+        index = _next_nonempty(lines, index)
+        if index >= len(lines):
+            raise ValueError(
+                "{}: unexpected end of file in {} section".format(path, section)
+            )
+        if lines[index].lstrip().startswith("#"):
+            index += 1
+            index = _next_nonempty(lines, index)
+            if index >= len(lines):
+                raise ValueError(
+                    "{}: unexpected end of file in {} section".format(path, section)
+                )
+        records.append(parser(lines[index], dimensions, path, index + 1))
+        index += 1
+    return records, index
+
+
+def parse_profile(path):
+    """Read all timer, aggregate, user-event, and metadata records in a profile."""
+    basename = os.path.basename(path)
+    name_match = PROFILE_NAME_RE.fullmatch(basename)
+    if not name_match:
+        raise ValueError(
+            "{}: expected profile.<node>.<context>.<thread> filename".format(path)
+        )
+    node, context, thread = (int(value) for value in name_match.groups())
+    dimensions = OrderedDict(
+        (
+            ("process index", node),
+            ("context index", context),
+            ("thread index", thread),
+        )
+    )
+
+    with open(path, encoding="utf-8", errors="replace") as profile:
+        lines = profile.readlines()
+    if len(lines) < 2:
+        raise ValueError("{}: incomplete TAU profile header".format(path))
+
+    first_line = lines[0].split()
+    if len(first_line) < 2:
+        raise ValueError("{}: invalid function-count header".format(path))
+    try:
+        timer_count = int(first_line[0])
+    except ValueError as error:
+        raise ValueError("{}: invalid function count".format(path)) from error
+    if timer_count < 0:
+        raise ValueError("{}: function count cannot be negative".format(path))
+    profile_format = " ".join(first_line[1:])
+    metric = "TIME" if profile_format == "templated_functions" else profile_format
+    metric_match = re.search(r"templated_functions(?:_MULTI)?_(.+)$", profile_format)
+    if metric_match:
+        metric = metric_match.group(1)
+
+    header = lines[1]
+    metadata = parse_tau_xml(header)
+    if metadata.get("Metric Name"):
+        metric = metadata["Metric Name"]
+    dimensions["Metric"] = metric
+
+    timers, index = _read_records(
+        lines, 2, timer_count, _parse_timer, dimensions, path, "timer"
+    )
+
+    index = _next_nonempty(lines, index)
+    if index >= len(lines):
+        raise ValueError("{}: missing aggregates section".format(path))
+    aggregate_count = _section_count(lines[index], "aggregates", path, index + 1)
+    aggregates, index = _read_records(
+        lines, index + 1, aggregate_count, _parse_timer, dimensions, path, "aggregate"
+    )
+
+    counters = []
+    index = _next_nonempty(lines, index)
+    if index < len(lines):
+        event_count = _section_count(lines[index], "userevents", path, index + 1)
+        counters, index = _read_records(
+            lines,
+            index + 1,
+            event_count,
+            _parse_user_event,
+            dimensions,
+            path,
+            "user event",
+        )
+
+    return OrderedDict(
+        (
+            ("process index", node),
+            ("context index", context),
+            ("thread index", thread),
+            ("Metric", metric),
+            ("Profile Format", profile_format),
+            ("Metadata", metadata),
+            ("Timers", timers),
+            ("Aggregates", aggregates),
+            ("Counters", counters),
+            (
+                "Additional Profile Data",
+                [line.rstrip("\n") for line in lines[index:] if line.strip()],
+            ),
+        )
+    )
+
+
+def _profile_sort_key(filename):
+    match = PROFILE_NAME_RE.fullmatch(filename)
+    return tuple(int(value) for value in match.groups()) if match else (sys.maxsize,)
+
+
+def _thread_name(profile, known_names):
+    if profile["context index"]:
+        name = "Rank {}, Context {}, Thread {}".format(
+            profile["process index"], profile["context index"], profile["thread index"]
+        )
     else:
-        end_time_stamp = app_dict["Ending Timestamp"]
-    if workflow_start == 0 or workflow_start > long(start_time_stamp):
-        workflow_start = long(start_time_stamp)
-    if workflow_end == 0 or workflow_end < long(end_time_stamp):
-        workflow_end = long(end_time_stamp)
-    local_time = app_dict["Local Time"]
-    if start_time_stamp != None and have_workflow_file:
-        for wc in workflow_dict["Workflow Component"]:
-            if wc["name"] == component_name:
-                wc["start-timestamp"] = start_time_stamp
-                wc["end-timestamp"] = end_time_stamp
-                wc["Local-Time"] = local_time
-        for wc in workflow_dict["Workflow Instance"]:
-            if "timestamp" not in wc or wc["start-timestamp"] > start_time_stamp:
-                wc["start-timestamp"] = start_time_stamp
-                wc["end-timestamp"] = end_time_stamp
-                wc["Local-Time"] = local_time
-    app_name = app_dict["Executable"]
-    found = False
-    app_id = 0
-    for app in workflow_dict["Application"]:
-        if app["name"] in component_name or app["name"] == app_name:
-            Found = True
-            app_id = app["id"]
-            break
-    if not found:
-        app = OrderedDict()
-        app_id = len(workflow_dict["Application"]) + 1
-        app["id"] = app_id
-        app["location-id"] = 1
-        app["name"] = app_name
-        app["version"] = "0.1"
-        app["uri"] = ""
-    	workflow_dict["Application"].append(app)
-    app_instance = OrderedDict()
-    app_instance["id"] = len(workflow_dict["Application-instance"]) + 1
-    app_instance["process-id"] = app_dict["pid"]
-    app_instance["application-id"] = app_id
-    app_instance["event-type"] = ""
-    app_instance["start-timestamp"] = start_time_stamp
-    app_instance["end-timestamp"] = end_time_stamp
-    app_instance["Local-Time"] = local_time
-    workflow_dict["Application-instance"].append(app_instance)
-    index = 0
-    while True:
-        name = "posix open[" + str(index) + "]"
-        if name in app_dict:
-            json_str = app_dict[name]
-        else:
-            break
-        index = index + 1
-    # add workflow instance data to the global metadata section
-    if not have_workflow_file:
-        workflow_component = OrderedDict()
-        workflow_component["id"] = app_id
-        workflow_component["name"] = app_name
-        workflow_component["location-id"] = 1
-        workflow_component["application-id"] = app_id
-        workflow_component["start-timestamp"] = start_time_stamp
-        workflow_component["end-timestamp"] = end_time_stamp
-        workflow_component["Local-Time"] = local_time
-        workflow_dict["Workflow Component"].append(workflow_component)
-    return workflow_component
+        name = "Rank {}, Thread {}".format(
+            profile["process index"], profile["thread index"]
+        )
+    if name in known_names:
+        name = "{}, Metric {}".format(name, profile["Metric"])
+    return name
 
-def parse_functions(node, context, thread, infile, data, num_functions, function_map):
-    global group_totals
-    global group_counts
-    max_inclusive = 0
-    # Function looks like:
-    # "".TAU application" 1 0 8626018 8626018 0 GROUP="TAU_USER""
-    if num_functions > 0:
-        """
-        if "Timers" not in data:
-            data["Timers"] = OrderedDict()
-        if "Timer Measurement Columns" not in data:
-            data["Timer Measurement Columns"] = list()
-            data["Timer Measurement Columns"].append("Process Index")
-            #data["Timer Measurement Columns"].append("Context Index")
-            data["Timer Measurement Columns"].append("Thread Index")
-            data["Timer Measurement Columns"].append("Function Index")
-            data["Timer Measurement Columns"].append("Calls")
-            data["Timer Measurement Columns"].append("Subroutines")
-            data["Timer Measurement Columns"].append("Exclusive TIME")
-            data["Timer Measurement Columns"].append("Inclusive TIME")
-        """
-        if "Timers" not in data:
-            data["Timers"] = list()
-        for i in range(0,num_functions):
-            line = infile.readline()
-            tokens = line.split("\"",2)
-            function_name = tokens[1].strip()
-            stats = tokens[2]
-            """
-            if function_name not in function_map:
-                #data["Timers"][function_name] = len(data["Timers"])
-                function_map[function_name] = len(data["Timers"])
-                data["Timers"][len(data["Timers"])] = function_name
-            """
-            # split the stats
-            tokens = stats.strip().split(" ", 6)
-            """
-            timer = list()
-            timer.append(int(node))
-            #timer.append(int(context))
-            timer.append(int(thread))
-            # function index
-            timer.append(function_map[function_name])
-            # calls
-            timer.append(long(tokens[0]))
-            # Subroutines
-            timer.append(long(tokens[1]))
-            # Exclusive
-            timer.append(long(tokens[2]))
-            # Inclusive
-            timer.append(long(tokens[3]))
-            # Profile Calls
-            #timer.append(long(tokens[4]))
-            data["Timer Measurements"].append(timer)
-            """
-            timer = OrderedDict()
-            timer["process index"] = int(node)
-            timer["thread index"] = int(thread)
-            timer["Function"] = function_name
-            timer["Calls"] = long(tokens[0])
-            timer["Subroutines"] = long(tokens[1])
-            timer["Exclusive Time"] = long(tokens[2])
-            timer["Inclusive Time"] = long(tokens[3])
-            group = tokens[5]
-            # handle the ADIOS special case
-            if "ADIOS" in function_name:
-                if "ADIOS" not in group_totals:
-                    group_totals["ADIOS"] = long(tokens[2])
-                    group_counts["ADIOS"] = long(tokens[0])
-                else:
-                    group_totals["ADIOS"] = group_totals["ADIOS"] + long(tokens[2])
-                    group_counts["ADIOS"] = group_counts["ADIOS"] + long(tokens[0])
-            else:
-                if group not in group_totals:
-                    group_totals[group] = long(tokens[2])
-                    group_counts[group] = long(tokens[0])
-                else:
-                    group_totals[group] = group_totals[group] + long(tokens[2])
-                    group_counts[group] = group_counts[group] + long(tokens[0])
-            data["Timers"].append(timer)
-            if max_inclusive < long(tokens[3]):
-                max_inclusive = long(tokens[3])
-    return max_inclusive
 
-def extract_group_totals():
-    global group_totals
-    global group_counts
-    global global_data
-    tmp = global_data["Workflow metadata"]["Workflow Component"]
-    application_metadata = tmp[len(tmp) - 1]
-    threads = group_totals["threads"]
-    application_metadata["Processes"] = threads
-    comm_calls = 0
-    comm_time = 0
-    io_time = 0
-    adios_time = 0
-    user_time = 0
-    collective_bytes = 0
-    send_bytes = 0
-    recv_bytes = 0
-    read_bytes = 0
-    write_bytes = 0
-    adios_bytes = 0
-    for key in group_counts:
-        if key.find("MPI") != -1:
-            comm_calls = comm_calls + group_counts[key]
-    for key in group_totals:
-        if key.find("MPI") != -1:
-            comm_time = comm_time + group_totals[key]
-        if key.find("TAU_IO") != -1:
-            io_time = io_time + group_totals[key]
-        # ADIOS is a special case, because it doesn't have a group - yet
-        # It is also in the TAU_DEFAULT and/or TAU_USER group.
-        if key.find("ADIOS") != -1:
-            adios_time = adios_time + group_totals[key]
-        elif key.find("TAU_USER") != -1:
-            user_time = user_time + group_totals[key]
-        elif key.find("TAU_DEFAULT") != -1:
-            user_time = user_time + group_totals[key]
-        if key.find("Collective_Bytes") != -1:
-            collective_bytes = collective_bytes + group_totals[key]
-        if key.find("Send_Bytes") != -1:
-            send_bytes = send_bytes + group_totals[key]
-        if key.find("Recv_Bytes") != -1:
-            recv_bytes = recv_bytes + group_totals[key]
-        if key.find("Read_Bytes") != -1:
-            read_bytes = read_bytes + group_totals[key]
-        if key.find("Write_Bytes") != -1:
-            write_bytes = write_bytes + group_totals[key]
-        if key.find("ADIOS_data_size") != -1:
-            adios_bytes = adios_bytes + group_totals[key]
-    if comm_calls > 0:
-        application_metadata["aggr_communication_calls"] = comm_calls
-    if comm_time > 0:
-        application_metadata["aggr_communication_time"] = comm_time/threads
-    if adios_time > 0:
-        application_metadata["aggr_adios_time"] = adios_time/threads
-    if io_time > 0:
-        application_metadata["aggr_io_time"] = io_time/threads
-    if user_time > 0:
-        application_metadata["aggr_execution_time"] = user_time/threads
-    if collective_bytes > 0:
-        application_metadata["aggr_communication_collective_bytes"] = collective_bytes
-    if send_bytes > 0:
-        application_metadata["aggr_communication_sent_bytes"] = send_bytes
-    if recv_bytes > 0:
-        application_metadata["aggr_communication_recv_bytes"] = send_bytes
-    if adios_bytes > 0:
-        application_metadata["aggr_adios_bytes"] = adios_bytes
-    if read_bytes > 0:
-        application_metadata["aggr_io_read_bytes"] = read_bytes
-    if write_bytes > 0:
-        application_metadata["aggr_io_write_bytes"] = write_bytes
-    application_metadata["total_time"] = long(application_metadata["end-timestamp"]) - long(application_metadata["start-timestamp"])
+def _profile_files(directory):
+    return sorted(
+        (
+            name
+            for name in os.listdir(directory)
+            if PROFILE_NAME_RE.fullmatch(name)
+            and os.path.isfile(os.path.join(directory, name))
+        ),
+        key=_profile_sort_key,
+    )
 
-def parse_aggregates(node, context, thread, infile, data):
-    aggregates = infile.readline()
-    tokens = aggregates.split()
-    num_aggregates = int(tokens[0])
-    # data["Num Aggregates"] = tokens[0]
-    for i in range(1,num_aggregates):
-        # do nothing
-        line = infile.readline()
 
-def parse_counters(node, context, thread, infile, data, counter_map):
-    global group_totals
-    userevents = infile.readline()
-    if (userevents == None or userevents == ""):
-        return
-    tokens = userevents.split()
-    num_userevents = int(tokens[0])
-    # data["Num Counters"] = tokens[0]
-    # ignore the header line
-    line = infile.readline()
-    for i in range(1,num_userevents):
-        """
-        if "Counters" not in data:
-            data["Counters"] = OrderedDict()
-        if "Counter Measurement Columns" not in data:
-            data["Counter Measurement Columns"] = list()
-            data["Counter Measurement Columns"].append("Process Index")
-            #data["Counter Measurement Columns"].append("Context Index")
-            data["Counter Measurement Columns"].append("Thread Index")
-            data["Counter Measurement Columns"].append("Function Index")
-            data["Counter Measurement Columns"].append("Sample Count")
-            data["Counter Measurement Columns"].append("Maximum")
-            data["Counter Measurement Columns"].append("Minimum")
-            data["Counter Measurement Columns"].append("Mean")
-            data["Counter Measurement Columns"].append("SumSqr")
-        """
-        if "Counters" not in data:
-            data["Counters"] = list()
-        for i in range(0,num_userevents):
-            line = infile.readline()
-            line = line.strip()
-            if len(line) == 0:
-                break
-            tokens = line.split("\"",2)
-            counter_name = tokens[1].strip()
-            stats = tokens[2]
-            if counter_name == "(null)":
+def _metric_sources(indir):
+    """Return (subdirectory prefix, directory) pairs holding profile files.
+
+    A directory with MULTI__<metric> subdirectories is a multi-metric run and
+    all of them are read. Mixing them with profile.* files in the same
+    directory is ambiguous and rejected.
+    """
+    multi = sorted(
+        name
+        for name in os.listdir(indir)
+        if MULTI_DIR_RE.fullmatch(name) and os.path.isdir(os.path.join(indir, name))
+    )
+    if not multi:
+        return [("", indir)]
+    if _profile_files(indir):
+        raise ValueError(
+            "{}: contains both profile.* files and MULTI__ metric directories "
+            "({}); it is ambiguous which to convert. Target one of them "
+            "directly or remove the other".format(indir, ", ".join(multi))
+        )
+    return [(name, os.path.join(indir, name)) for name in multi]
+
+
+def _counter_values(counters):
+    return [
+        OrderedDict((k, v) for k, v in counter.items() if k != "Metric")
+        for counter in counters
+    ]
+
+
+def _unique_threads(profiles):
+    return {
+        (p["process index"], p["context index"], p["thread index"]) for p in profiles
+    }
+
+
+def _primary_profiles(profiles):
+    """Profiles of one metric (a time metric if present).
+
+    Calls do not depend on the metric, so aggregating them over every metric
+    would count them several times.
+    """
+    metrics = list(OrderedDict((p["Metric"], None) for p in profiles))
+    chosen = next((m for m in metrics if m.upper() in TIME_METRICS), None)
+    if chosen is None and metrics:
+        chosen = metrics[0]
+    return [p for p in profiles if p["Metric"] == chosen]
+
+
+def _load_directory(indir):
+    if not os.path.isdir(indir):
+        raise ValueError("{}: not a profile directory".format(indir))
+    sources = []
+    for prefix, directory in _metric_sources(indir):
+        names = _profile_files(directory)
+        if not names:
+            raise ValueError("{}: no TAU profile.* files found".format(directory))
+        sources.extend((prefix, directory, name) for name in names)
+
+    application = OrderedDict()
+    application["metadata"] = OrderedDict()
+    application["Timers"] = []
+    application["Aggregates"] = []
+    application["Counters"] = []
+    application["Profiles"] = []
+    metrics = OrderedDict()
+    parsed_profiles = []
+    loaded = [
+        (prefix, directory, filename, parse_profile(os.path.join(directory, filename)))
+        for prefix, directory, filename in sources
+    ]
+    # User events do not depend on the metric. Keep them on the primary
+    # (time) metric's profiles only; other metrics' copies are dropped.
+    primary = _primary_profiles([item[3] for item in loaded])
+    primary_metric = primary[0]["Metric"] if primary else None
+    primary_counters = {
+        (p["process index"], p["context index"], p["thread index"]): _counter_values(
+            p["Counters"]
+        )
+        for p in primary
+    }
+    for prefix, directory, filename, profile in loaded:
+        thread_key = (
+            profile["process index"],
+            profile["context index"],
+            profile["thread index"],
+        )
+        if profile["Metric"] != primary_metric and thread_key in primary_counters:
+            if not _same(primary_counters[thread_key], _counter_values(profile["Counters"])):
+                print(
+                    "warning: {}: user events differ from metric {}; using "
+                    "those".format(
+                        os.path.join(directory, filename), primary_metric
+                    ),
+                    file=sys.stderr,
+                )
+            profile["Counters"] = []
+        parsed_profiles.append(profile)
+        application["Profiles"].append(
+            OrderedDict(
+                (
+                    ("Filename", os.path.join(prefix, filename) if prefix else filename),
+                    ("process index", profile["process index"]),
+                    ("context index", profile["context index"]),
+                    ("thread index", profile["thread index"]),
+                    ("Metric", profile["Metric"]),
+                    ("Profile Format", profile["Profile Format"]),
+                    ("Metadata", profile["Metadata"]),
+                    ("Timer Count", len(profile["Timers"])),
+                    ("Aggregate Count", len(profile["Aggregates"])),
+                    ("Counter Count", len(profile["Counters"])),
+                    ("Additional Profile Data", profile["Additional Profile Data"]),
+                )
+            )
+        )
+        thread_name = _thread_name(profile, application["metadata"])
+        application["metadata"][thread_name] = profile["Metadata"]
+        metrics[profile["Metric"]] = None
+        for section in ("Timers", "Aggregates", "Counters"):
+            application[section].extend(profile[section])
+    application["Metrics"] = list(metrics)
+    if len(metrics) == 1:
+        application["Metric"] = next(iter(metrics))
+    return application, parsed_profiles
+
+
+def _group_tokens(group):
+    return {token.strip() for token in (group or "").split("|")}
+
+
+# Groups of timers that re-report time already held by a flat timer (callpath
+# copies) or by the timer a sample landed in (EBS), so totals must skip them.
+DERIVED_GROUPS = {"TAU_CALLPATH", "TAU_SAMPLE", "TAU_SAMPLE_CONTEXT"}
+
+
+def _is_flat_sample(timer):
+    groups = _group_tokens(timer.get("Group"))
+    return "TAU_SAMPLE" in groups and "TAU_CALLPATH" not in groups
+
+
+def _is_derived_timer(timer):
+    return bool(_group_tokens(timer.get("Group")) & DERIVED_GROUPS)
+
+
+def _timer_category(timer):
+    """Classify a timer using TAU groups; only ADIOS needs a name rule.
+
+    TauADIOS.cpp puts adios_* timers in the generic TAU_IO group, so ADIOS
+    cannot be told apart from POSIX I/O by group alone.
+    """
+    name = timer["Function"]
+    groups = _group_tokens(timer.get("Group"))
+    if name.lower().startswith("adios_") or "ADIOS" in name:
+        return "ADIOS"
+    if "MPI" in groups:
+        return "MPI"
+    if "TAU_IO" in groups:
+        return "IO"
+    if groups & {"TAU_USER", "TAU_DEFAULT"}:
+        return "USER"
+    return "OTHER"
+
+
+def _sum_by_group(profiles):
+    group_times = OrderedDict()
+    group_calls = OrderedDict()
+    for profile in profiles:
+        for timer in profile["Timers"]:
+            if _is_derived_timer(timer):
                 continue
-            """
-            if counter_name not in counter_map:
-                #data["Counters"][counter_name] = len(data["Counters"])
-                counter_map[counter_name] = len(data["Counters"])
-                data["Counters"][len(data["Counters"])] = counter_name
-            """
-            # split the stats
-            tokens = stats.strip().split(" ", 5)
-            """
-            counter = list()
-            counter.append(int(node))
-            counter.append(int(context))
-            counter.append(int(thread))
-            # function index
-            counter.append(counter_map[counter_name])
-            # numevents
-            counter.append(float(tokens[0]))
-            # max
-            counter.append(float(tokens[1]))
-            # min
-            counter.append(float(tokens[2]))
-            # mean
-            counter.append(float(tokens[3]))
-            # sumsqr
-            counter.append(float(tokens[4]))
-            data["Counter Measurements"].append(counter)
-            """
-            counter = OrderedDict()
-            counter["process index"] = int(node)
-            counter["thread index"] = int(thread)
-            counter["Counter"] = counter_name
-            counter["Num Events"] = long(tokens[0])
-            counter["Max Value"] = float(tokens[1])
-            counter["Min Value"] = float(tokens[2])
-            counter["Mean Value"] = float(tokens[3])
-            counter["SumSqr Value"] = float(tokens[4])
-            if "Message size for " in counter_name:
-                value = long(tokens[0]) * float(tokens[3])
-                c_name = "Collective_Bytes"
-                if c_name not in group_totals:
-                    group_totals[c_name] = value
-                else:
-                    group_totals[c_name] = group_totals[c_name] + value
-            if counter_name == "Message size sent to all nodes":
-                value = long(tokens[0]) * float(tokens[3])
-                c_name = "Send_Bytes"
-                if c_name not in group_totals:
-                    group_totals[c_name] = value
-                else:
-                    group_totals[c_name] = group_totals[c_name] + value
-            if counter_name == "Message size received from all nodes":
-                value = long(tokens[0]) * float(tokens[3])
-                c_name = "Recv_Bytes"
-                if c_name not in group_totals:
-                    group_totals[c_name] = value
-                else:
-                    group_totals[c_name] = group_totals[c_name] + value
-            if counter_name == "Bytes Read":
-                value = long(tokens[0]) * float(tokens[3])
-                c_name = "Read_Bytes"
-                if c_name not in group_totals:
-                    group_totals[c_name] = value
-                else:
-                    group_totals[c_name] = group_totals[c_name] + value
-            if counter_name == "Bytes Written":
-                value = long(tokens[0]) * float(tokens[3])
-                c_name = "Write_Bytes"
-                if c_name not in group_totals:
-                    group_totals[c_name] = value
-                else:
-                    group_totals[c_name] = group_totals[c_name] + value
-            if counter_name == "ADIOS data size":
-                value = long(tokens[0]) * float(tokens[3])
-                c_name = "ADIOS_data_size"
-                if c_name not in group_totals:
-                    group_totals[c_name] = value
-                else:
-                    group_totals[c_name] = group_totals[c_name] + value
-            data["Counters"].append(counter)
+            key = _timer_category(timer)
+            if timer["Exclusive Time"] is not None:
+                group_times[key] = (
+                    group_times.get(key, 0) + timer["Exclusive Time"]
+                )
+            if timer["Calls"] is not None:
+                group_calls[key] = group_calls.get(key, 0) + timer["Calls"]
+    event_totals = OrderedDict()
+    for profile in profiles:
+        for event in profile["Counters"]:
+            name = event["Counter"]
+            # "<event> : <context>" records repeat the plain event's data.
+            if " : " in name:
+                continue
+            if event["Num Events"] is None or event["Mean Value"] is None:
+                continue
+            average = event["Mean Value"] * event["Num Events"]
+            if "Message size for " in name:
+                key = "Collective_Bytes"
+            elif name == "Message size sent to all nodes":
+                key = "Send_Bytes"
+            elif name == "Message size received from all nodes":
+                key = "Recv_Bytes"
+            elif name == "Bytes Read":
+                key = "Read_Bytes"
+            elif name == "Bytes Written":
+                key = "Write_Bytes"
+            elif name == "ADIOS data size":
+                key = "ADIOS_data_size"
+            else:
+                continue
+            event_totals[key] = event_totals.get(key, 0) + average
+    return group_times, group_calls, event_totals
 
-def parse_profile(indir, profile, application_metadata, function_map, counter_map):
-    global metadata_str
-    global global_data
-    group_totals["threads"] = group_totals["threads"] + 1
-    # FIrst, split the name of the profile to get the node, context, thread
-    tokens = profile.split(".")
-    node = tokens[1]
-    context = tokens[2]
-    thread = tokens[3]
-    # Open the file, get the first line
-    infile = open(os.path.join(indir, profile), "r")
-    functions = infile.readline()
-    # First line looks like:
-    # "16 templated_functions_MULTI_TIME"
-    tokens = functions.split()
-    num_functions = int(tokens[0])
-    # application_metadata["Metric"] = tokens[1]
-    # The header for the functions looks like this:
-    # "# Name Calls Subrs Excl Incl ProfileCalls # <metadata>...</metadata>"
-    header = infile.readline()
-    tokens = header.split("#",2)
-    # Parse the metadata
-    thread_name = "Rank " + str(node) + ", Thread " + str(thread)
-    application_metadata[metadata_str][thread_name] = parse_tau_xml(str.strip(tokens[2]))
-    # Parse the functions
-    max_inclusive = parse_functions(node, context, thread, infile, application_metadata, num_functions, function_map)
-    if node == "0" and thread == "0":
-        extract_workflow_metadata(indir, thread_name, max_inclusive)
-    # Parse the aggregates
-    parse_aggregates(node, context, thread, infile, application_metadata)
-    # Parse the counters
-    parse_counters(node, context, thread, infile, application_metadata, counter_map)
 
-"""
-This method will parse a directory of TAU profiles
-"""
-def parse_directory(indir, index):
-    global metadata_str
-    global global_data
-    global group_totals
-    global group_counts
-    # assume just 1 metric for now...
+SUMMARY_TOP = 10
+SOURCE_RE = re.compile(
+    r"^(?P<name>.*?)\s*\[\{(?P<file>[^}]*)\}\s*\{(?P<line>\d+)[^}]*\}"
+    r"(?:\s*-\s*\{(?P<end>\d+)[^}]*\})?\]\s*$"
+)
 
-    # create a dictionary for this application
-    application_metadata = OrderedDict()
-    #application["source directory"] = indir
 
-    # add the application to the master dictionary
-    # tmp = "Application " + str(index)
-    #data[tmp] = application
-    global_data[indir] = application_metadata
-    
-    # get the list of profile files
-    profiles = [f for f in os.listdir(indir) if (os.path.isfile(os.path.join (indir, f)) and f.startswith("profile."))]
-    #application["num profiles"] = len(profiles)
+def _split_function(function):
+    """Return (name, file, line, end line) from 'name [{file} {l,c}-{l,c}]'."""
+    match = SOURCE_RE.match(function)
+    if not match:
+        return function.strip(), None, None, None
+    end = match.group("end")
+    return (
+        match.group("name"),
+        match.group("file"),
+        int(match.group("line")),
+        int(end) if end else None,
+    )
 
-    # sort the profiles alphanumerically
-    profiles.sort()
 
-    application_metadata[metadata_str] = OrderedDict()
-    function_map = {}
-    counter_map = {}
-    group_totals = OrderedDict()
-    group_counts = OrderedDict()
-    group_totals["threads"] = 0
-    for p in profiles:
-        parse_profile(indir, p, application_metadata, function_map, counter_map)
-    extract_group_totals()
+def _summarize(application, profiles):
+    """Precompute the first-pass statistics analysts otherwise derive."""
+    summary = OrderedDict()
+    summary["processes"] = len({p["process index"] for p in profiles})
+    summary["threads"] = len(_unique_threads(profiles))
+    summary["timer_records"] = len(application["Timers"])
+    summary["counter_records"] = len(application["Counters"])
+    by_metric = OrderedDict()
+    for metric in application["Metrics"]:
+        selected = [p for p in profiles if p["Metric"] == metric]
+        functions = OrderedDict()
+        samples = OrderedDict()
+        for profile in selected:
+            for timer in profile["Timers"]:
+                if _is_flat_sample(timer):
+                    name = timer["Function"]
+                    if name.startswith("[SAMPLE]"):
+                        name = name[len("[SAMPLE]"):].strip()
+                    entry = samples.setdefault(name, {"calls": 0, "excl": 0, "incl": 0})
+                    entry["calls"] += timer["Calls"] or 0
+                    entry["excl"] += timer["Exclusive Time"] or 0
+                    entry["incl"] += timer["Inclusive Time"] or 0
+                    continue
+                if _is_derived_timer(timer):
+                    continue
+                entry = functions.setdefault(
+                    timer["Function"], {"calls": 0, "excl": 0, "incl": 0}
+                )
+                entry["calls"] += timer["Calls"] or 0
+                entry["excl"] += timer["Exclusive Time"] or 0
+                entry["incl"] += timer["Inclusive Time"] or 0
+        threads = max(len(selected), 1)
+        def make_rows(table):
+            rows = []
+            for raw_name, entry in table.items():
+                name, source, line, end = _split_function(raw_name)
+                row = OrderedDict((("Function", name),))
+                if source is not None:
+                    row["File"] = source
+                    row["Line"] = line
+                    if end is not None:
+                        row["End Line"] = end
+                row["Calls"] = _cell(entry["calls"])
+                row["Mean Exclusive"] = _cell(entry["excl"] / threads)
+                row["Mean Inclusive"] = _cell(entry["incl"] / threads)
+                rows.append(row)
+            return rows
 
-def make_workflow_instance():
-    instance = OrderedDict()
-    instance["id"] = 1
-    instance["name"] = "Workflow Instance"
-    instance["location-id"] = 1
-    instance["version"] = ""
+        rows = make_rows(functions)
+        sample_rows = make_rows(samples)
+        times, _, _ = _sum_by_group(selected)
+        total = sum(times.values())
+        info = OrderedDict()
+        info["total_exclusive_per_thread"] = _cell(total / threads)
+        info["exclusive_fraction"] = OrderedDict(
+            (name, round(times.get(name, 0) / total, 6) if total else 0)
+            for name in ("MPI", "IO", "ADIOS", "USER", "OTHER")
+        )
+        info["top_exclusive"] = sorted(
+            rows, key=lambda row: row["Mean Exclusive"], reverse=True
+        )[:SUMMARY_TOP]
+        info["top_inclusive"] = sorted(
+            rows, key=lambda row: row["Mean Inclusive"], reverse=True
+        )[:SUMMARY_TOP]
+        if sample_rows:
+            # Calls is the sample count; times are sample-attributed.
+            info["top_samples"] = sorted(
+                sample_rows, key=lambda row: row["Mean Exclusive"], reverse=True
+            )[:SUMMARY_TOP]
+        by_metric[metric] = info
+    summary["by_metric"] = by_metric
+    return summary
+
+
+def _workflow_instance(workflow):
+    instance = workflow.get("Workflow Instance")
+    if isinstance(instance, list):
+        if instance:
+            return instance[0]
+        instance.append(
+            OrderedDict(
+                (
+                    ("id", 1),
+                    ("name", "Workflow Instance"),
+                    ("location-id", 1),
+                    ("version", ""),
+                )
+            )
+        )
+        return instance[0]
+    if not isinstance(instance, dict):
+        instance = OrderedDict(
+            (
+                ("id", 1),
+                ("name", "Workflow Instance"),
+                ("location-id", 1),
+                ("version", ""),
+            )
+        )
+        workflow["Workflow Instance"] = instance
     return instance
 
-def write_metrics():
-    global global_data
-    # assuming 1 metric for now
+
+def _application_for(workflow, component_name, app_name):
+    applications = workflow.setdefault("Application", [])
+    for application in applications:
+        if application.get("name") in (component_name, app_name):
+            return application["id"]
+    app_id = len(applications) + 1
+    applications.append(
+        OrderedDict(
+            (
+                ("id", app_id),
+                ("location-id", 1),
+                ("name", app_name),
+                ("version", "0.1"),
+                ("uri", ""),
+            )
+        )
+    )
+    return app_id
+
+
+def _build_workflow_component(workflow, component_name, application, profiles):
+    metadata = next(
+        (
+            thread_metadata
+            for thread_metadata in application["metadata"].values()
+            if thread_metadata.get("Executable")
+        ),
+        {},
+    )
+    app_name = metadata.get("Executable", component_name)
+    app_id = _application_for(workflow, component_name, app_name)
+
+    timestamps = []
+    end_estimated = False
+    time_profiles = [
+        profile
+        for profile in profiles
+        if profile["Metric"].upper() in TIME_METRICS
+    ]
+    max_inclusive = max(
+        (
+            timer["Inclusive Time"]
+            for profile in time_profiles
+            for timer in profile["Timers"]
+            if timer["Inclusive Time"] is not None
+        ),
+        default=0,
+    )
+    for profile in profiles:
+        thread_metadata = profile["Metadata"]
+        start = thread_metadata.get("Starting Timestamp")
+        end = thread_metadata.get("Ending Timestamp")
+        if start is not None:
+            if end is not None:
+                end = int(end)
+            elif time_profiles:
+                end = int(start) + int(max_inclusive)
+                end_estimated = True
+            else:
+                end = None
+            timestamps.append((int(start), end, thread_metadata))
+
+    start_timestamp = min((item[0] for item in timestamps), default=None)
+    end_timestamp = max(
+        (item[1] for item in timestamps if item[1] is not None), default=None
+    )
+    local_time = next((item[2].get("Local Time") for item in timestamps if item[2].get("Local Time")), None)
+    components = workflow.setdefault("Workflow Component", [])
+    component_basename = os.path.basename(os.path.normpath(component_name))
+    component = next(
+        (
+            item
+            for item in components
+            if item.get("name") in (component_name, component_basename)
+        ),
+        None,
+    )
+    if component is None:
+        component = OrderedDict(
+            (
+                ("id", app_id),
+                ("name", app_name),
+                ("location-id", 1),
+                ("application-id", app_id),
+            )
+        )
+        components.append(component)
+    if start_timestamp is not None:
+        component["start-timestamp"] = str(start_timestamp)
+        component["end-timestamp"] = str(end_timestamp)
+        if end_estimated:
+            component["end-timestamp-estimated"] = True
+    if local_time is not None:
+        component["Local-Time"] = local_time
+    component["Processes"] = len({profile["process index"] for profile in profiles})
+    component["Threads"] = len(_unique_threads(profiles))
+
+    instances = workflow.setdefault("Application-instance", [])
+    instance = OrderedDict(
+        (
+            ("id", len(instances) + 1),
+            ("process-id", metadata.get("pid", "0")),
+            ("application-id", app_id),
+            ("event-type", ""),
+        )
+    )
+    if start_timestamp is not None:
+        instance["start-timestamp"] = str(start_timestamp)
+        instance["end-timestamp"] = str(end_timestamp)
+        if end_estimated:
+            instance["end-timestamp-estimated"] = True
+    if local_time is not None:
+        instance["Local-Time"] = local_time
+    instances.append(instance)
+
+    _, calls, _ = _sum_by_group(_primary_profiles(profiles))
+    # Counters are already stored once per thread, so use every profile.
+    _, _, event_totals = _sum_by_group(profiles)
+    time_group_totals, _, _ = _sum_by_group(_primary_profiles(time_profiles))
+    threads = max(len(_unique_threads(profiles)), 1)
+    comm_calls = calls.get("MPI", 0)
+    comm_time = time_group_totals.get("MPI", 0)
+    io_time = time_group_totals.get("IO", 0)
+    adios_time = time_group_totals.get("ADIOS", 0)
+    user_time = time_group_totals.get("USER", 0)
+    for name, value in (
+        ("aggr_communication_calls", comm_calls),
+        ("aggr_communication_time", comm_time / threads),
+        ("aggr_io_time", io_time / threads),
+        ("aggr_adios_time", adios_time / threads),
+        ("aggr_execution_time", user_time / threads),
+        ("aggr_communication_collective_bytes", event_totals.get("Collective_Bytes", 0)),
+        ("aggr_communication_sent_bytes", event_totals.get("Send_Bytes", 0)),
+        ("aggr_communication_recv_bytes", event_totals.get("Recv_Bytes", 0)),
+        ("aggr_adios_bytes", event_totals.get("ADIOS_data_size", 0)),
+        ("aggr_io_read_bytes", event_totals.get("Read_Bytes", 0)),
+        ("aggr_io_write_bytes", event_totals.get("Write_Bytes", 0)),
+    ):
+        if value:
+            component[name] = value
+    if start_timestamp is not None and end_timestamp is not None:
+        component["total_time"] = end_timestamp - start_timestamp
+    return start_timestamp, end_timestamp
+
+
+def _metrics(workflow, metric_names):
     metrics = []
-    metric = OrderedDict()
-    metric["id"] = 1
-    metric["location-id"] = 1
-    metric["measurement"] = "Time"
-    metric["units"] = "microseconds"
-    metric["description"] = "This is a metric used to measure the applications."
-    metrics.append(metric)
-    global_data["Workflow metadata"]["Metrics"] = metrics
+    for metric_id, name in enumerate(metric_names, start=1):
+        metrics.append(
+            OrderedDict(
+                (
+                    ("id", metric_id),
+                    ("location-id", 1),
+                    ("measurement", name),
+                    (
+                        "units",
+                        "microseconds" if name.upper() in TIME_METRICS else "unknown",
+                    ),
+                    ("description", "TAU profile metric {}".format(name)),
+                )
+            )
+        )
+    workflow["Metrics"] = metrics
 
+
+COMPACT_VERSION = FORMAT_VERSION + "-compact"
+APPLICATION_SECTIONS = ("metadata", "Timers", "Aggregates", "Counters", "Profiles")
+
+
+def _cell(value):
+    if isinstance(value, float) and value.is_integer() and abs(value) < 2**53:
+        return int(value)
+    return value
+
+
+def _same(left, right):
+    return json.dumps(left) == json.dumps(right)
+
+
+def _encode_run(run, indexed, strings):
+    keys = list(run[0])
+    constants = OrderedDict()
+    if len(run) > 1:
+        for key in keys:
+            if all(_same(record[key], run[0][key]) for record in run):
+                constants[key] = _cell(run[0][key])
+    columns = [key for key in keys if key not in constants]
+    table = OrderedDict()
+    if constants:
+        table["constants"] = constants
+    table["columns"] = columns
+    coded = [key for key in columns if key in indexed]
+    if coded:
+        table["indexed"] = coded
+    table["rows"] = [
+        [
+            strings.setdefault(record[key], len(strings))
+            if key in indexed
+            else _cell(record[key])
+            for key in columns
+        ]
+        for record in run
+    ]
+    return table
+
+
+def _encode_tables(records, indexed, strings):
+    """Encode records as tables; a new table starts when the key set changes."""
+    tables = []
+    run = []
+    for record in records:
+        if run and list(record) != list(run[0]):
+            tables.append(_encode_run(run, indexed, strings))
+            run = []
+        run.append(record)
+    if run:
+        tables.append(_encode_run(run, indexed, strings))
+    return tables
+
+
+def _decode_tables(tables, strings):
+    records = []
+    for table in tables:
+        constants = table.get("constants", {})
+        columns = table["columns"]
+        coded = set(table.get("indexed", ()))
+        for row in table["rows"]:
+            record = OrderedDict(constants)
+            for column, value in zip(columns, row):
+                record[column] = strings[value] if column in coded else value
+            records.append(record)
+    return records
+
+
+def _compact_application(application):
+    strings = OrderedDict()
+    metadata = application["metadata"]
+    first = next(iter(metadata.values()), {})
+    common = OrderedDict(
+        (key, value)
+        for key, value in first.items()
+        if all(key in other and _same(other[key], value) for other in metadata.values())
+    )
+    result = OrderedDict()
+    result["common_metadata"] = common
+    result["thread_metadata"] = OrderedDict(
+        (
+            name,
+            OrderedDict((k, v) for k, v in values.items() if k not in common),
+        )
+        for name, values in metadata.items()
+    )
+    profiles = []
+    known = OrderedDict()
+    for profile in application["Profiles"]:
+        name = _thread_name(profile, known)
+        known[name] = None
+        record = OrderedDict(
+            (key, value) for key, value in profile.items() if key != "Metadata"
+        )
+        record["Thread"] = name
+        profiles.append(record)
+    sections = OrderedDict()
+    sections["Timers"] = _encode_tables(
+        application["Timers"], {"Function", "Group"}, strings
+    )
+    sections["Aggregates"] = _encode_tables(
+        application["Aggregates"], {"Function", "Group"}, strings
+    )
+    sections["Counters"] = _encode_tables(
+        application["Counters"], {"Counter"}, strings
+    )
+    result["strings"] = list(strings)
+    result.update(sections)
+    result["Profiles"] = _encode_tables(profiles, set(), strings)
+    for key, value in application.items():
+        if key not in APPLICATION_SECTIONS:
+            result[key] = value
+    return result
+
+
+def _expand_application(compact):
+    strings = compact["strings"]
+    common = compact["common_metadata"]
+    metadata = OrderedDict()
+    for name, values in compact["thread_metadata"].items():
+        metadata[name] = OrderedDict(common)
+        metadata[name].update(values)
+    result = OrderedDict()
+    result["metadata"] = metadata
+    for section in ("Timers", "Aggregates", "Counters"):
+        result[section] = _decode_tables(compact[section], strings)
+    result["Profiles"] = _decode_tables(compact["Profiles"], strings)
+    for profile in result["Profiles"]:
+        profile["Metadata"] = OrderedDict(metadata[profile.pop("Thread")])
+    for key, value in compact.items():
+        if key not in result and key not in (
+            "common_metadata",
+            "thread_metadata",
+            "strings",
+        ):
+            result[key] = value
+    return result
+
+
+def compact_output(output):
+    """Convert converter output to the token-efficient compact layout."""
+    result = OrderedDict()
+    for key, value in output.items():
+        if key == "Workflow metadata":
+            value = OrderedDict(value)
+            value["profile-json-version"] = COMPACT_VERSION
+            result[key] = value
+        else:
+            result[key] = _compact_application(value)
+    return result
+
+
+def expand_compact(compact):
+    """Losslessly restore the full layout from compact_output() data."""
+    result = OrderedDict()
+    for key, value in compact.items():
+        if key == "Workflow metadata":
+            value = OrderedDict(value)
+            value["profile-json-version"] = FORMAT_VERSION
+            result[key] = value
+        else:
+            result[key] = _expand_application(value)
+    return result
+
+
+EPILOG = """\
+layouts:
+  default   self-describing JSON: one dictionary per record.
+  --compact token-efficient JSON (profile-json-version "1.0-compact",
+            schema: tau_profile_json_compact.schema.json). Timers,
+            Aggregates, Counters and Profiles are lists of tables:
+              {"constants": {...}, "columns": [...], "rows": [[...], ...]}
+            Each row holds values in "columns" order; "constants" are values
+            shared by every row (read them as extra columns). Columns listed
+            in "indexed" (Function and Group; Counter) are integers indexing
+            the application's "strings" list. "common_metadata" holds
+            attributes shared by all threads and "thread_metadata" only the
+            per-thread differences; a Profiles row names its thread in
+            "Thread".
+            tau_prof2json.expand_compact() restores the default layout
+            exactly.
+  --summary adds "Summary" to each application in either layout: process,
+            thread and record counts and, per metric, mean exclusive time per
+            thread, the exclusive-time fraction in MPI/IO/ADIOS/USER/OTHER,
+            and the top 10 timers by mean exclusive and inclusive time.
+            With sampling data, top_samples lists the top 10 [SAMPLE] entries
+            (Calls = sample count) since they are excluded from the other
+            lists. Callpath ("a => b") and sampling ([SAMPLE]/[CONTEXT]) timers
+            and "event : context" user events are left out of the derived
+            totals (aggr_*, Summary) because they repeat other records.
+            Summary names drop trailing spaces; a "[{file} {line,col}]"
+            suffix becomes File, Line and End Line fields.
+
+workflow file (-w): optional JSON describing the workflow (Workflow Instance,
+Workflow Component, Application, inputs/outputs, dependency graph). It is
+prepared by hand; components are matched to directories by path or basename
+and filled with the derived values above.
+
+examples:
+  tau_prof2json.py -o app.json run1/
+  tau_prof2json.py --compact --summary -w workflow.json run1/ run2/
 """
-Main method
-"""
-def main(arguments):
-    global workflow_metadata_str
-    global global_data
-    global have_workflow_file
-    global workflow_start
-    global workflow_end
-    # parse the arguments
+
+
+def parse_args(arguments):
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "indir",
+        help="One or more directories containing TAU text profiles",
+        nargs="+",
+    )
+    parser.add_argument(
+        "-w", "--workflow", help="Workflow description to merge in (JSON, see below)", default=None
+    )
+    parser.add_argument(
+        "-o", "--outfile", help="Output JSON file (default: stdout)", default="-"
+    )
+    parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Add a precomputed Summary per application: counts, top timers "
+        "and category time fractions (MPI, IO, ADIOS, USER, OTHER)",
+    )
+    parser.add_argument(
+        "--compact",
+        action="store_true",
+        help="Emit the compact, token-efficient layout (columnar tables, "
+        "string dictionary, no indentation); see layouts below",
+    )
+    return parser.parse_args(arguments)
+
+
+def main(arguments=None):
     args = parse_args(arguments)
-    global_data = OrderedDict()
-    if args.workflow != None:
-        global_data[workflow_metadata_str] = json.load(open(args.workflow), object_pairs_hook=OrderedDict)
-        have_workflow_file = True
+    if args.workflow:
+        with open(args.workflow, encoding="utf-8") as workflow_file:
+            workflow = json.load(workflow_file, object_pairs_hook=OrderedDict)
     else:
-        global_data[workflow_metadata_str] = OrderedDict()
-        global_data[workflow_metadata_str]["Workflow Instance"] = make_workflow_instance()
-        global_data[workflow_metadata_str]["Workflow Component"] = []
-    global_data[workflow_metadata_str]["Application"] = []
-    global_data[workflow_metadata_str]["Application-instance"] = []
+        workflow = OrderedDict()
+        workflow["Workflow Component"] = []
+    _workflow_instance(workflow)
+    workflow.setdefault("Application", [])
+    workflow.setdefault("Application-instance", [])
 
-    index = 1
+    output = OrderedDict()
+    workflow["profile-json-version"] = FORMAT_VERSION
+    output["Workflow metadata"] = workflow
+    workflow_start = None
+    workflow_end = None
+    metric_names = OrderedDict()
     for indir in args.indir:
-        print ("Processing:", indir)
-        parse_directory(indir, index)
-        index = index + 1
+        print("Processing: {}".format(indir), file=sys.stderr)
+        application, profiles = _load_directory(indir)
+        if args.summary:
+            application["Summary"] = _summarize(application, profiles)
+        output[indir] = application
+        for metric in application["Metrics"]:
+            metric_names[metric] = None
+        start, end = _build_workflow_component(
+            workflow, indir, application, profiles
+        )
+        if start is not None:
+            workflow_start = start if workflow_start is None else min(workflow_start, start)
+            workflow_end = end if workflow_end is None else max(workflow_end, end)
+    if workflow_start is not None and workflow_end is not None:
+        _workflow_instance(workflow)["execution_time"] = workflow_end - workflow_start
+    _metrics(workflow, metric_names)
 
-    # write the main workflow instance metadata
-    global_data[workflow_metadata_str]["Workflow Instance"]["execution_time"] = workflow_end - workflow_start
-    write_metrics()
-
-    # write the JSON output
-    if args.outfile == None:
-        # json.dump(global_data, args.outfile)
-        json.dumps(global_data, indent=2)
+    if args.compact:
+        output = compact_output(output)
+    json_output = json.dumps(
+        output,
+        indent=None if args.compact else 2,
+        separators=(",", ":") if args.compact else None,
+        allow_nan=False,
+    )
+    if args.outfile == "-":
+        sys.stdout.write(json_output)
+        sys.stdout.write("\n")
     else:
-        # json.dump(global_data, args.outfile)
-        args.outfile.write(json.dumps(global_data, indent=2))
+        with open(args.outfile, "w", encoding="utf-8") as outfile:
+            outfile.write(json_output)
+            outfile.write("\n")
 
-"""
-Call the main function if not called from another python file
-"""
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
 
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        print("tau_prof2json.py: {}".format(error), file=sys.stderr)
+        sys.exit(2)
