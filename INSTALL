@@ -199,6 +199,7 @@ Compiler Options:
    options    [mpif90|mpiifort|gfortran|ibm|pgi|cray|intel|nagware|pathscale
 	sgi|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
        g95|open64|kai|nec|hitachi|intel|absoft|lahey}
+   -cc, -c++ and -fortran take a compiler name or a full path.
 -upc=<compiler> ............................. specify the UPC compiler.
      options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
