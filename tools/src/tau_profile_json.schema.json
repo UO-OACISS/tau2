@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TAU profile JSON output",
+  "description": "Output produced by tools/src/tau_prof2json.py from one or more TAU text profile directories.",
+  "type": "object",
+  "required": [
+    "Workflow metadata"
+  ],
+  "properties": {
+    "Workflow metadata": {
+      "$ref": "#/$defs/workflowMetadata"
+    }
+  },
+  "patternProperties": {
+    "^(?!Workflow metadata$).+": {
+      "$ref": "#/$defs/applicationProfile"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "numberOrNull": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "profileMetadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "timerRecord": {
+      "type": "object",
+      "required": [
+        "process index",
+        "context index",
+        "thread index",
+        "Metric",
+        "Function",
+        "Calls",
+        "Subroutines",
+        "Exclusive Time",
+        "Inclusive Time"
+      ],
+      "properties": {
+        "process index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "context index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "thread index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Metric": {
+          "type": "string"
+        },
+        "Function": {
+          "type": "string"
+        },
+        "Calls": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Subroutines": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Exclusive Time": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Inclusive Time": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Profile Calls": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Group": {
+          "type": "string"
+        },
+        "Additional Values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/numberOrNull"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "userEventRecord": {
+      "type": "object",
+      "required": [
+        "process index",
+        "context index",
+        "thread index",
+        "Metric",
+        "Counter",
+        "Num Events",
+        "Max Value",
+        "Min Value",
+        "Mean Value",
+        "SumSqr Value"
+      ],
+      "properties": {
+        "process index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "context index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "thread index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Metric": {
+          "type": "string"
+        },
+        "Counter": {
+          "type": "string"
+        },
+        "Num Events": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Max Value": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Min Value": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Mean Value": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "SumSqr Value": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "Additional Values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/numberOrNull"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "profile": {
+      "type": "object",
+      "required": [
+        "Filename",
+        "process index",
+        "context index",
+        "thread index",
+        "Metric",
+        "Profile Format",
+        "Metadata",
+        "Timer Count",
+        "Aggregate Count",
+        "Counter Count",
+        "Additional Profile Data"
+      ],
+      "properties": {
+        "Filename": {
+          "type": "string",
+          "pattern": "^(MULTI_+[^/]+/)?profile\\.\\d+\\.\\d+\\.\\d+$"
+        },
+        "process index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "context index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "thread index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Metric": {
+          "type": "string"
+        },
+        "Profile Format": {
+          "type": "string"
+        },
+        "Metadata": {
+          "$ref": "#/$defs/profileMetadata"
+        },
+        "Additional Profile Data": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Timer Count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Aggregate Count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Counter Count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "applicationProfile": {
+      "type": "object",
+      "required": [
+        "metadata",
+        "Timers",
+        "Aggregates",
+        "Counters",
+        "Profiles",
+        "Metrics"
+      ],
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/profileMetadata"
+          }
+        },
+        "Timers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/timerRecord"
+          }
+        },
+        "Aggregates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/timerRecord"
+          }
+        },
+        "Counters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/userEventRecord"
+          }
+        },
+        "Profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profile"
+          }
+        },
+        "Metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "Metric": {
+          "type": "string"
+        },
+        "Summary": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workflowMetadata": {
+      "type": "object",
+      "required": [
+        "Workflow Instance",
+        "Workflow Component",
+        "Application",
+        "Application-instance",
+        "Metrics",
+        "profile-json-version"
+      ],
+      "properties": {
+        "profile-json-version": {
+          "type": "string"
+        },
+        "Workflow Instance": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          ]
+        },
+        "Workflow Component": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Application": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Application-instance": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Metrics": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "processes",
+        "threads",
+        "timer_records",
+        "counter_records",
+        "by_metric"
+      ],
+      "properties": {
+        "processes": {
+          "type": "integer"
+        },
+        "threads": {
+          "type": "integer"
+        },
+        "timer_records": {
+          "type": "integer"
+        },
+        "counter_records": {
+          "type": "integer"
+        },
+        "by_metric": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "total_exclusive_per_thread",
+              "exclusive_fraction",
+              "top_exclusive",
+              "top_inclusive"
+            ],
+            "properties": {
+              "total_exclusive_per_thread": {
+                "type": "number"
+              },
+              "exclusive_fraction": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "top_exclusive": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              },
+              "top_inclusive": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              },
+              "top_samples": {
+                "type": "array",
+                "description": "Top flat [SAMPLE] entries by mean exclusive time; present only when sampling data exists. Calls is the sample count.",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "summaryTimer": {
+      "type": "object",
+      "required": [
+        "Function",
+        "Calls",
+        "Mean Exclusive",
+        "Mean Inclusive"
+      ],
+      "properties": {
+        "Function": {
+          "type": "string",
+          "description": "Timer name without trailing spaces or source suffix"
+        },
+        "File": {
+          "type": "string"
+        },
+        "Line": {
+          "type": "integer"
+        },
+        "End Line": {
+          "type": "integer"
+        },
+        "Calls": {
+          "type": "number"
+        },
+        "Mean Exclusive": {
+          "type": "number"
+        },
+        "Mean Inclusive": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

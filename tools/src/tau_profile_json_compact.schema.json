@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TAU profile JSON output (compact layout)",
+  "description": "Output of tools/src/tau_prof2json.py --compact. Expand to the full layout with tau_prof2json.expand_compact().",
+  "type": "object",
+  "required": [
+    "Workflow metadata"
+  ],
+  "properties": {
+    "Workflow metadata": {
+      "$ref": "#/$defs/workflowMetadata"
+    }
+  },
+  "patternProperties": {
+    "^(?!Workflow metadata$).+": {
+      "$ref": "#/$defs/applicationProfile"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "workflowMetadata": {
+      "type": "object",
+      "required": [
+        "Workflow Instance",
+        "Workflow Component",
+        "Application",
+        "Application-instance",
+        "Metrics",
+        "profile-json-version"
+      ],
+      "properties": {
+        "profile-json-version": {
+          "const": "1.0-compact"
+        },
+        "Workflow Instance": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          ]
+        },
+        "Workflow Component": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Application": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Application-instance": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Metrics": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "columns",
+        "rows"
+      ],
+      "properties": {
+        "constants": {
+          "type": "object"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "indexed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "applicationProfile": {
+      "type": "object",
+      "required": [
+        "common_metadata",
+        "thread_metadata",
+        "strings",
+        "Timers",
+        "Aggregates",
+        "Counters",
+        "Profiles",
+        "Metrics"
+      ],
+      "properties": {
+        "common_metadata": {
+          "type": "object"
+        },
+        "thread_metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "strings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Timers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Aggregates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Counters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "Metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Metric": {
+          "type": "string"
+        },
+        "Summary": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "processes",
+        "threads",
+        "timer_records",
+        "counter_records",
+        "by_metric"
+      ],
+      "properties": {
+        "processes": {
+          "type": "integer"
+        },
+        "threads": {
+          "type": "integer"
+        },
+        "timer_records": {
+          "type": "integer"
+        },
+        "counter_records": {
+          "type": "integer"
+        },
+        "by_metric": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "total_exclusive_per_thread",
+              "exclusive_fraction",
+              "top_exclusive",
+              "top_inclusive"
+            ],
+            "properties": {
+              "total_exclusive_per_thread": {
+                "type": "number"
+              },
+              "exclusive_fraction": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "top_exclusive": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              },
+              "top_inclusive": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              },
+              "top_samples": {
+                "type": "array",
+                "description": "Top flat [SAMPLE] entries by mean exclusive time; present only when sampling data exists. Calls is the sample count.",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "summaryTimer": {
+      "type": "object",
+      "required": [
+        "Function",
+        "Calls",
+        "Mean Exclusive",
+        "Mean Inclusive"
+      ],
+      "properties": {
+        "Function": {
+          "type": "string",
+          "description": "Timer name without trailing spaces or source suffix"
+        },
+        "File": {
+          "type": "string"
+        },
+        "Line": {
+          "type": "integer"
+        },
+        "End Line": {
+          "type": "integer"
+        },
+        "Calls": {
+          "type": "number"
+        },
+        "Mean Exclusive": {
+          "type": "number"
+        },
+        "Mean Inclusive": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
