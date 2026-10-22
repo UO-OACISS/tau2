@@ -419,6 +419,20 @@ def _group_tokens(group):
     return {token.strip() for token in (group or "").split("|")}
 
 
+# Groups of timers that re-report time already held by a flat timer (callpath
+# copies) or by the timer a sample landed in (EBS), so totals must skip them.
+DERIVED_GROUPS = {"TAU_CALLPATH", "TAU_SAMPLE", "TAU_SAMPLE_CONTEXT"}
+
+
+def _is_flat_sample(timer):
+    groups = _group_tokens(timer.get("Group"))
+    return "TAU_SAMPLE" in groups and "TAU_CALLPATH" not in groups
+
+
+def _is_derived_timer(timer):
+    return bool(_group_tokens(timer.get("Group")) & DERIVED_GROUPS)
+
+
 def _timer_category(timer):
     """Classify a timer using TAU groups; only ADIOS needs a name rule.
 
@@ -443,6 +457,8 @@ def _sum_by_group(profiles):
     group_calls = OrderedDict()
     for profile in profiles:
         for timer in profile["Timers"]:
+            if _is_derived_timer(timer):
+                continue
             key = _timer_category(timer)
             if timer["Exclusive Time"] is not None:
                 group_times[key] = (
@@ -454,6 +470,9 @@ def _sum_by_group(profiles):
     for profile in profiles:
         for event in profile["Counters"]:
             name = event["Counter"]
+            # "<event> : <context>" records repeat the plain event's data.
+            if " : " in name:
+                continue
             if event["Num Events"] is None or event["Mean Value"] is None:
                 continue
             average = event["Mean Value"] * event["Num Events"]
@@ -476,6 +495,24 @@ def _sum_by_group(profiles):
 
 
 SUMMARY_TOP = 10
+SOURCE_RE = re.compile(
+    r"^(?P<name>.*?)\s*\[\{(?P<file>[^}]*)\}\s*\{(?P<line>\d+)[^}]*\}"
+    r"(?:\s*-\s*\{(?P<end>\d+)[^}]*\})?\]\s*$"
+)
+
+
+def _split_function(function):
+    """Return (name, file, line, end line) from 'name [{file} {l,c}-{l,c}]'."""
+    match = SOURCE_RE.match(function)
+    if not match:
+        return function.strip(), None, None, None
+    end = match.group("end")
+    return (
+        match.group("name"),
+        match.group("file"),
+        int(match.group("line")),
+        int(end) if end else None,
+    )
 
 
 def _summarize(application, profiles):
@@ -489,8 +526,20 @@ def _summarize(application, profiles):
     for metric in application["Metrics"]:
         selected = [p for p in profiles if p["Metric"] == metric]
         functions = OrderedDict()
+        samples = OrderedDict()
         for profile in selected:
             for timer in profile["Timers"]:
+                if _is_flat_sample(timer):
+                    name = timer["Function"]
+                    if name.startswith("[SAMPLE]"):
+                        name = name[len("[SAMPLE]"):].strip()
+                    entry = samples.setdefault(name, {"calls": 0, "excl": 0, "incl": 0})
+                    entry["calls"] += timer["Calls"] or 0
+                    entry["excl"] += timer["Exclusive Time"] or 0
+                    entry["incl"] += timer["Inclusive Time"] or 0
+                    continue
+                if _is_derived_timer(timer):
+                    continue
                 entry = functions.setdefault(
                     timer["Function"], {"calls": 0, "excl": 0, "incl": 0}
                 )
@@ -498,17 +547,24 @@ def _summarize(application, profiles):
                 entry["excl"] += timer["Exclusive Time"] or 0
                 entry["incl"] += timer["Inclusive Time"] or 0
         threads = max(len(selected), 1)
-        rows = [
-            OrderedDict(
-                (
-                    ("Function", name),
-                    ("Calls", _cell(entry["calls"])),
-                    ("Mean Exclusive", _cell(entry["excl"] / threads)),
-                    ("Mean Inclusive", _cell(entry["incl"] / threads)),
-                )
-            )
-            for name, entry in functions.items()
-        ]
+        def make_rows(table):
+            rows = []
+            for raw_name, entry in table.items():
+                name, source, line, end = _split_function(raw_name)
+                row = OrderedDict((("Function", name),))
+                if source is not None:
+                    row["File"] = source
+                    row["Line"] = line
+                    if end is not None:
+                        row["End Line"] = end
+                row["Calls"] = _cell(entry["calls"])
+                row["Mean Exclusive"] = _cell(entry["excl"] / threads)
+                row["Mean Inclusive"] = _cell(entry["incl"] / threads)
+                rows.append(row)
+            return rows
+
+        rows = make_rows(functions)
+        sample_rows = make_rows(samples)
         times, _, _ = _sum_by_group(selected)
         total = sum(times.values())
         info = OrderedDict()
@@ -523,6 +579,11 @@ def _summarize(application, profiles):
         info["top_inclusive"] = sorted(
             rows, key=lambda row: row["Mean Inclusive"], reverse=True
         )[:SUMMARY_TOP]
+        if sample_rows:
+            # Calls is the sample count; times are sample-attributed.
+            info["top_samples"] = sorted(
+                sample_rows, key=lambda row: row["Mean Exclusive"], reverse=True
+            )[:SUMMARY_TOP]
         by_metric[metric] = info
     summary["by_metric"] = by_metric
     return summary
@@ -908,6 +969,13 @@ layouts:
             thread and record counts and, per metric, mean exclusive time per
             thread, the exclusive-time fraction in MPI/IO/ADIOS/USER/OTHER,
             and the top 10 timers by mean exclusive and inclusive time.
+            With sampling data, top_samples lists the top 10 [SAMPLE] entries
+            (Calls = sample count) since they are excluded from the other
+            lists. Callpath ("a => b") and sampling ([SAMPLE]/[CONTEXT]) timers
+            and "event : context" user events are left out of the derived
+            totals (aggr_*, Summary) because they repeat other records.
+            Summary names drop trailing spaces; a "[{file} {line,col}]"
+            suffix becomes File, Line and End Line fields.
 
 workflow file (-w): optional JSON describing the workflow (Workflow Instance,
 Workflow Component, Application, inputs/outputs, dependency graph). It is

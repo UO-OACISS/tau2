@@ -419,6 +419,65 @@ class TauProfileToJsonTests(unittest.TestCase):
             tau_prof2json.main([self.profile_dir])
         self.assertNotIn("Summary", json.loads(without.getvalue())[self.profile_dir])
 
+    def test_derived_records_are_not_double_counted(self):
+        text = (
+            "7 templated_functions_MULTI_TIME\n"
+            "# Name Calls Subrs Excl Incl ProfileCalls # "
+            "<metadata><attribute><name>Metric Name</name><value>TIME</value>"
+            "</attribute></metadata>\n"
+            '".TAU application" 1 2 298964040 299188445 0 GROUP="TAU_USER"\n'
+            '"MPI_Init()  " 1 0 222257 222257 0 GROUP="MPI"\n'
+            '".TAU application => MPI_Init()  " 1 0 222257 222257 0 '
+            'GROUP="TAU_CALLPATH|MPI"\n'
+            '"MPI_Finalize()  " 1 0 2148 2148 0 GROUP="MPI"\n'
+            '".TAU application => MPI_Finalize()  " 1 0 2148 2148 0 '
+            'GROUP="TAU_CALLPATH|MPI"\n'
+            '"[SAMPLE] f [{a.c} {3}]" 5 0 900 900 0 GROUP="TAU_SAMPLE"\n'
+            '"[CONTEXT] g" 5 0 0 900 0 GROUP="TAU_SAMPLE_CONTEXT"\n'
+            "0 aggregates\n"
+            "2 userevents\n"
+            "# eventname numevents max min mean sumsqr\n"
+            '"Message size sent to all nodes" 1 8 8 8 64\n'
+            '"Message size sent to all nodes : ADIOS open => MPI_Bcast()" '
+            "1 8 8 8 64\n"
+        )
+        with open(self.profile_path, "w", encoding="utf-8") as profile:
+            profile.write(text)
+        result = self._convert("--summary", self.profile_dir)[self.profile_dir]
+        component = result["Summary"]
+        flow = self._convert(self.profile_dir)["Workflow metadata"]
+        flow = flow["Workflow Component"][0]
+        self.assertEqual(224405, flow["aggr_communication_time"])
+        self.assertEqual(2, flow["aggr_communication_calls"])
+        self.assertEqual(8, flow["aggr_communication_sent_bytes"])
+        metric = component["by_metric"]["TIME"]
+        self.assertEqual(298964040 + 224405, metric["total_exclusive_per_thread"])
+        names = [row["Function"] for row in metric["top_inclusive"]]
+        self.assertEqual(["MPI_Init()", "MPI_Finalize()"], names[1:])
+        sample = metric["top_samples"]
+        self.assertEqual(1, len(sample))
+        self.assertEqual(("f", "a.c", 3, 5), (
+            sample[0]["Function"], sample[0]["File"], sample[0]["Line"], sample[0]["Calls"]))
+        if jsonschema is not None:
+            for name in ("", "_compact"):
+                with open(os.path.join(TOOLS_SRC, "tau_profile_json%s.schema.json" % name), encoding="utf-8") as f:
+                    schema = json.load(f)
+                out = self._convert("--summary", *(["--compact"] if name else []), self.profile_dir)
+                jsonschema.validate(out, schema)
+
+    def test_summary_splits_source_location(self):
+        split = tau_prof2json._split_function
+        self.assertEqual(
+            ("resid", "./mg.f", 707, 772),
+            split("resid [{./mg.f} {707,1}-{772,1}]"),
+        )
+        self.assertEqual(
+            ("OpenMP_Parallel_Region f", "/a/b.c", 5, None),
+            split("OpenMP_Parallel_Region f [{/a/b.c} {5, 0}]"),
+        )
+        self.assertEqual(("g._omp_fn.0", "x.c", 110, None), split("g._omp_fn.0 [{x.c} {110}]"))
+        self.assertEqual(("MPI_Init()", None, None, None), split("MPI_Init()  "))
+
     def test_hardware_counter_is_not_reported_as_execution_time(self):
         with open(self.profile_path, "w", encoding="utf-8") as profile:
             profile.write(PROFILE.replace("<value>TIME</value>", "<value>CPU_CYCLES</value>"))

@@ -372,6 +372,13 @@
                 "items": {
                   "$ref": "#/$defs/summaryTimer"
                 }
+              },
+              "top_samples": {
+                "type": "array",
+                "description": "Top flat [SAMPLE] entries by mean exclusive time; present only when sampling data exists. Calls is the sample count.",
+                "items": {
+                  "$ref": "#/$defs/summaryTimer"
+                }
               }
             }
           }
@@ -389,7 +396,17 @@
       ],
       "properties": {
         "Function": {
+          "type": "string",
+          "description": "Timer name without trailing spaces or source suffix"
+        },
+        "File": {
           "type": "string"
+        },
+        "Line": {
+          "type": "integer"
+        },
+        "End Line": {
+          "type": "integer"
         },
         "Calls": {
           "type": "number"
