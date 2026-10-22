@@ -5153,10 +5153,15 @@ if [ "x$fortran_compiler" = "xxlflang" ]; then
 fi
 
 if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xflang-new" ]; then
+   if [ $fortran_compiler_specified = yes ] && ! command -v $fortran_compiler >/dev/null 2>&1; then
+     echo "ERROR: Fortran compiler '$fortran_compiler' not found in PATH."
+     echo "       Add it to PATH or choose another with -fortran=<compiler>."
+     exit 1
+   fi
    fixmakeargs="$fixmakeargs FLANG"
    touch foo_compinst.f
    test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
-   if [ $? -eq 1 ]; then
+   if [ $? -ne 0 ]; then
      # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
      fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
    fi
@@ -5714,7 +5719,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 fixmakeargs="$fixmakeargs FLANG"
                 touch foo_compinst.f
                 test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
-                if [ $? -eq 1 ]; then
+                if [ $? -ne 0 ]; then
                 # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
                   fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
                 fi
