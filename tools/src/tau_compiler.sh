@@ -403,6 +403,16 @@ compile_opari2_pompregions() {
     evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
 }
 
+# On macOS, write <output>.dSYM after a link. CoreSymbolication (TAU's name
+# lookup) finds no source info in GCC static executables without it, and
+# gfortran -fbacktrace needs it. A failure only warns: the link succeeded.
+run_dsymutil() {
+    [ "$(uname -s)" = Darwin ] || return 0
+    command -v dsymutil > /dev/null 2>&1 || return 0
+    evalWithDebugMessage "dsymutil -q $1" "Writing debug symbols" \
+        || echo "Warning: dsymutil $1 failed; source locations may be missing" >&2
+}
+
 # Select the appropriate wrapper link_options.tau file and apply it to optLinking.
 # Uses globals: trackIO, optMemDbg, trackDMAPP, trackARMCI, trackPthread, trackGOMP,
 #               trackMPCThread, trackUPCR, tauWrapFile, optWrappersDir, optShared, upc,
@@ -2032,6 +2042,12 @@ if [ $numFiles == 0 ]; then
             echo -e ""
             exit $errorStatus
         fi
+    elif [ $isForCompilation == $FALSE ]; then
+        # -E, -M, -MM and -S stop before the link: nothing to process
+        case " $regularCmd " in
+            *" -E "*|*" -M "*|*" -MM "*|*" -S "*) ;;
+            *) run_dsymutil "$passedOutputFile" ;;
+        esac
     fi
     gotoNextStep=$FALSE
     if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
@@ -2660,10 +2676,13 @@ else
           fi
 
           evalWithDebugMessage "$newCmd" "Linking (Together) object files"
+          linkStatus=$?
 
           if [ ! -e $passedOutputFile ] ; then
               echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
               printError "$CMD" "$newCmd"
+          elif [ $linkStatus == 0 ]; then
+              run_dsymutil "$passedOutputFile"
           fi
 
           if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
