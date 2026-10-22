@@ -378,6 +378,10 @@ for arg in "$@" ; do
               invoke_with_tau=no
               NON_TAUARGS="$NON_TAUARGS $modarg"
               ;;
+          -opt[[:upper:]]*)
+              # tau_compiler.sh option: the bare compiler reads -optX as -o ptX
+              TAUARGS="$TAUARGS $modarg"
+              ;;
           *)
               TAUARGS="$TAUARGS $modarg"
               NON_TAUARGS="$NON_TAUARGS $modarg"
