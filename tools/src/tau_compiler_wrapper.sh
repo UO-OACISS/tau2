@@ -166,8 +166,9 @@ showincludes:
 	@echo \$(TAU_INCLUDE) \$(TAU_MPI_INCLUDE)
 showlibs:
 	@echo \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)
+comma:=,
 showsharedlibs:
-	@echo -L\$(TAU_LIB_DIR) -Wl,-rpath,\$(TAU_LIB_DIR) -lTAUsh\$(TAU_CONFIG) \$(TAU_MPI_FLIBS) \$(TAU_SHMEM_LIBS) \$(TAU_EXLIBS) \$(TAU_LDFLAGS) \$(TAU_LINKER_RPATH_OPT) \$(TAU_CUDA_LIBRARY)
+	@echo -L\$(TAU_LIB_DIR) -Wl,-rpath,\$(TAU_LIB_DIR) -lTAUsh\$(TAU_CONFIG) \$(TAU_MPI_FLIBS) \$(TAU_SHMEM_LIBS) \$(TAU_EXLIBS) \$(TAU_LDFLAGS) \$(filter-out -Wl\$(comma)-rpath\$(comma)\$(TAU_LIB_DIR),\$(TAU_LINKER_RPATH_OPT)) \$(TAU_CUDA_LIBRARY)
 EOF
     else
 cat <<EOF > /tmp/makefile.tau.$USER.$$
@@ -182,8 +183,9 @@ showincludes:
 	@echo \$(TAU_INCLUDE) \$(TAU_MPI_INCLUDE)
 showlibs:
 	@echo \$(TAU_MPI_FLIBS) \$(TAU_LIBS)
+comma:=,
 showsharedlibs:
-	@echo -L\$(TAU_LIB_DIR) -Wl,-rpath,\$(TAU_LIB_DIR) -lTAUsh\$(TAU_CONFIG) \$(TAU_MPI_FLIBS) \$(TAU_SHMEM_LIBS) \$(TAU_EXLIBS) \$(TAU_LDFLAGS) \$(TAU_LINKER_RPATH_OPT) \$(TAU_CUDA_LIBRARY)
+	@echo -L\$(TAU_LIB_DIR) -Wl,-rpath,\$(TAU_LIB_DIR) -lTAUsh\$(TAU_CONFIG) \$(TAU_MPI_FLIBS) \$(TAU_SHMEM_LIBS) \$(TAU_EXLIBS) \$(TAU_LDFLAGS) \$(filter-out -Wl\$(comma)-rpath\$(comma)\$(TAU_LIB_DIR),\$(TAU_LINKER_RPATH_OPT)) \$(TAU_CUDA_LIBRARY)
 EOF
     fi
 }

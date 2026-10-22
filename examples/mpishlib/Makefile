@@ -24,6 +24,10 @@ CC		= $(TAU_CC)
 CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)  -fPIC -g 
 
 LIBS            = ./libring.so $(TAU_MPI_LIBS) $(TAU_SHLIBS) -lm
+# macOS: $(TAU_SHFLAGS) gives libring.so the install name @rpath/libring.so
+ifdef TAU_APPLE_SHFLAGS
+LIBS            += -Wl,-rpath,.
+endif
 
 LDFLAGS	      	= $(USER_OPT) $(TAU_LDFLAGS)
 

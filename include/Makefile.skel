@@ -1199,6 +1199,11 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #USE_INTELCXX#TAU_LINKER_RPATH_OPT= $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) #ENDIF#
 #PGI#TAU_LINKER_RPATH_OPT= $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) #ENDIF#
 #CLANG#TAU_LINKER_RPATH_OPT= $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) #ENDIF#
+# macOS: -lTAU is ../libTAUsh*.dylib, found through its @rpath install name
+#APPLECXX#TAU_LINKER_RPATH_OPT += $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR) #ENDIF#
+# -optSharedLinking's own rpath; macOS ld warns that it repeats one above
+TAU_SHARED_RPATH=$(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG)
+#APPLECXX#TAU_SHARED_RPATH=#ENDIF#
 ##############################################
 # MPI _r suffix check (as in libmpi_r)
 #MPI_R_SUFFIX#TAU_MPI_R_SUFFIX=_r    #ENDIF#
@@ -1214,7 +1219,7 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #SGICC#AR_SHFLAGS 		= -shared  	        #ENDIF#
 #OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
 #MPC#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
-#APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined dynamic_lookup #ENDIF#
+#APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined dynamic_lookup -Wl,-install_name,@rpath/$(@F) -Wl,-headerpad_max_install_names #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared -fPIC 	#ENDIF#
 #MMIC#AR_SHFLAGS  	= -shared -mmic #ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
@@ -1764,7 +1769,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optTauIncludes="$(OPARIINCDIR) $(TAU_INCLUDE) $(TAU_MPI_COMPILE_INCLUDE) $(TAU_SHMEM_INCLUDE) " \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
         -optLinking="$(TAU_SCOREP_EXTRA_FLAGS) $(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LDFLAGS) $(TAU_CUDA_STATIC_LIBS) $(TAU_USE_NO_PIE_ON_UBUNTU) "\
-        -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(SHLEXTRA1) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_CXXLIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LINKER_RPATH_OPT) $(TAU_PMI_SHLIBS) $(TAU_USE_NO_PIE_ON_UBUNTU) \
+        -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(SHLEXTRA1) $(TAU_SHARED_RPATH) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_CXXLIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LINKER_RPATH_OPT) $(TAU_PMI_SHLIBS) $(TAU_USE_NO_PIE_ON_UBUNTU) \
 				 $(TAU_LDFLAGS) $(TAU_LIBDL)"\
 				-optMICOffloadLinking="$(MIC_OFFLOAD_LINKING)"\
 	$(TAUCOMPILER_OMP_OPTS)			-optMICOffloadSharedLinking="$(MIC_OFFLOAD_SHARED_LINKING)"\
