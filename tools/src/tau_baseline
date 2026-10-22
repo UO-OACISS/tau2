@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 #
 # Copyright (c) 2017, ParaTools, Inc.
 # All rights reserved.
@@ -37,7 +36,8 @@ import time
 import getpass
 import platform
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
+from xml.sax.saxutils import escape
 
 
 def get_cpuinfo():
@@ -52,10 +52,10 @@ def get_cpuinfo():
                 elif core and not len(line.strip()):
                     cpuinfo.append(core)
                 else:
-                    key, val = line.split(':')
+                    key, val = line.split(':', 1)
                     core[key.strip()] = val.strip()
         return cpuinfo
-    except IOError:
+    except OSError:
         return [{}]
 
 
@@ -64,10 +64,10 @@ def get_meminfo():
         meminfo = {}
         with open("/proc/meminfo") as fin:
             for line in fin:
-                key, val = line.split(':')
+                key, val = line.split(':', 1)
                 meminfo[key.strip()] = val.strip()
         return meminfo
-    except IOError:
+    except OSError:
         return {}
 
 
@@ -75,8 +75,9 @@ def get_profile_metadata(cmd, pid, tid, start_time, end_time):
     meminfo = get_meminfo()
     cpuinfo = get_cpuinfo()
     cpu0 = cpuinfo[0]
-    start_stamp = str(start_time).replace('.', '')
-    end_stamp = str(end_time).replace('.', '')
+    start_stamp = str(int(start_time * 1e6))
+    end_stamp = str(int(end_time * 1e6))
+    now = datetime.now(timezone.utc)
     meta_fields = {'Metric Name': 'TIME',
                    'Hostname': platform.node(),
                    'CWD': os.getcwd(),
@@ -87,7 +88,7 @@ def get_profile_metadata(cmd, pid, tid, start_time, end_time):
                    'Cache Size': cpu0.get('cache size', '0'),
                    'Command Line': ' '.join(cmd),
                    'Executable': os.path.realpath(os.path.abspath(os.path.expanduser(cmd[0]))),
-                   'Local Time': str(datetime.utcnow()),
+                   'Local Time': now.astimezone().isoformat(timespec='seconds'),
                    'Memory Size': meminfo.get('MemTotal', '0'),
                    'Node Name': platform.node(),
                    'OS Machine': platform.machine(),
@@ -106,15 +107,15 @@ def get_profile_metadata(cmd, pid, tid, start_time, end_time):
                    'TAU_PROFILE_FORMAT': 'profile',
                    'TAU_TRACE': 'off',
                    'TAU_TRACE_FORMAT': 'tau',
-                   'UTC Time': str(datetime.utcnow()),
+                   'UTC Time': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
                    'pid': pid,
                    'tid': tid,
                    'username': getpass.getuser()}
     parts = ['<metadata>']
-    for key, val in meta_fields.iteritems():
+    for key, val in meta_fields.items():
         if val is None:
             val = '0'
-        parts.append('<attribute><name>%s</name><value>%s</value></attribute>' % (key, val))
+        parts.append('<attribute><name>{}</name><value>{}</value></attribute>'.format(escape(key), escape(str(val))))
     parts.append('</metadata>')
     return ''.join(parts)
 
