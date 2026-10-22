@@ -2483,7 +2483,15 @@ else
          	if [ "$useCompInst" = yes ]; then
                    if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
-		     if [ "x$tauSelectFile" != "x" ] ; then
+		     if [ "x$tauSelectFile" != "x" ] && [ "x$TAUCOMP" == "xclang" ] ; then
+                        # clang has no GNU exclude list; only TAU's LLVM plugin applies function lists
+                        if [ "$tau_llvm_plugin_missing" = "yes" ] && [ "x$selectFuncListWarned" = "x" ] && \
+                           grep -Eqs '^[[:space:]]*BEGIN_(EXCLUDE|INCLUDE)_LIST' "$tauSelectFile"; then
+                          echo "Warning: function lists in the select file are not applied at compile time"
+                          echo "  with clang compiler instrumentation; use TAU_SELECT_FILE at run time instead."
+                          selectFuncListWarned=yes
+                        fi
+		     elif [ "x$tauSelectFile" != "x" ] ; then
                         # Drop leading whitespace and comment/blank lines, unquote "entries", and drop
                         # wildcard entries (# and ?): GNU's exclude list only takes literal names.
                         optExcludeFuncsList=$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^#/d' -e '/^$/d' "$tauSelectFile" | \
