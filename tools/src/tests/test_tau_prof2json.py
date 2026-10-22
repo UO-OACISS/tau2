@@ -5,6 +5,7 @@ import json
 import html
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -478,6 +479,52 @@ class TauProfileToJsonTests(unittest.TestCase):
         self.assertEqual(("g._omp_fn.0", "x.c", 110, None), split("g._omp_fn.0 [{x.c} {110}]"))
         self.assertEqual(("MPI_Init()", None, None, None), split("MPI_Init()  "))
 
+    def test_summary_means_match_pprof(self):
+        pprof = shutil.which("pprof")
+        if pprof is None:
+            self.skipTest("pprof is not on PATH")
+        os.remove(self.profile_path)
+        # 2 ranks x 2 threads; whole msec means, since pprof prints msec.
+        for rank in range(2):
+            for thread in range(2):
+                scale = 1 + rank + 2 * thread
+                usec = 4000 * scale
+                lines = [
+                    '".TAU application" 1 2 %d %d 0 GROUP="TAU_USER"'
+                    % (2 * usec, 10 * usec),
+                    '"compute [{a.c} {10,1}-{40,1}]" %d 0 %d %d 0 GROUP="TAU_USER"'
+                    % (3 * scale, 6 * usec, 6 * usec),
+                    '"MPI_Send()  " %d 0 %d %d 0 GROUP="MPI"'
+                    % (2 * scale, 2 * usec, 2 * usec),
+                ]
+                if thread:
+                    lines = lines[:2]
+                    lines[0] = '".TAU application" 1 1 %d %d 0 GROUP="TAU_USER"' % (
+                        4 * usec, 10 * usec)
+                path = os.path.join(self.profile_dir, "profile.%d.0.%d" % (rank, thread))
+                with open(path, "w", encoding="utf-8") as profile:
+                    profile.write("%d templated_functions_MULTI_TIME\n%s%s\n0 aggregates\n" % (
+                        len(lines), PROFILE.splitlines(True)[1], "\n".join(lines)))
+        summary = self._convert("--summary", self.profile_dir)[self.profile_dir]["Summary"]
+        self.assertEqual(4, summary["threads"])
+        ours = {
+            row["Function"]: (row["Calls"] / summary["threads"],
+                              row["Mean Exclusive"], row["Mean Inclusive"])
+            for row in summary["by_metric"]["TIME"]["top_inclusive"]
+        }
+        text = subprocess.run([pprof, "-s"], cwd=self.profile_dir, capture_output=True,
+                              text=True, check=True).stdout
+        theirs = {}
+        for line in text.split("FUNCTION SUMMARY (mean):", 1)[1].splitlines():
+            fields = line.split()
+            if len(fields) >= 7 and fields[0][0].isdigit():
+                theirs[" ".join(fields[6:])] = (
+                    float(fields[3]), float(fields[1]) * 1000, float(fields[2]) * 1000)
+        self.assertEqual(sorted(theirs), sorted(ours))
+        for name, values in theirs.items():
+            for expected, actual in zip(values, ours[name]):
+                self.assertAlmostEqual(expected, actual, delta=0.5, msg=name)
+
     def test_hardware_counter_is_not_reported_as_execution_time(self):
         with open(self.profile_path, "w", encoding="utf-8") as profile:
             profile.write(PROFILE.replace("<value>TIME</value>", "<value>CPU_CYCLES</value>"))
@@ -520,6 +567,8 @@ class TauProfileToJsonTests(unittest.TestCase):
             text = PROFILE.replace("<value>TIME</value>", "<value>%s</value>" % metric)
             text = text.replace("templated_functions_MULTI_TIME",
                                 "templated_functions_MULTI_" + metric)
+            if metric != "TIME":
+                text = text.replace('"main" 1 2 3.5 4.5 6', '"main" 1 2 350 450 6')
             if events and metric in events:
                 text = text.replace('"quoted event" 1 3 3 3 9', events[metric])
             with open(os.path.join(directory, "profile.0.0.0"), "w", encoding="utf-8") as f:
@@ -547,6 +596,9 @@ class TauProfileToJsonTests(unittest.TestCase):
             {"PAPI_FP_OPS", "TIME"}, {t["Metric"] for t in application["Timers"]}
         )
         self.assertEqual(4, len(application["Timers"]))
+        main = {t["Metric"]: t["Exclusive Time"] for t in application["Timers"]
+                if t["Function"] == "main"}
+        self.assertEqual({"TIME": 3.5, "PAPI_FP_OPS": 350}, main)
         # User events are identical across metrics, so stored once.
         self.assertEqual(3, len(application["Counters"]))
         self.assertEqual([0, 3], [
