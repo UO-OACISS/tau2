@@ -54,6 +54,7 @@ pid_t tau_fork (void);
 #undef pthread_create
 #define pthread_create(thread, attr, function, arg) tau_pthread_create(thread, attr, function, arg)
 
+#undef pthread_join
 #define pthread_join(thread, retval) tau_pthread_join(thread, retval)
 
 #define pthread_exit(arg) tau_pthread_exit(arg)

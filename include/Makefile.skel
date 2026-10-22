@@ -1309,6 +1309,8 @@ ZLIBINCLUDE=
 
 #TAU_BFD#TAU_BFDLIB=$(BFDLINK) $(BFDLIBS) $(ZLIBLINK) $(ZLIBLIBS) $(ZLIBINCLUDE) #ENDIF#
 #PTHREAD_AVAILABLE#TAU_COMPINST_PTHREAD_OPTIONS= -Dpthread_create=tau_pthread_create -Dpthread_exit=tau_pthread_exit#ENDIF#
+# Apple ld has no -wrap, so time pthread_join at compile time.
+#PTHREAD_AVAILABLE##APPLECXX#TAU_COMPINST_PTHREAD_OPTIONS= -Dpthread_create=tau_pthread_create -Dpthread_exit=tau_pthread_exit -Dpthread_join=tau_pthread_join#ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions -finstrument-functions-exclude-file-list=include,.h,.hpp #ENDIF#
