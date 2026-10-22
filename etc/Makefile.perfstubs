@@ -14,10 +14,13 @@ $(BUILDDIR)/CMakeCache.txt:
 all : $(BUILDDIR)/CMakeCache.txt
 	$(MAKE) -C $(BUILDDIR) all
 
+# tau_python searches bindings$(TAUOPTIONS). The pytau install normally
+# creates that link, but pstubs-only configurations don't install pytau.
 install: all
 	$(MAKE) -C $(BUILDDIR) install
 	mkdir -p $(PYMODULEDIR)
 	mv -f $(INSTALLDIR)/lib/perfstubs.so $(PYMODULEDIR)/perfstubs.so
+	cd $(INSTALLDIR)/lib && ln -sfn shared$(TAUOPTIONS) bindings$(TAUOPTIONS)
 
 clean:
 	rm -rf $(BUILDDIR)

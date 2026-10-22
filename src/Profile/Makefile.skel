@@ -629,7 +629,7 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(CTAU_IMPL)
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_python_wrapper.py .
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_pyspark_wrapper.py .
-		cd $(INSTALLDEST) && $(LN) shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
+		cd $(INSTALLDEST) && $(LN) -n shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a :
 	ar rcs $(INSTALLDEST)/libpgnod_prof.a
