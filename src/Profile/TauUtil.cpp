@@ -560,6 +560,13 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
     return -1;
   }
 
+  /* Longer values would leave the copies below unterminated and overflow
+   * the 1024-byte buffers in Tau_util_parse_plugin_token */
+  if((strlen(TauEnv_get_plugins_path()) >= sizeof(pluginpath)) || (strlen(TauEnv_get_plugins()) >= sizeof(listpluginsnames))) {
+    printf("TAU: TAU_PLUGINS_PATH or TAU_PLUGINS (which TAU_SELECT_FILE sets) is too long: the limit is %d characters\n", (int)sizeof(listpluginsnames) - 1);
+    return -1;
+  }
+
   strncpy(pluginpath,  TauEnv_get_plugins_path(), sizeof(pluginpath)); 
   strncpy(listpluginsnames,  TauEnv_get_plugins(), sizeof(listpluginsnames)); 
 
