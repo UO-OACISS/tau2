@@ -98,7 +98,7 @@ def get_profile_metadata(cmd, pid, tid, start_time, end_time):
                    'Timestamp': start_stamp,
                    'Starting Timestamp': start_stamp,
                    'Ending Timestamp': end_stamp,
-                   'TAU Architecture': 'default',
+                   'TAU Architecture': '@TAU_ARCH@',
                    'TAU Config': ' ',
                    'TAU Makefile': '',
                    'TAU Version': '',

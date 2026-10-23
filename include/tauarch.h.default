@@ -1,2 +1,3 @@
+/* Unused: configure writes include/tauarch.h itself. Candidate for removal. */
 #define TAU_default
 #define TAU_ARCH "default"

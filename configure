@@ -4225,7 +4225,8 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINTARGET
     chmod a+rx $BINTARGET/tau_portal.py $BINTARGET/portal.py $BINTARGET/perfdmfdb.py
 
-    cp include/tauarch.h.default include/tauarch.h
+    echo "#define TAU_$machine" > include/tauarch.h
+    echo "#define TAU_ARCH \"$machine\"" >> include/tauarch.h
     if [ $default = "true" ] ; then
         echo "#define TAU_BIN_DIR \"default\"" >> include/tauarch.h
     else
@@ -4302,7 +4303,7 @@ configure_perfexplorer () {
     chmod +x $BINTARGET/tau_resolve_addresses.py
 
     # install tau_baseline toool
-    cp ${tauroot}/tools/src/tau_baseline $BINTARGET
+    sed -e 's,@TAU_ARCH@,'$machine',' ${tauroot}/tools/src/tau_baseline > $BINTARGET/tau_baseline
     chmod +x $BINTARGET/tau_baseline
 
     case $machine in
