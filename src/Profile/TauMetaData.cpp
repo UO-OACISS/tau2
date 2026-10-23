@@ -35,6 +35,7 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <time.h>
 
 #include <sstream>
+#include <vector>
 
 #ifdef TAU_NEC_SX
 #include <strings.h>
@@ -61,10 +62,9 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <string>
 #ifdef TAU_MPI
 #include <mpi.h>
-#if (defined(TAU_CRAYCNL_PMI) || defined(TAU_CRAYCNL_PMI_FOUND))
-#define TAU_ENABLE_PMI 1
+#ifdef TAU_ENABLE_PMI
 #include <pmi.h>
-#endif /* TAU_CRAYCNL_PMI || TAU_CRAYCNL_PMI_FOUND */
+#endif /* TAU_ENABLE_PMI */
 #endif
 #endif//TAU_CRAYCNL
 #include <mutex>
@@ -1037,18 +1037,64 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
     Tau_metadata_register("CRAY_CORE_ID", line);
   }
 
-#ifdef TAU_ENABLE_PMI
-  int rank = 0;  /* PMI rank */
-  int nid = -1;
-  pmi_mesh_coord_t xyz;
-  PMI_Get_rank(&rank);
-  PMI_Get_nid(rank, &nid);
-  PMI_Get_meshcoord((pmi_nid_t) nid, &xyz);
-  Tau_metadata_register("CRAY_PMI_NODEID", nid);
-  Tau_metadata_register("CRAY_PMI_RANK", rank);
-  Tau_metadata_register("CRAY_PMI_X", xyz.mesh_x);
-  Tau_metadata_register("CRAY_PMI_Y", xyz.mesh_y);
-  Tau_metadata_register("CRAY_PMI_Z", xyz.mesh_z);
+#if defined(TAU_ENABLE_PMI) && defined(TAU_MPI)
+  bool pmi_initialized = false;
+#if defined(TAU_HAVE_PMI2_INITIALIZED)
+  pmi_initialized = (PMI2_Initialized() != 0);
+#endif
+#if defined(TAU_HAVE_PMI_INITIALIZED)
+  if (!pmi_initialized) {
+    int initialized = 0;
+    int rc = PMI_Initialized(&initialized);
+    if (rc == PMI_SUCCESS) pmi_initialized = (initialized != 0);
+    else TAU_VERBOSE("PMI_Initialized failed: %d\n", rc);
+  }
+#endif
+  if (pmi_initialized) {
+    int rank=-1, size=-1, nid=-1;
+    int rc_rank=PMI_Get_rank(&rank);
+    if (rc_rank == PMI_SUCCESS) Tau_metadata_register("CRAY_PMI_RANK", rank);
+    else TAU_VERBOSE("PMI_Get_rank failed: %d\n", rc_rank);
+    int rc_size=PMI_Get_size(&size);
+    if (rc_size == PMI_SUCCESS) Tau_metadata_register("CRAY_PMI_SIZE", size);
+    else TAU_VERBOSE("PMI_Get_size failed: %d\n", rc_size);
+#if defined(TAU_HAVE_PMI_GET_NID)
+    if (rc_rank == PMI_SUCCESS) {
+      int rc=PMI_Get_nid(rank,&nid);
+      if (rc == PMI_SUCCESS) Tau_metadata_register("CRAY_PMI_NODEID",nid);
+      else TAU_VERBOSE("PMI_Get_nid failed for rank %d: %d\n",rank,rc);
+    }
+#endif
+#if defined(TAU_HAVE_PMI_GET_NUMPES_ON_SMP)
+    int local_size=-1, rc=PMI_Get_numpes_on_smp(&local_size);
+    if (rc == PMI_SUCCESS && local_size > 0) {
+      Tau_metadata_register("CRAY_PMI_LOCAL_SIZE",local_size);
+#if defined(TAU_HAVE_PMI_GET_PES_ON_SMP)
+      if (rc_rank == PMI_SUCCESS) {
+        std::vector<int> pes(static_cast<size_t>(local_size),-1);
+        rc=PMI_Get_pes_on_smp(pes.data(),local_size);
+        if (rc == PMI_SUCCESS) {
+          bool found=false;
+          for (int i=0;i<local_size;++i) if (pes[i] == rank) {
+            Tau_metadata_register("CRAY_PMI_LOCAL_RANK",i); found=true; break;
+          }
+          if (!found) TAU_VERBOSE("PMI rank %d was absent from local PE list\n",rank);
+        } else TAU_VERBOSE("PMI_Get_pes_on_smp failed: %d\n",rc);
+      }
+#endif
+    } else TAU_VERBOSE("PMI_Get_numpes_on_smp failed: rc=%d size=%d\n",rc,local_size);
+#endif
+#if defined(TAU_HAVE_PMI_GET_MESHCOORD)
+    if (nid >= 0) {
+      pmi_mesh_coord_t xyz={}; int rc=PMI_Get_meshcoord((pmi_nid_t)nid,&xyz);
+      if (rc == PMI_SUCCESS) {
+        Tau_metadata_register("CRAY_PMI_X",xyz.mesh_x);
+        Tau_metadata_register("CRAY_PMI_Y",xyz.mesh_y);
+        Tau_metadata_register("CRAY_PMI_Z",xyz.mesh_z);
+      } else TAU_VERBOSE("PMI_Get_meshcoord failed for nid %d: %d\n",nid,rc);
+    }
+#endif
+  } else TAU_VERBOSE("Neither PMI1 nor PMI2 is initialized; skipping Cray PMI metadata\n");
 #endif
 
   char cname[20];
@@ -1411,3 +1457,4 @@ char * Tau_metadata_get(const char * name, int tid) {
     free(key.name);
     return returnval;
 }
+
