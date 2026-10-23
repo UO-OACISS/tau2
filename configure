@@ -5710,6 +5710,19 @@ fi
 #echo "mpiinc = ($mpiinc)"
 #kill -9 $$
 
+# resolve_compiler <compiler>: its real path (which, then readlink -f).
+resolve_compiler() {
+    _rc_path=$(which "$1" 2>/dev/null || echo "$1")
+    readlink -f "$_rc_path" 2>/dev/null || echo "$_rc_path"
+}
+
+# not_mpi_wrapper_compiler <compiler> <wrapper> <wrapper's compiler>:
+# succeed if <compiler> is neither the MPI wrapper nor what it runs.
+not_mpi_wrapper_compiler() {
+    _nm_given=$(resolve_compiler "$1")
+    [[ $_nm_given != "$(resolve_compiler "$2")" && $_nm_given != "$(resolve_compiler "$3")" ]]
+}
+
 get_compilers_if_necessary() {
     # don't overwrite user's choice
     if [ "x$c_compiler" == "x" ] ; then
@@ -5845,6 +5858,15 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
             fi
             full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
             full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
+            # Compile user code with -cc/-c++, like TAU itself, when the
+            # wrapper runs another compiler. cc/CC are skipped on all
+            # machines, as in check_mpi_compiler_match (Cray PE wrappers).
+            if [[ $c_compiler_specified == yes && $c_compiler != cc ]] && not_mpi_wrapper_compiler "$host_prefix$c_compiler" $mpicc_exe "$full_cc_compiler"; then
+                full_cc_compiler=$host_prefix$c_compiler
+            fi
+            if [[ $cxx_compiler_specified == yes && $cxx_compiler != CC ]] && not_mpi_wrapper_compiler "$host_prefix$cxx_compiler" $mpicxx_exe "$full_cxx_compiler"; then
+                full_cxx_compiler=$host_prefix$cxx_compiler
+            fi
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
         fi
