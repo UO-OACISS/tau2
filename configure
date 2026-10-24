@@ -5580,9 +5580,11 @@ if [ $machine = mic_linux ] ; then
 fi
 
 if [ $machine = apple -o $machine = arm64_apple ] ; then
-    if [[ "${cxx_compiler##*/}" == g++* || "${cxx_compiler##*/}" == clang++ || "${cxx_compiler##*/}" == c++  || "${cxx_compiler##*/}" == icpc  || "${cxx_compiler##*/}" == icpx ]] ; then
-        fixmakeargs="$fixmakeargs APPLECXX"
-    fi
+    case "${cxx_compiler##*/}" in
+        g++*|clang++|clang++-[0-9]*|c++|icpc|icpx)
+            fixmakeargs="$fixmakeargs APPLECXX"
+            ;;
+    esac
     # The name doesn't distinguish clang from GCC here because Apple ships
     # "gcc" and "g++" executables that are actually Clang.
     # These use different C++ standard libraries, so we have to tell them apart.
@@ -9674,7 +9676,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
     then
         mpiwarnings="-qhalt=w"
     fi
-    if [[ ${c_compiler##*/} == "clang" || ${c_compiler##*/} == "armclang" || ${c_compiler##*/} == "amdclang" ]]
+    if [[ ${c_compiler##*/} == "clang" || ${c_compiler##*/} == clang-[0-9]* || ${c_compiler##*/} == "armclang" || ${c_compiler##*/} == "amdclang" ]]
     then
         mpiwarnings="-Werror"
     fi
@@ -12862,10 +12864,10 @@ if [ "x$download_scorep" = xyes ] ; then
       if [ $pgi = yes ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=pgi"
       fi
-      if [ $c_compiler = amdclang ]; then
+      if [[ ${c_compiler##*/} == amdclang ]]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=amdclang"
       fi
-      if [ $c_compiler = clang ]; then
+      if [[ ${c_compiler##*/} == clang || ${c_compiler##*/} == clang-[0-9]* ]]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=clang"
       fi
 
