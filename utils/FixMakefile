@@ -2372,14 +2372,22 @@ case $1 in
 	echo "NOTE: Using CrayCNL MVAPICH2 info"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     CRAYCNL_PMI)
-	echo "NOTE: Using CrayCNL PMI (Process Management Interface) to track topology info"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
+     cray_pmi_include_opts=*)
+        v=`echo $1 | sed -e 's/^cray_pmi_include_opts=//' -e 's/#/ /g'`
+        echo "s@^CRAY_PMI_INCLUDE_OPTS=.*\$@CRAY_PMI_INCLUDE_OPTS=$v@g" >> $sedout ;;
+     cray_pmi_post_link_opts=*)
+        v=`echo $1 | sed -e 's/^cray_pmi_post_link_opts=//' -e 's/#/ /g'`
+        echo "s@^CRAY_PMI_POST_LINK_OPTS=.*\$@CRAY_PMI_POST_LINK_OPTS=$v@g" >> $sedout ;;
+     cray_pmi_libs=*)
+        v=`echo $1 | sed -e 's/^cray_pmi_libs=//' -e 's/#/ /g'`
+        echo "s@^CRAY_PMI_LIBS=.*\$@CRAY_PMI_LIBS=$v@g" >> $sedout ;;
+     tau_pmi_capability_defines=*)
+        v=`echo $1 | sed -e 's/^tau_pmi_capability_defines=//' -e 's/#/ /g'`
+        echo "s@^TAU_PMI_CAPABILITY_DEFINES=.*\$@TAU_PMI_CAPABILITY_DEFINES=$v@g" >> $sedout ;;
      CRAYCNL_PMI_FOUND)
-	echo "NOTE: Found CrayCNL PMI (Process Management Interface) to track topology info"
+        echo "NOTE: Found Cray PMI; enabling PMI metadata (rank, size, node, local ranks)"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
+        ;;
      CRAYCNL_CCE)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
@@ -2869,4 +2877,5 @@ done
 
 # OK, stop here, and let another script actually hack all the Makefiles
 echo "Script to modify Makefiles created."
+
 

@@ -1073,7 +1073,7 @@ for arg in "$@"; do
         echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
         echo "                       (Note: also disables sampling, marker tracking)."
         echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
-        echo "-PMI ...................... Enable Cray PMI for tracking topology info."
+        echo "-PMI[=<dir>]............... Enable Cray PMI for tracking topology info."
         echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
         echo "-ALPHATIMERS . Use Alpha clock_gettime for low overhead wallclock time."
         echo "-COMPENSATE ... Enable online compensation of performance perturbation."
@@ -1260,6 +1260,7 @@ fx_aarch64=no
 plugins=yes
 disableshared=no
 pmi=no
+pmi_prefix=
 setnode0=no
 compensate=no
 smarts=no
@@ -3169,8 +3170,15 @@ for arg in "$@"; do
             ;;
 
         -PMI)
-            # Enable tracking Cray topology information using PMI
+            # Require Cray PMI metadata support using an automatically found prefix.
             pmi=yes
+            shift
+            ;;
+
+        -PMI=*)
+            # Require Cray PMI metadata support from the specified prefix.
+            pmi=yes
+            pmi_prefix=`echo "$1" | sed -e 's/^-PMI=//'`
             shift
             ;;
 
@@ -8253,23 +8261,111 @@ if [ $pgi = yes ]; then
   fi
 fi
 
-if [ $machine = craycnl -a $pmi = no ]; then
-  echo "Testing for <pmi.h> header... ${nnl}"
-cat <<EOF > pmitest.c
-#include <pmi.h>
-#include <ugni.h>
-EOF
-  if $cxx_compiler -c pmitest.c 1> /dev/null 2>&1
-  then
-    echo "yes"
-    fixmakeargs="$fixmakeargs CRAYCNL_PMI_FOUND"
+######################################################################
+# Detect Cray PMI by introspection; assume no site layout or PE version.
+if [ $machine = craycnl -o $pmi = yes ]; then
+  tau_pmi_requested=$pmi
+  tau_pmi_found=no
+  tau_pmi_capability_defines=
+  tau_pmi_include_opts=
+  tau_pmi_post_link_opts=
+  tau_pmi_lib_opts=
+
+  if [ "x$pmi_prefix" != x ]; then
+    # Explicit request: honor only this prefix.
+    tau_pmi_candidates="$pmi_prefix"
   else
-    echo "no."
-    echo "WARNING! PMI not found. You may need to reconfigure TAU with -PMI if there are missing references during linking."
-    echo "============="
+    tau_pmi_candidates="compiler-default pkg-config"
+    for tau_pmi_env in "$CRAY_PMI_PREFIX" "$PMI_ROOT"; do
+      [ "x$tau_pmi_env" != x ] && tau_pmi_candidates="$tau_pmi_candidates $tau_pmi_env"
+    done
   fi
+
+  for tau_pmi_cand in $tau_pmi_candidates; do
+    tau_pmi_test_inc=
+    tau_pmi_test_lib=
+    tau_pmi_test_rpath=
+    case "$tau_pmi_cand" in
+      compiler-default)
+        ;;
+      pkg-config)
+        command -v pkg-config >/dev/null 2>&1 || continue
+        pkg-config --exists cray-pmi >/dev/null 2>&1 || continue
+        tau_pmi_test_inc=`pkg-config --cflags-only-I cray-pmi 2>/dev/null`
+        tau_pmi_test_lib=`pkg-config --libs-only-L cray-pmi 2>/dev/null`
+        ;;
+      *)
+        [ -r "$tau_pmi_cand/include/pmi.h" ] || continue
+        tau_pmi_libdir=
+        for tau_pmi_d in lib64 lib; do
+          if ls "$tau_pmi_cand/$tau_pmi_d"/libpmi.* >/dev/null 2>&1; then
+            tau_pmi_libdir="$tau_pmi_cand/$tau_pmi_d"
+            break
+          fi
+        done
+        [ "x$tau_pmi_libdir" != x ] || continue
+        tau_pmi_test_inc="-I$tau_pmi_cand/include"
+        tau_pmi_test_lib="-L$tau_pmi_libdir"
+        # Only an explicit -PMI=<dir> is recorded as an rpath.
+        [ "x$pmi_prefix" != x ] && tau_pmi_test_rpath="-Wl,-rpath,$tau_pmi_libdir"
+        ;;
+    esac
+    cat > pmitest.cpp <<EOF
+#include <pmi.h>
+int main(void) { int r=-1, s=-1; (void)PMI_Get_rank(&r); (void)PMI_Get_size(&s); return 0; }
+EOF
+    if $cxx_compiler $orig_useropt $tau_pmi_test_inc pmitest.cpp $tau_pmi_test_lib -lpmi -o pmitest >/dev/null 2>&1; then
+      tau_pmi_found=yes
+      tau_pmi_include_opts="$tau_pmi_test_inc"
+      tau_pmi_lib_opts="$tau_pmi_test_lib"
+      tau_pmi_post_link_opts=`echo $tau_pmi_test_lib $tau_pmi_test_rpath`
+      echo "Found Cray PMI via: $tau_pmi_cand"
+      break
+    fi
+  done
+
+  if [ $tau_pmi_found = yes ]; then
+    tau_pmi_probe () {
+      tau_pmi_define=$1
+      tau_pmi_body=$2
+      cat > pmitest.cpp <<EOF
+#include <pmi.h>
+int main(void) { $tau_pmi_body }
+EOF
+      if $cxx_compiler $orig_useropt $tau_pmi_include_opts pmitest.cpp $tau_pmi_lib_opts -lpmi -o pmitest >/dev/null 2>&1; then
+        tau_pmi_capability_defines="$tau_pmi_capability_defines -D$tau_pmi_define"
+      fi
+    }
+    tau_pmi_probe TAU_HAVE_PMI2_INITIALIZED '(void)PMI2_Initialized(); return 0;'
+    tau_pmi_probe TAU_HAVE_PMI_INITIALIZED 'int i=0; return PMI_Initialized(&i);'
+    tau_pmi_probe TAU_HAVE_PMI_GET_NID 'int n=-1; return PMI_Get_nid(0, &n);'
+    tau_pmi_probe TAU_HAVE_PMI_GET_NUMPES_ON_SMP 'int n=-1; return PMI_Get_numpes_on_smp(&n);'
+    tau_pmi_probe TAU_HAVE_PMI_GET_PES_ON_SMP 'int r[1]={-1}; return PMI_Get_pes_on_smp(r, 1);'
+    tau_pmi_probe TAU_HAVE_PMI_GET_MESHCOORD 'pmi_mesh_coord_t x={}; return PMI_Get_meshcoord((pmi_nid_t)0, &x);'
+    case "$tau_pmi_capability_defines" in
+      *TAU_HAVE_PMI2_INITIALIZED*|*TAU_HAVE_PMI_INITIALIZED*) ;;
+      *) tau_pmi_found=no ;;
+    esac
+  fi
+
+  if [ $tau_pmi_found = yes ]; then
+    echo "  PMI include opts: ${tau_pmi_include_opts:-<none; compiler provides>}"
+    echo "  PMI link opts:    ${tau_pmi_post_link_opts:-<none; compiler provides>} -lpmi"
+    echo "  PMI capabilities:$tau_pmi_capability_defines"
+    fixmakeargs="$fixmakeargs CRAYCNL_PMI_FOUND"
+    enc () { echo "$1" | sed -e 's/ /#/g'; }
+    fixmakeargs="$fixmakeargs cray_pmi_include_opts=`enc "$tau_pmi_include_opts"`"
+    fixmakeargs="$fixmakeargs cray_pmi_post_link_opts=`enc "$tau_pmi_post_link_opts"`"
+    fixmakeargs="$fixmakeargs cray_pmi_libs=-lpmi"
+    fixmakeargs="$fixmakeargs tau_pmi_capability_defines=`enc "$tau_pmi_capability_defines"`"
+  elif [ $tau_pmi_requested = yes ]; then
+    echo "ERROR: -PMI was requested, but no usable <pmi.h>/libpmi with PMI_Initialized or PMI2_Initialized was found."
+    exit 1
+  else
+    echo "WARNING: Cray PMI was not found or is unusable; building without Cray PMI metadata."
+  fi
+  /bin/rm -f pmitest.cpp pmitest
 fi
-/bin/rm -f pmitest.c
 
 
 ######################################################################
@@ -13792,9 +13888,6 @@ if [ $disable_memory_manager = yes ] ; then
     fixmakeargs="$fixmakeargs DISABLE_MEM_MANAGER"
 fi
 
-if [ $pmi = yes ] ; then
-    fixmakeargs="$fixmakeargs CRAYCNL_PMI"
-fi
 
 if [ $disableshared = yes -a $python = yes ] ; then
     echo "ERROR: Shared libraries are disabled, but Python is specified"
