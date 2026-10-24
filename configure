@@ -1438,6 +1438,7 @@ ompt_compiler_support=no
 download_ompt=no
 download_ompt_5_0=no
 ompt_version_selected=no
+ompt_header=omp-tools.h
 ompt_compiler_support=no
 install_ompt=no
 xlsmp=no
