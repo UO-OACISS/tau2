@@ -416,12 +416,15 @@ setup_link_options() {
         link_options_file="$optWrappersDir/armci_wrapper/link_options.tau"
     fi
 
-    if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau -a $optShared == $FALSE ] ; then
-        link_options_file="$optWrappersDir/pthread_wrapper/link_options.tau"
-    fi
+    # The pthread and GOMP link options use -Wl,-wrap, which Apple's ld doesn't implement.
+    if [ "$TAUARCH" != "apple" -a "$TAUARCH" != "arm64_apple" ] ; then
+        if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau -a $optShared == $FALSE ] ; then
+            link_options_file="$optWrappersDir/pthread_wrapper/link_options.tau"
+        fi
 
-    if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then
-        link_options_file="$optWrappersDir/gomp_wrapper/link_options.tau"
+        if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then
+            link_options_file="$optWrappersDir/gomp_wrapper/link_options.tau"
+        fi
     fi
 
     if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then
