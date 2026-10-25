@@ -1112,6 +1112,8 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #INTELCXXLIBICC#TAU_CXXLIBS_INTEL        = -lcprts #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = $(TAU_CXXLIBS_INTEL) #ENDIF#
 #APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR)  $(TAUGCCLIBOPTS) -lgcc_s.1 #ENDIF#
+# clang maps -lstdc++ to libc++ itself, but gfortran links GCC's libstdc++.
+#APPLE_CLANG_CXX#TAU_CXXLIBS 		= -lc++ #ENDIF#
 #APPLEINTEL#TAU_CXXLIBS 		= -lstdc++ $(TAUGCCLIBOPTS) -lgcc_s.1 #ENDIF#
 
 # EXTERNAL PACKAGES: EPILOG
