@@ -169,6 +169,19 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
   // We should use the original sample context rather than the current
   // TAU EBS context for the unwind.
   //  unw_getcontext(&uc);
+#if defined(__APPLE__) && defined(__aarch64__)
+  // Apple's unw_context_t is libunwind's own register layout, not a ucontext_t
+  _STRUCT_ARM_THREAD_STATE64 & ss = ((ucontext_t *)context)->uc_mcontext->__ss;
+  unw_getcontext(&uc);
+  unw_init_local(&cursor, &uc);
+  for (int r = 0; r <= 28; r++) {
+    unw_set_reg(&cursor, UNW_AARCH64_X0 + r, ss.__x[r]);
+  }
+  unw_set_reg(&cursor, UNW_AARCH64_FP, ss.__fp);
+  unw_set_reg(&cursor, UNW_AARCH64_LR, ss.__lr);
+  unw_set_reg(&cursor, UNW_REG_SP, ss.__sp);
+  unw_set_reg(&cursor, UNW_REG_IP, ss.__pc);
+#else
   uc = *(unw_context_t *)context;
   // Per unw_init_local manpage:
   //    If the unw_context_t is known to be a signal frame 
@@ -185,6 +198,7 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
 #else
   unw_init_local(&cursor, &uc);
 #endif
+#endif /* __APPLE__ && __aarch64__ */
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
     if ((depthCutoff > 0 && unwindDepth >= depthCutoff) ||

@@ -1128,7 +1128,19 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
       CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
       if(CSIsNull(source_info)) {
-          node->resolved = false;
+          // System libraries and executables without dSYM and .o files have symbols but no line tables.
+          CSSymbolRef symbol = CSSymbolicatorGetSymbolWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
+          const char * name = CSIsNull(symbol) ? NULL : CSSymbolGetName(symbol);
+          if (name == NULL) {
+              node->resolved = false;
+          } else {
+              const char * path = CSSymbolOwnerGetPath(CSSymbolGetSymbolOwner(symbol));
+              node->resolved = true;
+              node->info.probeAddr = addr;
+              node->info.filename = path ? strdup(path) : "";
+              node->info.funcname = strdup(name);
+              node->info.lineno = 0;
+          }
       } else {
           CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
           node->resolved = true;
