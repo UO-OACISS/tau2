@@ -34,7 +34,8 @@ std::map<uint64_t, double> rocsdk_interval_map;
 std::map<rocsdk_map_inst_key, rocsdk_instruction> code_object_map;
 
 //List of events, used  to sort events by timestamp
-std::list<struct TauSDKSampleEvent> TauRocmSampleSDKList;
+//std::list<struct TauSDKSampleEvent> TauRocmSampleSDKList;
+std::set<struct TauSDKSampleEvent> TauRocmSampleSDKList;
 std::mutex sample_mtx;
 std::mutex sample_list_mtx;
 std::mutex codeobj_mtx;
@@ -43,24 +44,6 @@ std::map<int, rocprofiler_timestamp_t> tau_last_pc_timestamp_published;
 
 extern double Tau_rocprofsdk_synchronized_gpu_timestamp(int tid, double value);
 extern void Tau_add_metadata_for_task(const char *key, int value, int taskid);
-extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
-/* TAU uses microsecond clock for timestamps, but the GPU provides the
- * stamps in nanoseconds.  So, in order to compute the delta between
- * the CPU clock and GPU clock, we need to take a CPU timestamp in nanoseconds
- * and then get the delta.  The delta will be in nanoseconds.  So when we
- * adjust for the asynchronous activity, we will apply the nanosecond delta
- * and then convert to microseconds.
- */
- #define MYCLOCK std::chrono::system_clock
- static uint64_t time_point_to_nanoseconds1(std::chrono::time_point<MYCLOCK> tp) {
-     auto value = tp.time_since_epoch();
-     uint64_t duration =
-         std::chrono::duration_cast<std::chrono::nanoseconds>(value).count();
-     return duration;
- }
- static uint64_t now_ns() {
-     return time_point_to_nanoseconds1(MYCLOCK::now());
- }
 
 //Queue map should have gpu id and computing unit as index
 // queue id as value
@@ -158,8 +141,9 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
   //TAU_VERBOSE("TAU_process_sdk_sample_event\n");
 
   sample_list_mtx.lock();
-  auto it = std::lower_bound(TauRocmSampleSDKList.begin(), TauRocmSampleSDKList.end(), sdk_sample_event);
-  TauRocmSampleSDKList.insert(it, sdk_sample_event);
+  //auto it = std::lower_bound(TauRocmSampleSDKList.begin(), TauRocmSampleSDKList.end(), sdk_sample_event);
+  //TauRocmSampleSDKList.insert(it, sdk_sample_event);
+  TauRocmSampleSDKList.insert(sdk_sample_event);
 
   if(TauRocmSampleSDKList.size() < TAU_ROCMSDK_SAMPLE_LOOK_AHEAD)
   {
@@ -168,8 +152,10 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
   }
   else
   {
-    TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
-    TauRocmSampleSDKList.pop_front();
+    //TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
+    //TauRocmSampleSDKList.pop_front();
+    TAU_publish_sdk_sample_event(*TauRocmSampleSDKList.begin());
+     TauRocmSampleSDKList.erase(TauRocmSampleSDKList.begin());
   }
   sample_list_mtx.unlock();
 }
@@ -1379,11 +1365,11 @@ void sdk_pc_sampling_flush()
     for( auto it_id : *pc_buffer_ids)
         ROCPROFILER_CALL(rocprofiler_flush_buffer(it_id), "buffer flush");
     TAU_VERBOSE("Executing sdk_pc_sampling_flush\n");
-    TauRocmSampleSDKList.sort();
+    //TauRocmSampleSDKList.sort();
     while(!TauRocmSampleSDKList.empty())
     {
-        TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
-        TauRocmSampleSDKList.pop_front();
+        TAU_publish_sdk_sample_event(*TauRocmSampleSDKList.begin());
+        TauRocmSampleSDKList.erase(TauRocmSampleSDKList.begin());
     }
 
     pc_flushed = 1;
