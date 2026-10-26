@@ -34,7 +34,8 @@ std::map<uint64_t, double> rocsdk_interval_map;
 std::map<rocsdk_map_inst_key, rocsdk_instruction> code_object_map;
 
 //List of events, used  to sort events by timestamp
-std::list<struct TauSDKSampleEvent> TauRocmSampleSDKList;
+//std::list<struct TauSDKSampleEvent> TauRocmSampleSDKList;
+std::set<struct TauSDKSampleEvent> TauRocmSampleSDKList;
 std::mutex sample_mtx;
 std::mutex sample_list_mtx;
 std::mutex codeobj_mtx;
@@ -158,8 +159,9 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
   //TAU_VERBOSE("TAU_process_sdk_sample_event\n");
 
   sample_list_mtx.lock();
-  auto it = std::lower_bound(TauRocmSampleSDKList.begin(), TauRocmSampleSDKList.end(), sdk_sample_event);
-  TauRocmSampleSDKList.insert(it, sdk_sample_event);
+  //auto it = std::lower_bound(TauRocmSampleSDKList.begin(), TauRocmSampleSDKList.end(), sdk_sample_event);
+  //TauRocmSampleSDKList.insert(it, sdk_sample_event);
+  TauRocmSampleSDKList.insert(sdk_sample_event);
 
   if(TauRocmSampleSDKList.size() < TAU_ROCMSDK_SAMPLE_LOOK_AHEAD)
   {
@@ -168,8 +170,10 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
   }
   else
   {
-    TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
-    TauRocmSampleSDKList.pop_front();
+    //TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
+    //TauRocmSampleSDKList.pop_front();
+    TAU_publish_sdk_sample_event(*TauRocmSampleSDKList.begin());
+     TauRocmSampleSDKList.erase(TauRocmSampleSDKList.begin());
   }
   sample_list_mtx.unlock();
 }
@@ -1379,11 +1383,11 @@ void sdk_pc_sampling_flush()
     for( auto it_id : *pc_buffer_ids)
         ROCPROFILER_CALL(rocprofiler_flush_buffer(it_id), "buffer flush");
     TAU_VERBOSE("Executing sdk_pc_sampling_flush\n");
-    TauRocmSampleSDKList.sort();
+    //TauRocmSampleSDKList.sort();
     while(!TauRocmSampleSDKList.empty())
     {
-        TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
-        TauRocmSampleSDKList.pop_front();
+        TAU_publish_sdk_sample_event(*TauRocmSampleSDKList.begin());
+        TauRocmSampleSDKList.erase(TauRocmSampleSDKList.begin());
     }
 
     pc_flushed = 1;

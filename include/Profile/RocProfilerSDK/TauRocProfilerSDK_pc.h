@@ -137,11 +137,14 @@ struct TauSDKSampleEvent {
             return false;
     }
 
-    bool operator < (struct TauSDKSampleEvent two) {
-        if (entry < two.entry) 
+    //bool operator < (struct TauSDKSampleEvent two) {
+        /*if (entry < two.entry) 
             return true;
         else 
             return false;
+        */
+    bool operator<(const TauSDKSampleEvent& two) const {
+        return entry < two.entry;
     }
   
 };
