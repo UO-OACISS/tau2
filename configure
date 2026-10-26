@@ -12237,7 +12237,7 @@ if [ "x$unwinder" != "xnone" ] ; then
       unwind_lib="-L${unwind_lib}"
     fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
-          if [ $machine = apple ] ; then
+          if [ $machine = apple -o $machine = arm64_apple ] ; then
             unwind_lib_flag="-framework#System"
             unwind_extras=""
           fi
