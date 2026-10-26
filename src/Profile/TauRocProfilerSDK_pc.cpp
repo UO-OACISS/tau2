@@ -44,24 +44,6 @@ std::map<int, rocprofiler_timestamp_t> tau_last_pc_timestamp_published;
 
 extern double Tau_rocprofsdk_synchronized_gpu_timestamp(int tid, double value);
 extern void Tau_add_metadata_for_task(const char *key, int value, int taskid);
-extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
-/* TAU uses microsecond clock for timestamps, but the GPU provides the
- * stamps in nanoseconds.  So, in order to compute the delta between
- * the CPU clock and GPU clock, we need to take a CPU timestamp in nanoseconds
- * and then get the delta.  The delta will be in nanoseconds.  So when we
- * adjust for the asynchronous activity, we will apply the nanosecond delta
- * and then convert to microseconds.
- */
- #define MYCLOCK std::chrono::system_clock
- static uint64_t time_point_to_nanoseconds1(std::chrono::time_point<MYCLOCK> tp) {
-     auto value = tp.time_since_epoch();
-     uint64_t duration =
-         std::chrono::duration_cast<std::chrono::nanoseconds>(value).count();
-     return duration;
- }
- static uint64_t now_ns() {
-     return time_point_to_nanoseconds1(MYCLOCK::now());
- }
 
 //Queue map should have gpu id and computing unit as index
 // queue id as value
