@@ -399,7 +399,8 @@ ifeq ($(strip $(TAU_MPI_INTERPOSE)),yes)
 TAU_MPI_INTERPOSE_SRC_OBJS = $(TAU_MPI_FOR_SHARED) TauProfileMerge.o TauMetaDataMerge.o
 TAU_SHLIB_MPI_DEPS = TauMpiInterpose.stamp
 TAU_SHLIB_MPI_OBJS = $(TAU_MPI_INTERPOSE_SRC_OBJS:.o=.ip.o) TauMpiInterpose.o $(MPI_FORTRAN_INIT)
-TAU_SHLIB_ARFLAGS = -dynamiclib -undefined dynamic_lookup -o
+# Same install name and headerpad as TAU_APPLE_SHFLAGS, so -optShared programs find libTAUsh.
+TAU_SHLIB_ARFLAGS = -dynamiclib -undefined dynamic_lookup -Wl,-install_name,@rpath/$(@F) -Wl,-headerpad_max_install_names -o
 TAU_FLAT_NAMESPACE_FLAG = -Wl,-flat_namespace
 TAU_SHLIB_MPI_LIBS = $(filter-out -lTauMpi$(TAU_CONFIG) $(TAU_FLAT_NAMESPACE_FLAG),$(TAU_MPI_LIB) $(TAU_MPI_FLIB))
 TAU_SHLIB_EXTRA_LIBS = $(filter-out $(MPI_WRAPPER),$(EXTRA_LIBS))

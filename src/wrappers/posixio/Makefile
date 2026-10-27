@@ -39,7 +39,8 @@ iowrap_shared.o: iowrap_shared.c
 # On macOS, __DATA,__interpose entries are ignored unless
 # the library uses two-level namespace binding.
 ifneq ($(strip $(TAU_APPLE_SHFLAGS)),)
-IOWRAP_SHFLAGS = -dynamiclib -undefined dynamic_lookup -o
+# Same install name and headerpad as TAU_APPLE_SHFLAGS.
+IOWRAP_SHFLAGS = -dynamiclib -undefined dynamic_lookup -Wl,-install_name,@rpath/$(@F) -Wl,-headerpad_max_install_names -o
 else
 IOWRAP_SHFLAGS = $(TAU_SHFLAGS)
 endif
