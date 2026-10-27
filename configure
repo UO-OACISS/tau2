@@ -5508,6 +5508,13 @@ if [ $machine = apple -o $machine = arm64_apple ] ; then
     if [[ "$cxx_compiler" == g++* || "$cxx_compiler" == clang++ || "$cxx_compiler" == c++  || "$cxx_compiler" == icpc  || "$cxx_compiler" == icpx ]] ; then
         fixmakeargs="$fixmakeargs APPLECXX"
     fi
+    # The name doesn't distinguish clang from GCC here because Apple ships
+    # "gcc" and "g++" executables that are actually Clang.
+    # These use different C++ standard libraries, so we have to tell them apart.
+    # Determine by checking for "clang" in the compiler's --version string
+    if $cxx_compiler --version 2>&1 | grep -q clang ; then
+        fixmakeargs="$fixmakeargs APPLE_CLANG_CXX"
+    fi
     if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] ; then
         fixmakeargs="$fixmakeargs APPLEPGI"
     fi
@@ -12230,7 +12237,7 @@ if [ "x$unwinder" != "xnone" ] ; then
       unwind_lib="-L${unwind_lib}"
     fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
-          if [ $machine = apple ] ; then
+          if [ $machine = apple -o $machine = arm64_apple ] ; then
             unwind_lib_flag="-framework#System"
             unwind_extras=""
           fi

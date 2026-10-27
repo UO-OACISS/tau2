@@ -59,6 +59,7 @@ include/tauarch.h
 include/tauroot.h
 libunwind-*
 libdwarf-*
+src/Profile/TauMpiInterpose.*
 src/TraceInput/Makefile
 src/wrappers/Makefile
 tools/src/TauIL/Makefile.inc

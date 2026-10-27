@@ -61,6 +61,32 @@
 
 #define TAU_MAX_FILENAME_LEN 2048
 
+#ifdef __APPLE__
+// Use __DATA,__interpose on macOS
+#define TAU_IOWRAP_FN(name) tau_iowrap_##name
+#define TAU_IOWRAP_REAL(name) ((void *)&name)
+#define TAU_IOWRAP_INTERPOSE(name) \
+  __attribute__((used)) static struct { const void * r; const void * o; } \
+  tau_interpose_##name __attribute__((section("__DATA,__interpose"))) = \
+  { (const void *)&TAU_IOWRAP_FN(name), (const void *)&name };
+
+// Interposition also intercepts libSystem's own initializer, which does I/O before
+// libTAU's thread-local variables can be used; therefore, pass through to
+// the underlying functions until TAU is fully intialized.
+static volatile int tau_iowrap_ready = 0;
+__attribute__((constructor)) static void tau_iowrap_set_ready(void) {
+  tau_iowrap_ready = 1;
+}
+#define Tau_iowrap_checkPassThrough() (!tau_iowrap_ready || Tau_iowrap_checkPassThrough())
+#define TAU_IOWRAP_RETURN_UNLESS_READY(value) if (!tau_iowrap_ready) return (value)
+#else
+#define TAU_IOWRAP_FN(name) name
+#define TAU_IOWRAP_REAL(name) dlsym(RTLD_NEXT, #name)
+// Don't need interpose on platforms other than macOS
+#define TAU_IOWRAP_INTERPOSE(name)
+#define TAU_IOWRAP_RETURN_UNLESS_READY(value)
+#endif
+
 void Tau_posix_plugin_trace_current_timer(const char * name) {
     /*Invoke plugins only if both plugin path and plugins are specified*/
     if(TauEnv_get_plugins_enabled()) {
@@ -74,11 +100,11 @@ void Tau_posix_plugin_trace_current_timer(const char * name) {
 /*********************************************************************
  * fopen
  ********************************************************************/
-FILE *fopen(const char *path, const char *mode) {
+FILE *TAU_IOWRAP_FN(fopen)(const char *path, const char *mode) {
   static FILE* (*_fopen)(const char *path, const char *mode) = NULL;
   FILE *ret;
   if (_fopen == NULL) {
-    _fopen = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen");
+    _fopen = ( FILE* (*)(const char *path, const char *mode)) TAU_IOWRAP_REAL(fopen);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -110,15 +136,17 @@ FILE *fopen(const char *path, const char *mode) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fopen)
 
+#ifndef __APPLE__
 /*********************************************************************
  * fopen64
  ********************************************************************/
-FILE *fopen64(const char *path, const char *mode) {
+FILE *TAU_IOWRAP_FN(fopen64)(const char *path, const char *mode) {
   static FILE* (*_fopen64)(const char *path, const char *mode) = NULL;
   FILE *ret;
   if (_fopen64 == NULL) {
-    _fopen64 = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen64");
+    _fopen64 = ( FILE* (*)(const char *path, const char *mode)) TAU_IOWRAP_REAL(fopen64);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -150,16 +178,18 @@ FILE *fopen64(const char *path, const char *mode) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fopen64)
+#endif /* !__APPLE__ */
 
 
 /*********************************************************************
  * fdopen
  ********************************************************************/
-FILE *fdopen(int fd, const char *mode) {
+FILE *TAU_IOWRAP_FN(fdopen)(int fd, const char *mode) {
   static FILE* (*_fdopen)(int fd, const char *mode) = NULL;
   FILE *ret;
   if (_fdopen == NULL) {
-    _fdopen = ( FILE* (*)(int fd, const char *mode)) dlsym(RTLD_NEXT, "fdopen");
+    _fdopen = ( FILE* (*)(int fd, const char *mode)) TAU_IOWRAP_REAL(fdopen);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -188,15 +218,16 @@ FILE *fdopen(int fd, const char *mode) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fdopen)
 
 /*********************************************************************
  * freopen
  ********************************************************************/
-FILE *freopen(const char *path, const char *mode, FILE *stream) {
+FILE *TAU_IOWRAP_FN(freopen)(const char *path, const char *mode, FILE *stream) {
   static FILE* (*_freopen)(const char *path, const char *mode, FILE *stream) = NULL;
   FILE *ret;
   if (_freopen == NULL) {
-    _freopen = ( FILE* (*)(const char *path, const char *mode, FILE *stream)) dlsym(RTLD_NEXT, "freopen");
+    _freopen = ( FILE* (*)(const char *path, const char *mode, FILE *stream)) TAU_IOWRAP_REAL(freopen);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -227,15 +258,16 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(freopen)
 
 /*********************************************************************
  * fclose
  ********************************************************************/
-int fclose(FILE *fp) {
+int TAU_IOWRAP_FN(fclose)(FILE *fp) {
   static int (*_fclose)(FILE *fp) = NULL;
   int ret;
   if (_fclose == NULL) {
-    _fclose = ( int (*)(FILE *fp)) dlsym(RTLD_NEXT, "fclose");
+    _fclose = ( int (*)(FILE *fp)) TAU_IOWRAP_REAL(fclose);
   }
 
   int fd = fileno(fp);
@@ -264,19 +296,20 @@ int fclose(FILE *fp) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fclose)
 
 
 
 /*********************************************************************
  * fprintf
  ********************************************************************/
-int fprintf(FILE *stream, const char *format, ...) {
+int TAU_IOWRAP_FN(fprintf)(FILE *stream, const char *format, ...) {
   va_list arg;
 
   static int (*_fprintf)(FILE *stream, const char *format, ...) = NULL;
   int ret;
   if (_fprintf == NULL) {
-    _fprintf = ( int (*)(FILE *stream, const char *format, ...)) dlsym(RTLD_NEXT, "fprintf");
+    _fprintf = ( int (*)(FILE *stream, const char *format, ...)) TAU_IOWRAP_REAL(fprintf);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -335,17 +368,18 @@ int fprintf(FILE *stream, const char *format, ...) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fprintf)
 
 /*********************************************************************
  * fscanf
  ********************************************************************/
-int fscanf(FILE *stream, const char *format, ...) {
+int TAU_IOWRAP_FN(fscanf)(FILE *stream, const char *format, ...) {
   va_list arg;
 
   static int (*_fscanf)(FILE *stream, const char *format, ...) = NULL;
   int ret;
   if (_fscanf == NULL) {
-    _fscanf = ( int (*)(FILE *stream, const char *format, ...)) dlsym(RTLD_NEXT, "fscanf");
+    _fscanf = ( int (*)(FILE *stream, const char *format, ...)) TAU_IOWRAP_REAL(fscanf);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -404,15 +438,16 @@ int fscanf(FILE *stream, const char *format, ...) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fscanf)
 
 /*********************************************************************
  * fwrite
  ********************************************************************/
-size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
+size_t TAU_IOWRAP_FN(fwrite)( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   static size_t (*_fwrite)(const void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
   size_t ret;
   if (_fwrite == NULL) {
-    _fwrite = ( size_t (*)(const void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fwrite");
+    _fwrite = ( size_t (*)(const void *ptr, size_t size, size_t nmemb, FILE *stream)) TAU_IOWRAP_REAL(fwrite);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -462,15 +497,16 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fwrite)
 
 /*********************************************************************
  * fread
  ********************************************************************/
-size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+size_t TAU_IOWRAP_FN(fread)(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   static size_t (*_fread)(void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
   int ret;
   if (_fread == NULL) {
-    _fread = ( size_t (*)(void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fread");
+    _fread = ( size_t (*)(void *ptr, size_t size, size_t nmemb, FILE *stream)) TAU_IOWRAP_REAL(fread);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -518,18 +554,19 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fread)
 
 /*********************************************************************
  * fcntl
  ********************************************************************/
-int fcntl(int fd, int cmd, ...) {
+int TAU_IOWRAP_FN(fcntl)(int fd, int cmd, ...) {
   va_list ap;
   void *arg;
 
   static int (*_fcntl)(int fd, int cmd, ...) = NULL;
   int ret;
   if (_fcntl == NULL) {
-    _fcntl = ( int (*)(int fd, int cmd, ...)) dlsym(RTLD_NEXT, "fcntl");
+    _fcntl = ( int (*)(int fd, int cmd, ...)) TAU_IOWRAP_REAL(fcntl);
   }
 
   switch (cmd) {
@@ -555,6 +592,7 @@ int fcntl(int fd, int cmd, ...) {
       break;
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(ret);
   switch (cmd) {
     case F_DUPFD :
       Tau_iowrap_checkInit();
@@ -564,16 +602,17 @@ int fcntl(int fd, int cmd, ...) {
   TAU_VERBOSE ("* fcntl(fid=%d,cmd=%d...) called\n", fd, cmd);
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fcntl)
 
 
 /*********************************************************************
  * lseek
  ********************************************************************/
-off_t lseek(int fd, off_t offset, int whence) {
+off_t TAU_IOWRAP_FN(lseek)(int fd, off_t offset, int whence) {
   static off_t (*_lseek)(int fd, off_t offset, int whence) = NULL;
   off_t ret;
   if (_lseek == NULL) {
-    _lseek = ( off_t (*)(int fd, off_t offset, int whence)) dlsym(RTLD_NEXT, "lseek");   }
+    _lseek = ( off_t (*)(int fd, off_t offset, int whence)) TAU_IOWRAP_REAL(lseek);   }
 
   if (Tau_iowrap_checkPassThrough()) {
     return _lseek(fd, offset, whence);
@@ -594,19 +633,17 @@ off_t lseek(int fd, off_t offset, int whence) {
   TAU_VERBOSE ("* lseek called\n");
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(lseek)
 
+#ifndef __APPLE__
 /*********************************************************************
  * lseek64
  ********************************************************************/
-/* FIX for Apple: */
-#ifdef __APPLE__
-typedef int64_t               off64_t;
-#endif /* __APPLE__ */
-off64_t lseek64(int fd, off64_t offset, int whence) {
+off64_t TAU_IOWRAP_FN(lseek64)(int fd, off64_t offset, int whence) {
   static off64_t (*_lseek64)(int fd, off64_t offset, int whence) = NULL;
   off64_t ret;
   if (_lseek64 == NULL) {
-    _lseek64 = ( off64_t (*)(int fd, off64_t offset, int whence)) dlsym(RTLD_NEXT, "lseek64");   }
+    _lseek64 = ( off64_t (*)(int fd, off64_t offset, int whence)) TAU_IOWRAP_REAL(lseek64);   }
 
   if (Tau_iowrap_checkPassThrough()) {
     return _lseek64(fd, offset, whence);
@@ -627,15 +664,17 @@ off64_t lseek64(int fd, off64_t offset, int whence) {
   TAU_VERBOSE ("* lseek64 called\n");
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(lseek64)
+#endif /* !__APPLE__ */
 
 /*********************************************************************
  * fseek
  ********************************************************************/
-int fseek(FILE *stream, long offset, int whence) {
+int TAU_IOWRAP_FN(fseek)(FILE *stream, long offset, int whence) {
   static int (*_fseek)(FILE *stream, long offset, int whence) = NULL;
   int ret;
   if (_fseek == NULL) {
-    _fseek = ( int (*)(FILE *stream, long offset, int whence)) dlsym(RTLD_NEXT, "fseek");
+    _fseek = ( int (*)(FILE *stream, long offset, int whence)) TAU_IOWRAP_REAL(fseek);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -660,14 +699,15 @@ int fseek(FILE *stream, long offset, int whence) {
   Tau_global_decr_insideTAU();
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(fseek)
 
 /*********************************************************************
  * rewind
  ********************************************************************/
-void rewind(FILE *stream) {
+void TAU_IOWRAP_FN(rewind)(FILE *stream) {
   static void (*_rewind)(FILE *stream) = NULL;
   if (_rewind == NULL) {
-    _rewind = ( void (*)(FILE *stream)) dlsym(RTLD_NEXT, "rewind");
+    _rewind = ( void (*)(FILE *stream)) TAU_IOWRAP_REAL(rewind);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -690,16 +730,17 @@ void rewind(FILE *stream) {
   TAU_VERBOSE ("* rewind called\n");
   return;
 }
+TAU_IOWRAP_INTERPOSE(rewind)
 
 
 /*********************************************************************
  * write
  ********************************************************************/
-ssize_t write (int fd, const void *buf, size_t count) {
+ssize_t TAU_IOWRAP_FN(write) (int fd, const void *buf, size_t count) {
   static ssize_t (*_write)(int fd, const void *buf, size_t count) = NULL;
   ssize_t ret;
   if (_write == NULL) {
-    _write = ( ssize_t (*)(int fd, const void *buf, size_t count)) dlsym(RTLD_NEXT, "write");
+    _write = ( ssize_t (*)(int fd, const void *buf, size_t count)) TAU_IOWRAP_REAL(write);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -747,15 +788,16 @@ ssize_t write (int fd, const void *buf, size_t count) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(write)
 
 /*********************************************************************
  * pwrite
  ********************************************************************/
-ssize_t pwrite (int fd, const void *buf, size_t count, off_t offset) {
+ssize_t TAU_IOWRAP_FN(pwrite) (int fd, const void *buf, size_t count, off_t offset) {
   static ssize_t (*_pwrite)(int fd, const void *buf, size_t count, off_t offset) = NULL;
   ssize_t ret;
   if (_pwrite == NULL) {
-    _pwrite = ( ssize_t (*)(int fd, const void *buf, size_t count, off_t offset)) dlsym(RTLD_NEXT, "pwrite");
+    _pwrite = ( ssize_t (*)(int fd, const void *buf, size_t count, off_t offset)) TAU_IOWRAP_REAL(pwrite);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -803,16 +845,17 @@ ssize_t pwrite (int fd, const void *buf, size_t count, off_t offset) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(pwrite)
 
 /*********************************************************************
  * read
  ********************************************************************/
-ssize_t read (int fd, void *buf, size_t count) {
+ssize_t TAU_IOWRAP_FN(read) (int fd, void *buf, size_t count) {
   static ssize_t (*_read)(int fd, void *buf, size_t count) = NULL;
   ssize_t ret;
 
   if (_read == NULL) {
-    _read = ( ssize_t (*)(int fd, void *buf, size_t count)) dlsym(RTLD_NEXT, "read");
+    _read = ( ssize_t (*)(int fd, void *buf, size_t count)) TAU_IOWRAP_REAL(read);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -858,17 +901,18 @@ ssize_t read (int fd, void *buf, size_t count) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(read)
 
 
 /*********************************************************************
  * pread
  ********************************************************************/
-ssize_t pread (int fd, void *buf, size_t count, off_t offset) {
+ssize_t TAU_IOWRAP_FN(pread) (int fd, void *buf, size_t count, off_t offset) {
   static ssize_t (*_pread)(int fd, void *buf, size_t count, off_t offset) = NULL;
   ssize_t ret;
 
   if (_pread == NULL) {
-    _pread = ( ssize_t (*)(int fd, void *buf, size_t count, off_t offset)) dlsym(RTLD_NEXT, "pread");
+    _pread = ( ssize_t (*)(int fd, void *buf, size_t count, off_t offset)) TAU_IOWRAP_REAL(pread);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -914,17 +958,18 @@ ssize_t pread (int fd, void *buf, size_t count, off_t offset) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(pread)
 
 
 /*********************************************************************
  * readv
  ********************************************************************/
-ssize_t readv (int fd, const struct iovec *vec, int count) {
+ssize_t TAU_IOWRAP_FN(readv) (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_readv)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret;
 
   if (_readv == NULL) {
-    _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
+    _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) TAU_IOWRAP_REAL(readv);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -975,11 +1020,12 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(readv)
 
 /*********************************************************************
  * writev
  ********************************************************************/
-ssize_t writev (int fd, const struct iovec *vec, int count) {
+ssize_t TAU_IOWRAP_FN(writev) (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_writev)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret;
 
@@ -988,7 +1034,7 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   double bw = 0.0;
 
   if (_writev == NULL) {
-    _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "writev");
+    _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) TAU_IOWRAP_REAL(writev);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1036,16 +1082,17 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(writev)
 
 /*********************************************************************
  * mkstemp
  ********************************************************************/
-int mkstemp (char *templat) {
+int TAU_IOWRAP_FN(mkstemp) (char *templat) {
   static int (*_mkstemp)(char *templat)  = NULL;
   int ret;
 
   if (_mkstemp == NULL) {
-    _mkstemp = ( int (*)(char *templat)) dlsym(RTLD_NEXT, "mkstemp");
+    _mkstemp = ( int (*)(char *templat)) TAU_IOWRAP_REAL(mkstemp);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1068,16 +1115,17 @@ int mkstemp (char *templat) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(mkstemp)
 
 /*********************************************************************
  * tmpfile
  ********************************************************************/
-FILE* tmpfile () {
+FILE* TAU_IOWRAP_FN(tmpfile) () {
   static FILE* (*_tmpfile)()  = NULL;
   FILE* ret;
 
   if (_tmpfile == NULL) {
-    _tmpfile = ( FILE* (*)()) dlsym(RTLD_NEXT, "tmpfile");
+    _tmpfile = ( FILE* (*)()) TAU_IOWRAP_REAL(tmpfile);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1100,19 +1148,20 @@ FILE* tmpfile () {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(tmpfile)
 
 
 /*********************************************************************
  * open
  ********************************************************************/
-int open (const char *pathname, int flags, ...) {
+int TAU_IOWRAP_FN(open) (const char *pathname, int flags, ...) {
   static int (*_open)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode = 0777; // default value
   va_list args;
   int ret;
 
   if (_open == NULL) {
-    _open = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open");
+    _open = ( int (*)(const char *pathname, int flags, ...)) TAU_IOWRAP_REAL(open);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1159,18 +1208,20 @@ int open (const char *pathname, int flags, ...) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(open)
 
+#ifndef __APPLE__
 /*********************************************************************
  * open64
  ********************************************************************/
-int open64 (const char *pathname, int flags, ...) {
+int TAU_IOWRAP_FN(open64) (const char *pathname, int flags, ...) {
   static int (*_open64)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode = 0777; // default value
   va_list args;
   int ret;
 
   if (_open64 == NULL) {
-     _open64 = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open64");
+     _open64 = ( int (*)(const char *pathname, int flags, ...)) TAU_IOWRAP_REAL(open64);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1213,16 +1264,18 @@ int open64 (const char *pathname, int flags, ...) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(open64)
+#endif /* !__APPLE__ */
 
 /*********************************************************************
  * creat
  ********************************************************************/
-int creat(const char *pathname, mode_t mode) {
+int TAU_IOWRAP_FN(creat)(const char *pathname, mode_t mode) {
   static int (*_creat)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
   if (_creat == NULL) {
-     _creat = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat");
+     _creat = ( int (*)(const char *pathname, mode_t mode)) TAU_IOWRAP_REAL(creat);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1251,16 +1304,18 @@ int creat(const char *pathname, mode_t mode) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(creat)
 
+#ifndef __APPLE__
 /*********************************************************************
  * creat64
  ********************************************************************/
-int creat64(const char *pathname, mode_t mode) {
+int TAU_IOWRAP_FN(creat64)(const char *pathname, mode_t mode) {
   static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
   if (_creat64 == NULL) {
-     _creat64 = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat64");
+     _creat64 = ( int (*)(const char *pathname, mode_t mode)) TAU_IOWRAP_REAL(creat64);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1289,17 +1344,19 @@ int creat64(const char *pathname, mode_t mode) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(creat64)
+#endif /* !__APPLE__ */
 
 
 /*********************************************************************
  * close
  ********************************************************************/
-int close(int fd) {
+int TAU_IOWRAP_FN(close)(int fd) {
   static int (*_close) (int fd) = NULL;
   int ret;
 
   if (_close == NULL) {
-    _close = (int (*) (int fd) ) dlsym(RTLD_NEXT, "close");
+    _close = (int (*) (int fd) ) TAU_IOWRAP_REAL(close);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1325,17 +1382,18 @@ int close(int fd) {
   TAU_VERBOSE ("* close called on %d\n", fd);
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(close)
 
 
 /*********************************************************************
  * pipe
  ********************************************************************/
-int pipe(int filedes[2]) {
+int TAU_IOWRAP_FN(pipe)(int filedes[2]) {
   static int (*_pipe) (int filedes[2]) = NULL;
   int ret;
 
   if (_pipe == NULL) {
-    _pipe = (int (*) (int filedes[2]) ) dlsym(RTLD_NEXT, "pipe");
+    _pipe = (int (*) (int filedes[2]) ) TAU_IOWRAP_REAL(pipe);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1359,6 +1417,7 @@ int pipe(int filedes[2]) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(pipe)
 
 
 /*********************************************************************
@@ -1393,12 +1452,12 @@ char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len, size_
 /*********************************************************************
  * socket
  ********************************************************************/
-int socket(int domain, int type, int protocol) {
+int TAU_IOWRAP_FN(socket)(int domain, int type, int protocol) {
   static int (*_socket) (int domain, int type, int protocol) = NULL;
   int ret;
 
   if (_socket == NULL) {
-    _socket = (int (*) (int domain, int type, int protocol) ) dlsym(RTLD_NEXT, "socket");
+    _socket = (int (*) (int domain, int type, int protocol) ) TAU_IOWRAP_REAL(socket);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1421,16 +1480,17 @@ int socket(int domain, int type, int protocol) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(socket)
 
 /*********************************************************************
  * socketpair
  ********************************************************************/
-int socketpair(int d, int type, int protocol, int sv[2]) {
+int TAU_IOWRAP_FN(socketpair)(int d, int type, int protocol, int sv[2]) {
   static int (*_socketpair) (int d, int type, int protocol, int sv[2]) = NULL;
   int ret;
 
   if (_socketpair == NULL) {
-    _socketpair = (int (*) (int d, int type, int protocol, int sv[2]) ) dlsym(RTLD_NEXT, "socketpair");
+    _socketpair = (int (*) (int d, int type, int protocol, int sv[2]) ) TAU_IOWRAP_REAL(socketpair);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1454,18 +1514,19 @@ int socketpair(int d, int type, int protocol, int sv[2]) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(socketpair)
 
 #if (!(defined(TAU_BGP) || defined(TAU_XLC)))
 /*********************************************************************
  * bind
  ********************************************************************/
-int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
+int TAU_IOWRAP_FN(bind)(int socket, const struct sockaddr *address, socklen_t address_len) {
   static int (*_bind) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int ret;
   char socketname[TAU_MAX_FILENAME_LEN] = {0};
 
   if (_bind == NULL) {
-    _bind = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "bind");
+    _bind = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) TAU_IOWRAP_REAL(bind);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1487,18 +1548,19 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(bind)
 /*********************************************************************
  * accept
  ********************************************************************/
 #ifndef _AIX
 #ifdef TAU_ENABLE_ACCEPT_WRAPPER
-int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
+int TAU_IOWRAP_FN(accept)(int socket, struct sockaddr *address, socklen_t* address_len) {
   static int (*_accept) (int socket, struct sockaddr *address, socklen_t* address_len) = NULL;
   int current;
   char socketname[TAU_MAX_FILENAME_LEN] = {0};
 
   if (_accept == NULL) {
-    _accept = (int (*) (int socket, struct sockaddr *address, socklen_t* address_len) ) dlsym(RTLD_NEXT, "accept");
+    _accept = (int (*) (int socket, struct sockaddr *address, socklen_t* address_len) ) TAU_IOWRAP_REAL(accept);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1518,19 +1580,20 @@ int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   }
   return current;
 }
+TAU_IOWRAP_INTERPOSE(accept)
 #endif /* TAU_ENABLE_ACCEPT_WRAPPER */
 #endif /* _AIX */
 
 /*********************************************************************
  * connect
  ********************************************************************/
-int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
+int TAU_IOWRAP_FN(connect)(int socket, const struct sockaddr *address, socklen_t address_len) {
   static int (*_connect) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int current;
   char socketname[2048] = {0};
 
   if (_connect == NULL) {
-    _connect = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "connect");
+    _connect = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) TAU_IOWRAP_REAL(connect);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1551,16 +1614,17 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
 
   return current;
 }
+TAU_IOWRAP_INTERPOSE(connect)
 
 /*********************************************************************
  * recv
  ********************************************************************/
-ssize_t recv (int fd, void *buf, size_t count, int flags) {
+ssize_t TAU_IOWRAP_FN(recv) (int fd, void *buf, size_t count, int flags) {
   static ssize_t (*_recv)(int fd, void *buf, size_t count, int flags) = NULL;
   ssize_t ret;
 
   if (_recv == NULL) {
-    _recv = ( ssize_t (*)(int fd, void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "recv");
+    _recv = ( ssize_t (*)(int fd, void *buf, size_t count, int flags)) TAU_IOWRAP_REAL(recv);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1600,17 +1664,18 @@ ssize_t recv (int fd, void *buf, size_t count, int flags) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(recv)
 
 /*********************************************************************
  * send
  ********************************************************************/
 
-ssize_t send (int fd, const void *buf, size_t count, int flags) {
+ssize_t TAU_IOWRAP_FN(send) (int fd, const void *buf, size_t count, int flags) {
   static ssize_t (*_send)(int fd, const void *buf, size_t count, int flags) = NULL;
   ssize_t ret;
 
   if (_send == NULL) {
-    _send = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "send");
+    _send = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags)) TAU_IOWRAP_REAL(send);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1650,18 +1715,19 @@ ssize_t send (int fd, const void *buf, size_t count, int flags) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(send)
 
 
 /*********************************************************************
  * sendto
  ********************************************************************/
 
-ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) {
+ssize_t TAU_IOWRAP_FN(sendto) (int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) {
   static ssize_t (*_sendto)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) = NULL;
   ssize_t ret;
 
   if (_sendto == NULL) {
-    _sendto = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len)) dlsym(RTLD_NEXT, "sendto");
+    _sendto = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len)) TAU_IOWRAP_REAL(sendto);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1701,6 +1767,7 @@ ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct s
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(sendto)
 
 
 #ifndef _AIX
@@ -1708,12 +1775,12 @@ ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct s
  * recvfrom
  ********************************************************************/
 
-ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t *len) {
+ssize_t TAU_IOWRAP_FN(recvfrom) (int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t *len) {
   static ssize_t (*_recvfrom)(int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t * len) = NULL;
   ssize_t ret;
 
   if (_recvfrom == NULL) {
-    _recvfrom = ( ssize_t (*)(int fd, void *buf, size_t count, int flags, struct sockaddr * from, socklen_t * len)) dlsym(RTLD_NEXT, "recvfrom");
+    _recvfrom = ( ssize_t (*)(int fd, void *buf, size_t count, int flags, struct sockaddr * from, socklen_t * len)) TAU_IOWRAP_REAL(recvfrom);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1753,57 +1820,62 @@ ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *f
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(recvfrom)
 #endif /* _AIX */
 #endif /* !(TAU_BGP || TAU_XLC) */
 
 /*********************************************************************
  * dup
  ********************************************************************/
-int dup(int oldfd) {
+int TAU_IOWRAP_FN(dup)(int oldfd) {
   static int (*_dup)(int oldfd) = NULL;
   int fd;
 
   if (_dup == NULL) {
-    _dup = ( int(*)(int fd)) dlsym(RTLD_NEXT, "dup");
+    _dup = ( int(*)(int fd)) TAU_IOWRAP_REAL(dup);
   }
 
   fd = _dup(oldfd);
+  TAU_IOWRAP_RETURN_UNLESS_READY(fd);
 
   Tau_iowrap_checkInit();
   Tau_iowrap_dupEvents(oldfd, fd);
 
   return fd;
 }
+TAU_IOWRAP_INTERPOSE(dup)
 
 
 /*********************************************************************
  * dup2
  ********************************************************************/
-int dup2(int oldfd, int newfd) {
+int TAU_IOWRAP_FN(dup2)(int oldfd, int newfd) {
   static int (*_dup2)(int oldfd, int newfd) = NULL;
 
   if (_dup2 == NULL) {
-    _dup2 = ( int(*)(int fd, int newfd)) dlsym(RTLD_NEXT, "dup2");
+    _dup2 = ( int(*)(int fd, int newfd)) TAU_IOWRAP_REAL(dup2);
   }
 
   newfd = _dup2(oldfd, newfd);
+  TAU_IOWRAP_RETURN_UNLESS_READY(newfd);
 
   Tau_iowrap_checkInit();
   Tau_iowrap_dupEvents(oldfd, newfd);
 
   return newfd;
 }
+TAU_IOWRAP_INTERPOSE(dup2)
 
 
 /*********************************************************************
  * popen
  ********************************************************************/
-FILE * popen (const char *command, const char *type) {
+FILE * TAU_IOWRAP_FN(popen) (const char *command, const char *type) {
   static FILE * (*_popen)(const char *command, const char *type)  = NULL;
   FILE* ret;
 
   if (_popen == NULL) {
-    _popen = ( FILE * (*)(const char *command, const char *type)) dlsym(RTLD_NEXT, "popen");
+    _popen = ( FILE * (*)(const char *command, const char *type)) TAU_IOWRAP_REAL(popen);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1823,16 +1895,17 @@ FILE * popen (const char *command, const char *type) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(popen)
 
 /*********************************************************************
  * pclose
  ********************************************************************/
-int pclose(FILE * stream) {
+int TAU_IOWRAP_FN(pclose)(FILE * stream) {
   static int (*_pclose) (FILE * stream) = NULL;
   int ret;
 
   if (_pclose == NULL) {
-    _pclose = (int (*) (FILE * stream) ) dlsym(RTLD_NEXT, "pclose");
+    _pclose = (int (*) (FILE * stream) ) TAU_IOWRAP_REAL(pclose);
   }
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1850,18 +1923,20 @@ int pclose(FILE * stream) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(pclose)
 
 /*********************************************************************
  * aio_read
  ********************************************************************/
-int aio_read(struct aiocb *aiocbp) {
+int TAU_IOWRAP_FN(aio_read)(struct aiocb *aiocbp) {
   static int (*_aio_read) (struct aiocb *aiocbp) = NULL;
   int ret;
 
   if (_aio_read == NULL) {
-    _aio_read = (int (*) (struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_read");
+    _aio_read = (int (*) (struct aiocb *aiocbp) ) TAU_IOWRAP_REAL(aio_read);
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(_aio_read(aiocbp));
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "aio_read()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -1873,18 +1948,20 @@ int aio_read(struct aiocb *aiocbp) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(aio_read)
 
 /*********************************************************************
  * aio_write
  ********************************************************************/
-int aio_write(struct aiocb *aiocbp) {
+int TAU_IOWRAP_FN(aio_write)(struct aiocb *aiocbp) {
   static int (*_aio_write) (struct aiocb *aiocbp) = NULL;
   int ret;
 
   if (_aio_write == NULL) {
-    _aio_write = (int (*) (struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_write");
+    _aio_write = (int (*) (struct aiocb *aiocbp) ) TAU_IOWRAP_REAL(aio_write);
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(_aio_write(aiocbp));
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "aio_write()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -1896,18 +1973,20 @@ int aio_write(struct aiocb *aiocbp) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(aio_write)
 
 /*********************************************************************
  * aio_error
  ********************************************************************/
-int aio_error(const struct aiocb *aiocbp) {
+int TAU_IOWRAP_FN(aio_error)(const struct aiocb *aiocbp) {
   static int (*_aio_error) (const struct aiocb *aiocbp) = NULL;
   int ret;
 
   if (_aio_error == NULL) {
-    _aio_error = (int (*) (const struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_error");
+    _aio_error = (int (*) (const struct aiocb *aiocbp) ) TAU_IOWRAP_REAL(aio_error);
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(_aio_error(aiocbp));
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "aio_error()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -1934,18 +2013,20 @@ int aio_error(const struct aiocb *aiocbp) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(aio_error)
 
 /*********************************************************************
  * aio_return
  ********************************************************************/
-ssize_t aio_return(struct aiocb *aiocbp) {
+ssize_t TAU_IOWRAP_FN(aio_return)(struct aiocb *aiocbp) {
   static ssize_t (*_aio_return) (struct aiocb *aiocbp) = NULL;
   ssize_t ret;
 
   if (_aio_return == NULL) {
-    _aio_return = (ssize_t (*) (struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_return");
+    _aio_return = (ssize_t (*) (struct aiocb *aiocbp) ) TAU_IOWRAP_REAL(aio_return);
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(_aio_return(aiocbp));
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "aio_return()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -1957,18 +2038,20 @@ ssize_t aio_return(struct aiocb *aiocbp) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(aio_return)
 
 /*********************************************************************
  * aio_suspend
  ********************************************************************/
-int aio_suspend(const struct aiocb * const cblist[], int n, const struct timespec *timeout) {
+int TAU_IOWRAP_FN(aio_suspend)(const struct aiocb * const cblist[], int n, const struct timespec *timeout) {
   static int (*_aio_suspend) (const struct aiocb * const cblist[], int n, const struct timespec *timeout) = NULL;
   int ret;
 
   if (_aio_suspend == NULL) {
-    _aio_suspend = (int (*) (const struct aiocb * const cblist[], int n, const struct timespec *timeout) ) dlsym(RTLD_NEXT, "aio_suspend");
+    _aio_suspend = (int (*) (const struct aiocb * const cblist[], int n, const struct timespec *timeout) ) TAU_IOWRAP_REAL(aio_suspend);
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(_aio_suspend(cblist, n, timeout));
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "aio_suspend()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -1980,18 +2063,20 @@ int aio_suspend(const struct aiocb * const cblist[], int n, const struct timespe
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(aio_suspend)
 
 /*********************************************************************
  * aio_cancel
  ********************************************************************/
-int aio_cancel(int fd, struct aiocb *aiocbp) {
+int TAU_IOWRAP_FN(aio_cancel)(int fd, struct aiocb *aiocbp) {
   static int (*_aio_cancel) (int fd, struct aiocb *aiocbp) = NULL;
   int ret;
 
   if (_aio_cancel == NULL) {
-    _aio_cancel = (int (*) (int fd, struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_cancel");
+    _aio_cancel = (int (*) (int fd, struct aiocb *aiocbp) ) TAU_IOWRAP_REAL(aio_cancel);
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(_aio_cancel(fd, aiocbp));
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "aio_cancel()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -2003,19 +2088,21 @@ int aio_cancel(int fd, struct aiocb *aiocbp) {
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(aio_cancel)
 
 /*********************************************************************
  * lio_listio
  ********************************************************************/
 
-int lio_listio(int mode, struct aiocb * const list[], int nent, struct sigevent *sig) {
+int TAU_IOWRAP_FN(lio_listio)(int mode, struct aiocb * const list[], int nent, struct sigevent *sig) {
   static int (*_lio_listio) (int mode, struct aiocb * const list[], int nent, struct sigevent *sig) = NULL;
   ssize_t ret;
 
   if (_lio_listio == NULL) {
-    _lio_listio = (int (*) (int mode, struct aiocb * const list[], int nent, struct sigevent *sig)) dlsym(RTLD_NEXT, "lio_listio");
+    _lio_listio = (int (*) (int mode, struct aiocb * const list[], int nent, struct sigevent *sig)) TAU_IOWRAP_REAL(lio_listio);
   }
 
+  TAU_IOWRAP_RETURN_UNLESS_READY(_lio_listio(mode, list, nent, sig));
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "lio_listio()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -2027,6 +2114,7 @@ int lio_listio(int mode, struct aiocb * const list[], int nent, struct sigevent 
 
   return ret;
 }
+TAU_IOWRAP_INTERPOSE(lio_listio)
 
 /*********************************************************************
  * exit

@@ -36,8 +36,16 @@ iowrap_link.o: iowrap_link.c
 iowrap_shared.o: iowrap_shared.c
 	$(CC) $(CFLAGS) -c iowrap_shared.c -I.
 
+# On macOS, __DATA,__interpose entries are ignored unless
+# the library uses two-level namespace binding.
+ifneq ($(strip $(TAU_APPLE_SHFLAGS)),)
+IOWRAP_SHFLAGS = -dynamiclib -undefined dynamic_lookup -o
+else
+IOWRAP_SHFLAGS = $(TAU_SHFLAGS)
+endif
+
 libTAU-iowrap$(TAU_SHLIBX): iowrap_shared.o
-	$(CC) $(TAU_SHFLAGS) libTAU-iowrap$(TAU_SHLIBX) iowrap_shared.o -ldl
+	$(CC) $(IOWRAP_SHFLAGS) libTAU-iowrap$(TAU_SHLIBX) iowrap_shared.o -ldl
 
 clean:
 	/bin/rm -f iowrapper.o libTauIOWrapper.a iowrap_shared.o iowrap_link.o libTauPosixWrap.a

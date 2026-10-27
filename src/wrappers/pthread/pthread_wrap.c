@@ -49,7 +49,41 @@ extern int tau_pthread_barrier_wait_wrapper(pthread_barrier_wait_p pthread_barri
 #endif
 
 
-#ifdef TAU_PRELOAD_LIB
+#if defined(TAU_PRELOAD_LIB) && defined(__APPLE__)
+// On modern macOS, exporting pthread_create from an inserted library doesn't
+// replace it, even with DYLD_FORCE_FLAT_NAMESPACE. Instead, a __DATA,__interpose
+// entry is needed.  See 
+//   https://github.com/HackTricks-wiki/hacktricks/blob/master/src/macos-hardening/macos-security-and-privilege-escalation/macos-proces-abuse/macos-function-hooking.md
+// for details.
+#include <pthread.h>
+
+#define TAU_DYLD_INTERPOSE(replacement, replacee) \
+  __attribute__((used)) static struct { const void * r; const void * o; } \
+  tau_interpose_##replacee __attribute__((section("__DATA,__interpose"))) = \
+  { (const void *)&replacement, (const void *)&replacee };
+
+#ifndef TAU_SUPPRESS_PTHREAD_CREATE_WRAPPER
+static int tau_interposed_pthread_create(pthread_t* thread, const pthread_attr_t* attr,
+    start_routine_p start_routine, void* arg)
+{
+  return tau_pthread_create_wrapper(pthread_create, thread, attr, start_routine, arg);
+}
+TAU_DYLD_INTERPOSE(tau_interposed_pthread_create, pthread_create)
+#endif /* TAU_SUPPRESS_PTHREAD_CREATE_WRAPPER */
+
+static int tau_interposed_pthread_join(pthread_t thread, void ** retval)
+{
+  return tau_pthread_join_wrapper(pthread_join, thread, retval);
+}
+TAU_DYLD_INTERPOSE(tau_interposed_pthread_join, pthread_join)
+
+static void tau_interposed_pthread_exit(void * value_ptr)
+{
+  tau_pthread_exit_wrapper(pthread_exit, value_ptr);
+}
+TAU_DYLD_INTERPOSE(tau_interposed_pthread_exit, pthread_exit)
+
+#elif defined(TAU_PRELOAD_LIB)
 /********************************/
 /* LD_PRELOAD wrapper functions */
 /********************************/

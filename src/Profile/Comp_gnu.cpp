@@ -332,15 +332,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         if (!node->info.probeAddr) {
 #if defined(__APPLE__)
 #if defined(TAU_HAVE_CORESYMBOLICATION)
-         static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
-         CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
-         if(!CSIsNull(source_info)) {
-             CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
-             node->info.probeAddr = addr;
-             node->info.filename = strdup(CSSourceInfoGetPath(source_info));
-             node->info.funcname = strdup(CSSymbolGetName(symbol));
-             node->info.lineno = CSSourceInfoGetLineNumber(source_info);
-         }
+          Tau_coresymbolication_resolveInfo(addr, node->info);
 #else
           Dl_info info;
           int rc = dladdr((const void *)addr, &info);

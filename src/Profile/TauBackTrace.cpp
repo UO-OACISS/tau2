@@ -22,6 +22,35 @@ using namespace std;
 
 extern "C" void finalizeCallSites_if_necessary();
 
+#if defined(__APPLE__) && defined(TAU_HAVE_CORESYMBOLICATION)
+bool Tau_coresymbolication_resolveInfo(unsigned long probeAddr, TauBfdInfo & info)
+{
+  static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
+  CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)probeAddr, kCSNow);
+  CSSymbolRef symbol;
+  const char * path;
+  int lineno;
+  if (CSIsNull(source_info)) {
+    symbol = CSSymbolicatorGetSymbolWithAddressAtTime(symbolicator, (vm_address_t)probeAddr, kCSNow);
+    path = CSIsNull(symbol) ? NULL : CSSymbolOwnerGetPath(CSSymbolGetSymbolOwner(symbol));
+    lineno = 0;
+  } else {
+    symbol = CSSourceInfoGetSymbol(source_info);
+    path = CSSourceInfoGetPath(source_info);
+    lineno = CSSourceInfoGetLineNumber(source_info);
+  }
+  const char * name = CSIsNull(symbol) ? NULL : CSSymbolGetName(symbol);
+  if (name == NULL) {
+    return false;
+  }
+  info.probeAddr = probeAddr;
+  info.filename = path ? strdup(path) : "";
+  info.funcname = strdup(name);
+  info.lineno = lineno;
+  return true;
+}
+#endif
+
 struct BacktraceFrame
 {
   char const * funcname;
@@ -69,14 +98,7 @@ static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
       TauBfdInfo info;
 #if defined(__APPLE__)
 #if defined(TAU_HAVE_CORESYMBOLICATION)
-      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
-      CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
-      if(!CSIsNull(source_info)) {
-          CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
-          info.filename = strdup(CSSourceInfoGetPath(source_info));
-          info.funcname = strdup(CSSymbolGetName(symbol));
-          info.lineno = CSSourceInfoGetLineNumber(source_info);
-      }
+      Tau_coresymbolication_resolveInfo(addr, info);
 #else
       Dl_info dlinfo;
       int rc = dladdr((const void *)addr, &dlinfo);

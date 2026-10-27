@@ -61,6 +61,7 @@
 #ifdef __APPLE__
 #include <dlfcn.h>
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
+#include <pthread.h>
 #ifdef TAU_HAVE_CORESYMBOLICATION
 #include "CoreSymbolication.h"
 #endif
@@ -1125,19 +1126,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       node = new CallSiteCacheNode;
 #if defined(__APPLE__)
 #if defined(TAU_HAVE_CORESYMBOLICATION)
-      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
-      CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
-      if(CSIsNull(source_info)) {
-          node->resolved = false;
-      } else {
-          CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
-          node->resolved = true;
-          node->info.probeAddr = addr;
-          node->info.filename = strdup(CSSourceInfoGetPath(source_info));
-          node->info.funcname = strdup(CSSymbolGetName(symbol));
-          node->info.lineno = CSSourceInfoGetLineNumber(source_info);
-      }
-      //CSRelease(source_info);
+      node->resolved = Tau_coresymbolication_resolveInfo(addr, node->info);
 #else
       Dl_info info;
       int rc = dladdr((const void *)addr, &info);
@@ -2328,14 +2317,18 @@ int Tau_sampling_init(int tid, pid_t pid)
   //DEBUGMSG("threshold=%d, itimer=(%d, %d)", threshold, itval.it_interval.tv_usec, itval.it_interval.tv_sec);
 
   if(pid != 0) {
+#ifndef __APPLE__
     fprintf(stderr, "TAU: WARNING: Sampling on thread %d was deferred, but this system does not have timer_create available."
             "Sampling on thread %d will not occur!\n", tid, tid);
     return -1;
-  }
-  ret = setitimer(TAU_ITIMER_TYPE, &itval, &ovalue);
-  if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error 8: %s\n", strerror(ret));
-    return -1;
+#endif
+    // A deferred thread shares the itimer armed by the thread calling MPI_Init.
+  } else {
+    ret = setitimer(TAU_ITIMER_TYPE, &itval, &ovalue);
+    if (ret != 0) {
+      fprintf(stderr, "TAU: Sampling error 8: %s\n", strerror(ret));
+      return -1;
+    }
   }
   //TAU_VERBOSE("Thread %d called setitimer...\n", tid);
   //DEBUGMSG("setitimer called");
@@ -2457,6 +2450,11 @@ extern "C" void Tau_sampling_defer_init(void) {
 #ifdef TAU_FX_AARCH64
     const pid_t pid = syscall(__NR_gettid);
 #endif
+#elif defined(__APPLE__)
+    // On macOS, the process-wide itimer interrupts whichever thread is running, so a
+    // deferred thread needs no timer of its own, only its sampling state set
+    // up once MPI_Init is done.
+    const pid_t pid = (pid_t)pthread_mach_thread_np(pthread_self());
 #else
     fprintf(stderr, "TAU: WARNING: Thread %d was started before MPI_Init, but this system "
             "doesn't support timer_create. Thread %d will not be sampled!\n", tid, tid);
