@@ -2206,9 +2206,6 @@ else
                   tauCmd="$tauCmd --tau_use_cxx_api"
               fi
               tauCmd="$tauCmd --"
-              if [ -n "${salt_compiler_flags## }" ]; then
-                  tauCmd="$tauCmd ${salt_compiler_flags## }"
-              fi
               tauCmd="$tauCmd $optTau $optCompile $optDefs $optIncludes $argsRemaining"
               tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
               instrumentor=$optSaltParser
