@@ -337,6 +337,20 @@ apply_llvm_plugin_compinst() {
     return 0
 }
 
+# Print the suffix for the SALT output of a Fortran source. SALT writes
+# preprocessor directives, and .F90 (free form), .F (fixed form), and .CUF
+# (CUDA Fortran) are the most portable suffixes that compilers preprocess.
+# Other suffixes are printed unchanged.
+# Usage: salt_fortran_suffix <suffix, with its leading dot>
+salt_fortran_suffix() {
+    case $(echo "$1" | tr '[:upper:]' '[:lower:]') in
+        .f90|.f95|.f03|.f08|.f18) echo ".F90" ;;
+        .f|.for|.ftn|.f77|.fpp) echo ".F" ;;
+        .cuf) echo ".CUF" ;;
+        *) echo "$1" ;;
+    esac
+}
+
 # Determine whether compiler-based instrumentation should be applied to a source file.
 # Sets useCompInst (yes/no) and updates instrumentedFileForCompilation and tempTauFileName.
 # If tauSelectFile is set but unreadable, prints an error and defaults to instrumenting
@@ -1277,7 +1291,7 @@ for arg in "$@" ; do
                 optTau=" "
                 ;;
 
-            *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR|*.cuf)
+            *.[fF]|*.for|*.FOR|*.ftn|*.FTN|*.fpp|*.FPP|*.[fF]77|*.[fF]9[05]|*.[fF]0[38]|*.cuf|*.CUF)
         	fileName=$arg
         	arrFileName[$numFiles]=$arg
         	arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -1797,7 +1811,10 @@ while [ $tempCounter -lt $numFiles ]; do
         base=${base}.pomp
         arrFileName[$tempCounter]=$base$suf
     fi
-    if [ $optCompInst == $FALSE ] ; then
+    if [ $optCompInst == $FALSE -a $optSaltInst == $TRUE -a $groupType == $group_f_F ] ; then
+        # SALT's output needs preprocessing, which most compilers do by suffix
+        newFile=${base}.inst$(salt_fortran_suffix $suf)
+    elif [ $optCompInst == $FALSE ] ; then
         newFile=${base}.inst${suf}
     else
         newFile=${arrFileName[$tempCounter]}
@@ -2120,7 +2137,7 @@ else
                         # Run the parser on all Fortran files to generate needed .mod files
                         case $origFileName in
                             # Check all Fortran files TAU knows about
-                            *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR|*.cuf)
+                            *.[fF]|*.for|*.FOR|*.ftn|*.FTN|*.fpp|*.FPP|*.[fF]77|*.[fF]9[05]|*.[fF]0[38]|*.cuf|*.CUF)
                                 # Only process files defining modules, fewer false positives if we look for 'end module'
                                 # See ISO/IEC DIS 1539-1:2017 (E) 14.2.1 R1406
                                 if grep -i -q '\(^\|;\)[[:blank:]]*end module' "$origFileName" > /dev/null 2>&1 ; then
@@ -2206,9 +2223,6 @@ else
                   tauCmd="$tauCmd --tau_use_cxx_api"
               fi
               tauCmd="$tauCmd --"
-              if [ -n "${salt_compiler_flags## }" ]; then
-                  tauCmd="$tauCmd ${salt_compiler_flags## }"
-              fi
               tauCmd="$tauCmd $optTau $optCompile $optDefs $optIncludes $argsRemaining"
               tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
               instrumentor=$optSaltParser
@@ -2673,6 +2687,8 @@ else
           if [ $reusingInstFile == $FALSE ]; then
             evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning inst file"
             tmpname="`echo $tmpname | sed -e 's/\.inst//'`"
+            # The other intermediate files keep the source's suffix, which the SALT output may not
+            tmpname="${tmpname%.*}.${arrFileName[$tempCounter]##*.}"
             if [ $continueBeforeOMP == $TRUE ] ; then
               evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning continue file"
               tmpname="`echo $tmpname | sed -e 's/\.continue//'`"

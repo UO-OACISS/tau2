@@ -144,7 +144,13 @@ struct TauSDKSampleEvent {
             return false;
         */
     bool operator<(const TauSDKSampleEvent& two) const {
-        return entry < two.entry;
+        if (entry != two.entry)
+            return entry < two.entry;
+
+        if (device_id != two.device_id)
+            return device_id < two.device_id;
+
+        return cu_id < two.cu_id;
     }
   
 };
