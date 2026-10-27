@@ -337,6 +337,20 @@ apply_llvm_plugin_compinst() {
     return 0
 }
 
+# Print the suffix for the SALT output of a Fortran source. SALT writes
+# preprocessor directives, and .F90 (free form), .F (fixed form), and .CUF
+# (CUDA Fortran) are the most portable suffixes that compilers preprocess.
+# Other suffixes are printed unchanged.
+# Usage: salt_fortran_suffix <suffix, with its leading dot>
+salt_fortran_suffix() {
+    case $(echo "$1" | tr '[:upper:]' '[:lower:]') in
+        .f90|.f95|.f03|.f08|.f18) echo ".F90" ;;
+        .f|.for|.ftn|.f77|.fpp) echo ".F" ;;
+        .cuf) echo ".CUF" ;;
+        *) echo "$1" ;;
+    esac
+}
+
 # Determine whether compiler-based instrumentation should be applied to a source file.
 # Sets useCompInst (yes/no) and updates instrumentedFileForCompilation and tempTauFileName.
 # If tauSelectFile is set but unreadable, prints an error and defaults to instrumenting
@@ -1797,7 +1811,10 @@ while [ $tempCounter -lt $numFiles ]; do
         base=${base}.pomp
         arrFileName[$tempCounter]=$base$suf
     fi
-    if [ $optCompInst == $FALSE ] ; then
+    if [ $optCompInst == $FALSE -a $optSaltInst == $TRUE -a $groupType == $group_f_F ] ; then
+        # SALT's output needs preprocessing, which most compilers do by suffix
+        newFile=${base}.inst$(salt_fortran_suffix $suf)
+    elif [ $optCompInst == $FALSE ] ; then
         newFile=${base}.inst${suf}
     else
         newFile=${arrFileName[$tempCounter]}
@@ -2670,6 +2687,8 @@ else
           if [ $reusingInstFile == $FALSE ]; then
             evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning inst file"
             tmpname="`echo $tmpname | sed -e 's/\.inst//'`"
+            # The other intermediate files keep the source's suffix, which the SALT output may not
+            tmpname="${tmpname%.*}.${arrFileName[$tempCounter]##*.}"
             if [ $continueBeforeOMP == $TRUE ] ; then
               evalWithDebugMessage "/bin/rm -f \"$tmpname\"" "cleaning continue file"
               tmpname="`echo $tmpname | sed -e 's/\.continue//'`"
