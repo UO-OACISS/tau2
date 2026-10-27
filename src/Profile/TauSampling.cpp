@@ -2697,4 +2697,68 @@ void Tau_sampling_stop_sampling() {
     Tau_sampling_disable_signal();
 }
 
+#ifdef __APPLE__
+/* On macOS, an itimer survives exec, but the SIGPROF handler reverts to the default
+ * action, which kills the new image before TAU can reinstall the handler.
+ * Disarm the timer when we intercept the exec, restoring it if the exec fails. */
+#include <spawn.h>
+
+#define TAU_DYLD_INTERPOSE(replacement, replacee) \
+  __attribute__((used)) static struct { const void * r; const void * o; } \
+  tau_interpose_##replacee __attribute__((section("__DATA,__interpose"))) = \
+  { (const void *)&replacement, (const void *)&replacee };
+
+static bool Tau_sampling_suspend_itimer_for_exec(struct itimerval * saved) {
+  if (!collectingSamples) return false;
+  struct itimerval zero;
+  memset(&zero, 0, sizeof(zero));
+  return setitimer(TAU_ITIMER_TYPE, &zero, saved) == 0;
+}
+
+static void Tau_sampling_resume_itimer_after_exec(bool suspended, const struct itimerval * saved) {
+  if (suspended) {
+    setitimer(TAU_ITIMER_TYPE, saved, NULL);
+  }
+}
+
+static int tau_interposed_execve(const char * path, char * const argv[], char * const envp[]) {
+  struct itimerval saved;
+  bool suspended = Tau_sampling_suspend_itimer_for_exec(&saved);
+  int ret = execve(path, argv, envp);
+  int saved_errno = errno;
+  Tau_sampling_resume_itimer_after_exec(suspended, &saved);
+  errno = saved_errno;
+  return ret;
+}
+TAU_DYLD_INTERPOSE(tau_interposed_execve, execve)
+
+static bool Tau_spawn_is_exec(const posix_spawnattr_t * attrp) {
+  short flags = 0;
+  return attrp != NULL && posix_spawnattr_getflags(attrp, &flags) == 0
+      && (flags & POSIX_SPAWN_SETEXEC);
+}
+
+static int tau_interposed_posix_spawn(pid_t * pid, const char * path,
+    const posix_spawn_file_actions_t * file_actions, const posix_spawnattr_t * attrp,
+    char * const argv[], char * const envp[]) {
+  struct itimerval saved;
+  bool suspended = Tau_spawn_is_exec(attrp) && Tau_sampling_suspend_itimer_for_exec(&saved);
+  int ret = posix_spawn(pid, path, file_actions, attrp, argv, envp);
+  Tau_sampling_resume_itimer_after_exec(suspended, &saved);
+  return ret;
+}
+TAU_DYLD_INTERPOSE(tau_interposed_posix_spawn, posix_spawn)
+
+static int tau_interposed_posix_spawnp(pid_t * pid, const char * file,
+    const posix_spawn_file_actions_t * file_actions, const posix_spawnattr_t * attrp,
+    char * const argv[], char * const envp[]) {
+  struct itimerval saved;
+  bool suspended = Tau_spawn_is_exec(attrp) && Tau_sampling_suspend_itimer_for_exec(&saved);
+  int ret = posix_spawnp(pid, file, file_actions, attrp, argv, envp);
+  Tau_sampling_resume_itimer_after_exec(suspended, &saved);
+  return ret;
+}
+TAU_DYLD_INTERPOSE(tau_interposed_posix_spawnp, posix_spawnp)
+#endif /* __APPLE__ */
+
 #endif //TAU_WINDOWS && TAU_ANDROID
