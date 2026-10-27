@@ -66,8 +66,12 @@ struct TMMUnit
 #endif
 };
 
+struct TMMVector : public vector<TMMUnit*> {
+    ~TMMVector() { Tau_destructor_trigger(); }
+};
+
 std::mutex TMMVectorMutex;
-static vector<TMMUnit*> TMMList;
+static TMMVector TMMList;
 
 inline void checkTMMVector(int tid){
 	while(TMMList.size()<=tid){

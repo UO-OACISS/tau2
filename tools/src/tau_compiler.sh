@@ -497,13 +497,15 @@ setup_link_options() {
                 response_files="$response_files @$f"
             done
             optLinking="$optLinking$response_files $optLinking"
-            case " $link_options_file " in
-                *" $optWrappersDir/pthread_wrapper/link_options.tau "*)
-                    echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
-                    optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
-                    ;;
-            esac
         fi
+        # gcc's libgcc.a can define __wrap_pthread_create for split-stack support,
+        # which clashes with the pthread wrapper
+        case " $link_options_file " in
+            *" $optWrappersDir/pthread_wrapper/link_options.tau "*)
+                echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
+                ;;
+        esac
     fi
 }
 
