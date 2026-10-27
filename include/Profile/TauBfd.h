@@ -107,6 +107,11 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle);
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 		unsigned long probeAddr, TauBfdInfo & info);
 
+#if defined(__APPLE__) && defined(TAU_HAVE_CORESYMBOLICATION)
+// Lookup of symbol information for an address via CoreSymbolication.
+bool Tau_coresymbolication_resolveInfo(unsigned long probeAddr, TauBfdInfo & info);
+#endif
+
 // Fast scan of the executable symbol table.
 int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, TauBfdIterFn fn);
 

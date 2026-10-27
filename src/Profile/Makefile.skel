@@ -387,6 +387,27 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 
 #SICORTEX#####TAU_MPI_FOR_SHARED= $(TAU_FORCE_MPI_OBJECT) #ENDIF#
 
+# On macOS, MPI wrappers need to use __DATA,__interpose.
+# The tau_mpi_interpose_gen.sh script generates these.
+# The entries need two-level namespace binding, and libTauMpi must
+# not be included in the link line or its wrappers would be used as
+# the originals instead of the actual originals.
+#APPLECXX#TAU_MPI_INTERPOSE = $(if $(strip $(TAU_MPI_FOR_SHARED)),yes) #ENDIF#
+ifeq ($(strip $(TAU_MPI_INTERPOSE)),yes)
+TAU_MPI_INTERPOSE_SRC_OBJS = $(TAU_MPI_FOR_SHARED) TauProfileMerge.o TauMetaDataMerge.o
+TAU_SHLIB_MPI_DEPS = TauMpiInterpose.stamp
+TAU_SHLIB_MPI_OBJS = $(TAU_MPI_INTERPOSE_SRC_OBJS:.o=.ip.o) TauMpiInterpose.o $(MPI_FORTRAN_INIT)
+TAU_SHLIB_ARFLAGS = -dynamiclib -undefined dynamic_lookup -o
+TAU_SHLIB_MPI_LIBS = $(filter-out -lTauMpi$(TAU_CONFIG),$(TAU_MPI_LIB) $(TAU_MPI_FLIB))
+TAU_SHLIB_EXTRA_LIBS = $(filter-out $(MPI_WRAPPER),$(EXTRA_LIBS))
+else
+TAU_SHLIB_MPI_DEPS =
+TAU_SHLIB_MPI_OBJS = $(TAU_MPI_FOR_SHARED)
+TAU_SHLIB_ARFLAGS = $(TAU_ARFLAGS)
+TAU_SHLIB_MPI_LIBS = $(TAU_MPI_LIB) $(TAU_MPI_FLIB)
+TAU_SHLIB_EXTRA_LIBS = $(EXTRA_LIBS)
+endif
+
 CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
@@ -452,9 +473,9 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 #	cp $(TAU_CUPTI_LIB) $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)
 
 
-$(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS) $(MPI_WRAPPER)
+$(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS) $(MPI_WRAPPER) $(TAU_SHLIB_MPI_DEPS)
 		$(PRELINK_PHASE)
-		$(CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS) $(TAU_LDFLAGS)
+		$(CXX) $(TAU_SHLIB_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_SHLIB_MPI_OBJS) $(TAU_SHLIB_MPI_LIBS) $(TAU_SHLIB_EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS) $(TAU_LDFLAGS)
 
 $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
 	$(CXX) -M $(CXXFLAGS) -I$(TAU_OPENCL_INC) -c TauGpuAdapterOpenCL.cpp > $@
@@ -503,6 +524,10 @@ $(TAU_DISABLE_SHARED) : TauDisable.o TauKojakOpariDisable.o
 
 libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauRequest.cpp TauTranslateRank.cpp TauFMpi.c ClockSync.c TauProfileMerge.cpp TauMpiExtensions.c TauMetaDataMerge.cpp
 		$(MAKE) -f Makefile.wrapper
+
+TauMpiInterpose.stamp: $(MPI_WRAPPER)
+		$(MAKE) -f Makefile.wrapper interpose "TAU_MPI_SHARED_OBJS=$(TAU_MPI_INTERPOSE_SRC_OBJS)"
+		touch $@
 
 libTauShmem$(TAU_CONFIG)$(LSX):
 		$(MAKE) -f Makefile.shmem
@@ -1132,4 +1157,4 @@ clean :
 	# empty (e.g. recursive make from the root that does not propagate
 	# TAUROOT, leaving the include of $(TAUROOT)/include/Makefile a
 	# no-op), causing `rm -rf *` to wipe the source directory.
-	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *.so *.dylib *.sl $(TAU_GPU_LIB) $(TAU_GPU_DEP)
+	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *.so *.dylib *.sl $(TAU_GPU_LIB) $(TAU_GPU_DEP) TauMpiInterpose.stamp TauMpiInterpose.h TauMpiInterpose.c

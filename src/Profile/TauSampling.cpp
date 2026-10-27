@@ -1125,31 +1125,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       node = new CallSiteCacheNode;
 #if defined(__APPLE__)
 #if defined(TAU_HAVE_CORESYMBOLICATION)
-      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
-      CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
-      if(CSIsNull(source_info)) {
-          // System libraries and executables without dSYM and .o files have symbols but no line tables.
-          CSSymbolRef symbol = CSSymbolicatorGetSymbolWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
-          const char * name = CSIsNull(symbol) ? NULL : CSSymbolGetName(symbol);
-          if (name == NULL) {
-              node->resolved = false;
-          } else {
-              const char * path = CSSymbolOwnerGetPath(CSSymbolGetSymbolOwner(symbol));
-              node->resolved = true;
-              node->info.probeAddr = addr;
-              node->info.filename = path ? strdup(path) : "";
-              node->info.funcname = strdup(name);
-              node->info.lineno = 0;
-          }
-      } else {
-          CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
-          node->resolved = true;
-          node->info.probeAddr = addr;
-          node->info.filename = strdup(CSSourceInfoGetPath(source_info));
-          node->info.funcname = strdup(CSSymbolGetName(symbol));
-          node->info.lineno = CSSourceInfoGetLineNumber(source_info);
-      }
-      //CSRelease(source_info);
+      node->resolved = Tau_coresymbolication_resolveInfo(addr, node->info);
 #else
       Dl_info info;
       int rc = dladdr((const void *)addr, &info);
