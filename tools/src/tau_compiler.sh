@@ -1291,7 +1291,7 @@ for arg in "$@" ; do
                 optTau=" "
                 ;;
 
-            *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR|*.cuf)
+            *.[fF]|*.for|*.FOR|*.ftn|*.FTN|*.fpp|*.FPP|*.[fF]77|*.[fF]9[05]|*.[fF]0[38]|*.cuf|*.CUF)
         	fileName=$arg
         	arrFileName[$numFiles]=$arg
         	arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -2137,7 +2137,7 @@ else
                         # Run the parser on all Fortran files to generate needed .mod files
                         case $origFileName in
                             # Check all Fortran files TAU knows about
-                            *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR|*.cuf)
+                            *.[fF]|*.for|*.FOR|*.ftn|*.FTN|*.fpp|*.FPP|*.[fF]77|*.[fF]9[05]|*.[fF]0[38]|*.cuf|*.CUF)
                                 # Only process files defining modules, fewer false positives if we look for 'end module'
                                 # See ISO/IEC DIS 1539-1:2017 (E) 14.2.1 R1406
                                 if grep -i -q '\(^\|;\)[[:blank:]]*end module' "$origFileName" > /dev/null 2>&1 ; then
