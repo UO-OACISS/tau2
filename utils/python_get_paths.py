@@ -40,6 +40,16 @@ try:
         libname = sysconfig.get_config_var("LDLIBRARY")
         if suffix is not None:
             libname = libname.replace(".a", suffix)
+        # A framework build's LDLIBRARY is relative to PYTHONFRAMEWORKPREFIX
+        # (e.g. Python.framework/Versions/3.15/Python), not LIBDIR, and the
+        # link name can't be derived from it. Framework builds also put a
+        # libpythonX.Y.dylib link to the framework library in LIBDIR.
+        if sysconfig.get_config_var("PYTHONFRAMEWORK"):
+            import os
+            dylib = "libpython%s%s.dylib" % (sysconfig.get_config_var("VERSION"),
+                                             sysconfig.get_config_var("ABIFLAGS") or "")
+            if os.path.exists(os.path.join(sysconfig.get_config_var("LIBDIR"), dylib)):
+                libname = dylib
         print(libname)
     sys.exit(0)
 except Exception as e:
