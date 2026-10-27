@@ -395,68 +395,69 @@ compile_opari2_pompregions() {
 #               cat_link_file
 # Modifies globals: link_options_file, optLinking
 setup_link_options() {
+    # Every requested wrapper contributes its link options, so several can be tracked at once.
     link_options_file=""
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
     if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
         optLinking=`echo $optLinking | sed -e 's/Comp_gnu.o//g'`
-        link_options_file="$optWrappersDir/io_wrapper/link_options.tau"
+        link_options_file="$link_options_file $optWrappersDir/io_wrapper/link_options.tau"
     fi
 
     echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
     if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then
         optLinking=`echo $optLinking | sed -e 's/Comp_gnu.o//g'`
-        link_options_file="$optWrappersDir/memory_wrapper/link_options.tau"
+        link_options_file="$link_options_file $optWrappersDir/memory_wrapper/link_options.tau"
     fi
 
     if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then
-        link_options_file="$optWrappersDir/dmapp_wrapper/link_options.tau"
+        link_options_file="$link_options_file $optWrappersDir/dmapp_wrapper/link_options.tau"
     fi
 
     if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then
-        link_options_file="$optWrappersDir/armci_wrapper/link_options.tau"
+        link_options_file="$link_options_file $optWrappersDir/armci_wrapper/link_options.tau"
     fi
 
     # The pthread and GOMP link options use -Wl,-wrap, which Apple's ld doesn't implement.
     if [ "$TAUARCH" != "apple" -a "$TAUARCH" != "arm64_apple" ] ; then
         if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau -a $optShared == $FALSE ] ; then
-            link_options_file="$optWrappersDir/pthread_wrapper/link_options.tau"
+            link_options_file="$link_options_file $optWrappersDir/pthread_wrapper/link_options.tau"
         fi
 
         if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then
-            link_options_file="$optWrappersDir/gomp_wrapper/link_options.tau"
+            link_options_file="$link_options_file $optWrappersDir/gomp_wrapper/link_options.tau"
         fi
     fi
 
     if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then
-        link_options_file="$optWrappersDir/mpcthread_wrapper/link_options.tau"
+        link_options_file="$link_options_file $optWrappersDir/mpcthread_wrapper/link_options.tau"
     fi
 
     if [ $trackUPCR == $TRUE ] ; then
         case $upc in
             berkeley)
                 if [ -r $optWrappersDir/upc/bupc/link_options.tau ] ; then
-                    link_options_file="$optWrappersDir/upc/bupc/link_options.tau"
+                    link_options_file="$link_options_file $optWrappersDir/upc/bupc/link_options.tau"
                 else
                     echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
                 fi
                 ;;
             xlupc)
                 if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
-                    link_options_file="$optWrappersDir/upc/xlupc/link_options.tau"
+                    link_options_file="$link_options_file $optWrappersDir/upc/xlupc/link_options.tau"
                 else
                     echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
                 fi
                 ;;
             gnu)
                 if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
-                    link_options_file="$optWrappersDir/upc/gupc/link_options.tau"
+                    link_options_file="$link_options_file $optWrappersDir/upc/gupc/link_options.tau"
                 else
                     echo "Warning: can't locate link_options.tau for GNU UPC runtime tracking"
                 fi
                 ;;
             cray)
                 if [ -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
-                    link_options_file="$optWrappersDir/upc/cray/link_options.tau"
+                    link_options_file="$link_options_file $optWrappersDir/upc/cray/link_options.tau"
                 else
                     echo "Warning: can't locate link_options.tau for CRAY UPC runtime tracking"
                 fi
@@ -468,7 +469,7 @@ setup_link_options() {
     fi
 
     if [ "x$tauWrapFile" != "x" ]; then
-        link_options_file="$tauWrapFile"
+        link_options_file="$link_options_file $tauWrapFile"
     fi
 
     link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
@@ -476,11 +477,18 @@ setup_link_options() {
         if [ $cat_link_file == $TRUE ]; then
             optLinking="$optLinking `cat $link_options_file` $optLinking"
         else
-            optLinking="$optLinking @$link_options_file $optLinking"
-            if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
-                echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
-                optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
-            fi
+            local response_files=""
+            local f
+            for f in $link_options_file ; do
+                response_files="$response_files @$f"
+            done
+            optLinking="$optLinking$response_files $optLinking"
+            case " $link_options_file " in
+                *" $optWrappersDir/pthread_wrapper/link_options.tau "*)
+                    echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                    optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
+                    ;;
+            esac
         fi
     fi
 }
