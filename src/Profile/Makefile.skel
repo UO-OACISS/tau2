@@ -392,13 +392,16 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 # The entries need two-level namespace binding, and libTauMpi must
 # not be included in the link line or its wrappers would be used as
 # the originals instead of the actual originals.
+# Some MPI compiler wrappers (e.g. Homebrew Open MPI's mpifort) add
+# -Wl,-flat_namespace, which would override the two-level binding.
 #APPLECXX#TAU_MPI_INTERPOSE = $(if $(strip $(TAU_MPI_FOR_SHARED)),yes) #ENDIF#
 ifeq ($(strip $(TAU_MPI_INTERPOSE)),yes)
 TAU_MPI_INTERPOSE_SRC_OBJS = $(TAU_MPI_FOR_SHARED) TauProfileMerge.o TauMetaDataMerge.o
 TAU_SHLIB_MPI_DEPS = TauMpiInterpose.stamp
 TAU_SHLIB_MPI_OBJS = $(TAU_MPI_INTERPOSE_SRC_OBJS:.o=.ip.o) TauMpiInterpose.o $(MPI_FORTRAN_INIT)
 TAU_SHLIB_ARFLAGS = -dynamiclib -undefined dynamic_lookup -o
-TAU_SHLIB_MPI_LIBS = $(filter-out -lTauMpi$(TAU_CONFIG),$(TAU_MPI_LIB) $(TAU_MPI_FLIB))
+TAU_FLAT_NAMESPACE_FLAG = -Wl,-flat_namespace
+TAU_SHLIB_MPI_LIBS = $(filter-out -lTauMpi$(TAU_CONFIG) $(TAU_FLAT_NAMESPACE_FLAG),$(TAU_MPI_LIB) $(TAU_MPI_FLIB))
 TAU_SHLIB_EXTRA_LIBS = $(filter-out $(MPI_WRAPPER),$(EXTRA_LIBS))
 else
 TAU_SHLIB_MPI_DEPS =

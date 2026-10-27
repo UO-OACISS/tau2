@@ -6458,8 +6458,9 @@ case $cxx_compiler in
                 echo "Using CLANG Compilers"
                 fixmakeargs="$fixmakeargs CLANG"
                 if [ $machine = apple -o $machine = arm64_apple ]; then
-                    # MPI on Apple OS X has issues with shared objects
-                    fixmakeargs="$fixmakeargs NOSHARED"
+                    gnu=yes
+                    fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
+                    fixmakeargs="$fixmakeargs APPLECXX"
                 else
                 # We currently do not support building the TAU LLVM plugin for macOS. This may change in the future.
                     build_llvm_plugin=yes
