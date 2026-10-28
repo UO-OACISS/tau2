@@ -373,7 +373,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	private final JLabel pickLabel = new JLabel(" ");
 
 	// Describes the hovered topology point; index follows the thread order used to build the plot values.
+	private int lastPickedIndex = -1;
+
 	private void showPickedPoint(edu.uoregon.tau.vis.Shape shape, int index) {
+		int effective = (shape != null && shape == topoPlot) ? index : -1;
+		if (effective == lastPickedIndex) {
+			return;
+		}
+		lastPickedIndex = effective;
 		String text = " ";
 		if (shape != null && shape == topoPlot && index >= 0) {
 			try {
@@ -401,6 +408,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			}
 		}
 		pickLabel.setText(text);
+		if (visRenderer != null) {
+			float[] pos = (shape != null && shape == topoPlot) ? topoPlot.getPointPosition(index) : null;
+			visRenderer.setHighlight(pos);
+			visRenderer.redraw();
+		}
 	}
 
 	private float getColorValue(Thread thread) {

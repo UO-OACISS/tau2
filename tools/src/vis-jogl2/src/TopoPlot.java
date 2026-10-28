@@ -487,6 +487,14 @@ public class TopoPlot extends ScatterPlot {
         return best;
     }
 
+    /** Plot-space position of point index (as rendered), or null. */
+    public float[] getPointPosition(int index) {
+        if (values == null || index < 0 || index >= values.length) {
+            return null;
+        }
+        return new float[] {values[index][0], values[index][1], values[index][2]};
+    }
+
     static boolean project(double[] m, double[] p, int[] vp, double x, double y, double z, double[] out) {
         double[] e = new double[4];
         for (int r = 0; r < 4; r++) {

@@ -153,12 +153,19 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         }
     }
 
-    private static final int PICK_DELAY_MS = 150;
+    private static final int PICK_INTERVAL_MS = 40;
     private static final double PICK_RADIUS_PX = 8.0;
     private volatile PickListener pickListener;
     private volatile PickView pickView;
     private javax.swing.Timer pickTimer;
     private int pendingPickX, pendingPickY, pendingPickW, pendingPickH;
+    private long lastPickNanos;
+    private volatile float[] highlight;
+
+    /** Marks a point (plot coordinates) with an overlay ring; null clears it. */
+    public void setHighlight(float[] position) {
+        this.highlight = position == null ? null : position.clone();
+    }
 
     public VisRenderer() {}
 
@@ -184,6 +191,8 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         }
     }
 
+    // Leading + trailing throttle: pick at once if the interval has elapsed, otherwise
+    // schedule one trailing pick that uses the most recent mouse position.
     private void schedulePick(MouseEvent e) {
         if (pickListener == null) {
             return;
@@ -193,14 +202,66 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         pendingPickW = Math.max(1, e.getComponent().getWidth());
         pendingPickH = Math.max(1, e.getComponent().getHeight());
         if (pickTimer == null) {
-            pickTimer = new javax.swing.Timer(PICK_DELAY_MS, new ActionListener() {
+            pickTimer = new javax.swing.Timer(PICK_INTERVAL_MS, new ActionListener() {
                 public void actionPerformed(ActionEvent ev) {
                     doPick();
                 }
             });
             pickTimer.setRepeats(false);
         }
-        pickTimer.restart();
+        if (pickTimer.isRunning()) {
+            return;
+        }
+        long elapsedMs = (System.nanoTime() - lastPickNanos) / 1000000L;
+        if (elapsedMs >= PICK_INTERVAL_MS) {
+            doPick();
+        } else {
+            pickTimer.setInitialDelay((int) Math.max(1, PICK_INTERVAL_MS - elapsedMs));
+            pickTimer.start();
+        }
+    }
+
+    // Screen-space ring: hollow and drawn last, so it hides neither the point's colour nor its neighbours.
+    private void drawHighlight(GL2 gl) {
+        float[] h = highlight;
+        PickView v = pickView;
+        if (h == null || v == null) {
+            return;
+        }
+        double[] win = new double[3];
+        if (!TopoPlot.project(v.model, v.projection, v.viewport, h[0], h[1], h[2], win)) {
+            return;
+        }
+        gl.glPushAttrib(GL2.GL_ENABLE_BIT | GL2.GL_LINE_BIT | GL2.GL_CURRENT_BIT | GL2.GL_TRANSFORM_BIT);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        gl.glOrtho(v.viewport[0], v.viewport[0] + v.viewport[2], v.viewport[1], v.viewport[1] + v.viewport[3], -1, 1);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        gl.glDisable(GL2.GL_LIGHTING);
+        gl.glDisable(GL2.GL_DEPTH_TEST);
+        gl.glDisable(GL2.GL_CULL_FACE);
+        // Dark outer ring plus light inner ring stays visible over any colour scale and background.
+        drawRing(gl, win[0], win[1], 9.0, 4.0f, 0f);
+        drawRing(gl, win[0], win[1], 9.0, 2.0f, 1f);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glPopAttrib();
+    }
+
+    private void drawRing(GL2 gl, double cx, double cy, double r, float width, float shade) {
+        gl.glLineWidth(width);
+        gl.glColor3f(shade, shade, shade);
+        gl.glBegin(GL2.GL_LINE_LOOP);
+        for (int i = 0; i < 24; i++) {
+            double a = 2 * Math.PI * i / 24;
+            gl.glVertex2d(cx + r * Math.cos(a), cy + r * Math.sin(a));
+        }
+        gl.glEnd();
     }
 
     private void doPick() {
@@ -209,6 +270,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         if (l == null || v == null) {
             return;
         }
+        lastPickNanos = System.nanoTime();
         // Mouse coordinates are in AWT units; the viewport is in (possibly HiDPI-scaled) pixels.
         double glX = v.viewport[0] + pendingPickX * (double) v.viewport[2] / pendingPickW;
         double glY = v.viewport[1] + (pendingPickH - pendingPickY) * (double) v.viewport[3] / pendingPickH;
@@ -674,6 +736,8 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             //        int err = gl.glGetError();
             //        if (err != GL.GL_NO_ERROR)
             //            System.out.println("err = " + glu.gluErrorString(err));
+
+            drawHighlight(gl);
 
             gl.glPopMatrix();
             framesRendered++;
