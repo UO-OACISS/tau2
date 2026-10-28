@@ -545,13 +545,36 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		} 
 		
-		else if (prefix.equals("Map")||prefix.equals("CRAY_PMI")) {
+		else if (prefix.equals("Map") || prefix.equals("CRAY_PMI")
+				|| SlurmTopologyLayout.SOURCE_NAME.equals(prefix)) {
 			
 			CoordMap map = null;
+			List<Thread> profileThreads = ppTrial.getDataSource().getAllThreads();
 			
-			if(prefix.equals("CRAY_PMI"))
+			if (SlurmTopologyLayout.SOURCE_NAME.equals(prefix)) {
+				List<SlurmTopologyLayout.Participant> participants =
+						new ArrayList<SlurmTopologyLayout.Participant>(profileThreads.size());
+				for (int i = 0; i < profileThreads.size(); i++) {
+					Thread thread = profileThreads.get(i);
+					String localId = getTopologyMetadata(thread, "SLURM_LOCALID");
+					if (localId == null || localId.isEmpty()) {
+						localId = getTopologyMetadata(thread, "CRAY_PMI_LOCAL_RANK");
+					}
+					participants.add(new SlurmTopologyLayout.Participant(
+							getTopologyMetadata(thread, "SLURM_TOPOLOGY_ADDR"),
+							getTopologyMetadata(thread, "SLURM_TOPOLOGY_ADDR_PATTERN"),
+							localId,
+							thread.getNodeID(), thread.getThreadID(), i));
+				}
+				SlurmTopologyLayout.Layout layout = SlurmTopologyLayout.create(participants);
+				if (layout == null) {
+					return values;
+				}
+				map = new CoordMap(layout.getMin(), layout.getMax(), layout.getCoordinates());
+			}
+			else if(prefix.equals("CRAY_PMI"))
 			{
-					CrayTopology[] ctopo = new CrayTopology[ppTrial.getDataSource().getNumThreads()];
+					CrayTopology[] ctopo = new CrayTopology[profileThreads.size()];
 					int i=0;
 					
 					//This metadata only shows up where it changes from the previous rank, so we need to check for it and use the previous value if it is absent.
@@ -563,9 +586,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					int y=0; 
 					int z=0;
 					
-					for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
-							.iterator(); it.hasNext();) {
-						Thread thread = it.next();
+					for (Thread thread : profileThreads) {
 
 						int mpirank = thread.getNodeID();
 						int threadID = thread.getThreadID();
@@ -671,9 +692,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			// int maxVix=settings.getMaxTopoRange();
 
 			int threadIndex = 0;
-			for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
-					.iterator(); it.hasNext();) {
-				Thread thread = it.next();
+			for (Thread thread : profileThreads) {
 
 				// String coord = thread.getMetaData().get(coord_key);
 				// if(coord==null){
@@ -1092,6 +1111,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			}
 
 		return values;
+	}
+
+	private String getTopologyMetadata(Thread thread, String key) {
+		String value = thread.getMetaData().get(key);
+		if (value == null) {
+			value = ppTrial.getDataSource().getMetaData().get(key);
+		}
+		return value;
 	}
 	
 	private void calculateTSize(int[] tempSize, int offset){

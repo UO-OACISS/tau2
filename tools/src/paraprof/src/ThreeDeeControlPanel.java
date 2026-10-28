@@ -740,7 +740,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
     
     private boolean checkDisableTopoWidgets(String topo){
-    	boolean b = (topo.equals(CUSTOM)||topo.equals("BGQ")||topo.equals(MAP)||topo.startsWith("Topo"));
+        boolean b = (topo.equals(CUSTOM) || topo.equals("BGQ") || topo.equals(MAP)
+                || topo.equals(SlurmTopologyLayout.SOURCE_NAME) || topo.startsWith("Topo"));
     	return !b;
     	
     }
@@ -789,12 +790,16 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         Vector<String> topos = ppTrial.getTopologyArray();
         
         //String[] a = new String[topos.size()];
+        if (!topos.contains(SlurmTopologyLayout.SOURCE_NAME)) {
+            topos.add(SlurmTopologyLayout.SOURCE_NAME);
+        }
         topos.add(CUSTOM);
         customTopoDex=topos.size()-1;
         topos.add(MAP);
 		//return topos;//topos.toArray(a);
         
         topoComboBox = new SteppedComboBox(topos);
+        topoComboBox.setToolTipText("The Slurm hierarchy source derives display coordinates from switch/node grouping; coordinates are not physical.");
         
 
         //topoComboBox.addItem("Custom");
