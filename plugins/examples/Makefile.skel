@@ -40,7 +40,7 @@ install: $(SHAREDLIBS)
 	$(TAU_INSTALL) $^ $(PLUGININSTALLDIR)
 
 libTAU-atomic-trigger$(TAU_SHLIBX): Tau_plugin_example_atomic_trigger.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-atomic-trigger$(TAU_SHLIBX) Tau_plugin_example_atomic_trigger.o
+	$(CXX) Tau_plugin_example_atomic_trigger.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-atomic-trigger$(TAU_SHLIBX)
 
 libTAU-sos-plugin$(TAU_SHLIBX): Tau_plugin_sos.o TauSOS.o
 	$(CXX) Tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin$(TAU_SHLIBX)
@@ -76,40 +76,40 @@ libTAU-monitoring-plugin$(TAU_SHLIBX): Tau_plugin_monitoring.o tau_nvml.o $(TAU_
 	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_monitoring.o tau_nvml.o $(TAU_PLUGIN_ROCM_SMI_O) $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SHLIBS) $(TAU_CUDA_LINKER_OPTS) $(TAU_ROCMSMI_LINKER_OPTS)
 
 libTAU-thread-summary-plugin$(TAU_SHLIBX): Tau_plugin_thread_summary.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin$(TAU_SHLIBX) Tau_plugin_thread_summary.o
+	$(CXX) Tau_plugin_thread_summary.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin$(TAU_SHLIBX)
 
 libTAU-memory-usage-async$(TAU_SHLIBX): Tau_plugin_example_memory_usage_async.o
-	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS)  libTAU-memory-usage-async$(TAU_SHLIBX) Tau_plugin_example_memory_usage_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_example_memory_usage_async.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-memory-usage-async$(TAU_SHLIBX)
 
 libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX): Tau_plugin_example_emulate_profile_snapshots_analysis_async.o
-	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX) Tau_plugin_example_emulate_profile_snapshots_analysis_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_example_emulate_profile_snapshots_analysis_async.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX)
 
 libTAU-analyze-node-profiles-async$(TAU_SHLIBX): Tau_plugin_example_analyze_node_profile_snapshots_async.o
-	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles-async$(TAU_SHLIBX) Tau_plugin_example_analyze_node_profile_snapshots_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_example_analyze_node_profile_snapshots_async.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles-async$(TAU_SHLIBX)
 
 libTAU-analyze-node-profiles$(TAU_SHLIBX): Tau_plugin_example_analyze_node_profile_snapshots.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles$(TAU_SHLIBX) Tau_plugin_example_analyze_node_profile_snapshots.o
+	$(CXX) Tau_plugin_example_analyze_node_profile_snapshots.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles$(TAU_SHLIBX)
 
 libTAU-filter-plugin$(TAU_SHLIBX): Tau_plugin_example_disable_instrumentation_runtime.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin$(TAU_SHLIBX) Tau_plugin_example_disable_instrumentation_runtime.o
+	$(CXX) Tau_plugin_example_disable_instrumentation_runtime.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin$(TAU_SHLIBX)
 
 libTAU-selective-tracing$(TAU_SHLIBX): Tau_plugin_example_selective_tracing.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-selective-tracing$(TAU_SHLIBX) Tau_plugin_example_selective_tracing.o
+	$(CXX) Tau_plugin_example_selective_tracing.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-selective-tracing$(TAU_SHLIBX)
 
 libTAU-snapshot-trigger$(TAU_SHLIBX): Tau_plugin_example_profile_snapshot_trigger.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-snapshot-trigger$(TAU_SHLIBX) Tau_plugin_example_profile_snapshot_trigger.o
+	$(CXX) Tau_plugin_example_profile_snapshot_trigger.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-snapshot-trigger$(TAU_SHLIBX)
 
 libTAU-mpit-exchange-data$(TAU_SHLIBX): Tau_plugin_example_mpit_exchange_pvar_data.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-exchange-data$(TAU_SHLIBX) Tau_plugin_example_mpit_exchange_pvar_data.o
+	$(CXX) Tau_plugin_example_mpit_exchange_pvar_data.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-exchange-data$(TAU_SHLIBX)
 
 libTAU-analyze-profiles$(TAU_SHLIBX): Tau_plugin_example_analyze_profile_snapshots.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-profiles$(TAU_SHLIBX) Tau_plugin_example_analyze_profile_snapshots.o
+	$(CXX) Tau_plugin_example_analyze_profile_snapshots.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-profiles$(TAU_SHLIBX)
 
 libTAU-load-balance-async$(TAU_SHLIBX): Tau_plugin_example_load_balance_async.o
-	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance-async$(TAU_SHLIBX) Tau_plugin_example_load_balance_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_example_load_balance_async.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance-async$(TAU_SHLIBX)
 
 libTAU-load-balance$(TAU_SHLIBX): Tau_plugin_example_load_balance.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance$(TAU_SHLIBX) Tau_plugin_example_load_balance.o
+	$(CXX) Tau_plugin_example_load_balance.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance$(TAU_SHLIBX)
 
 Tau_plugin_example_atomic_trigger.o: Tau_plugin_example_atomic_trigger.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
@@ -196,13 +196,13 @@ Tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX) : Tau_plugin_example_mpit_recommend_sharp_usage.o
-	 $(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX)  Tau_plugin_example_mpit_recommend_sharp_usage.o
+	 $(CXX) Tau_plugin_example_mpit_recommend_sharp_usage.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX)
 
 Tau_plugin_example_mpit_recommend_sharp_usage.o: Tau_plugin_example_mpit_recommend_sharp_usage.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX): Tau_plugin_example_free_unused_vbufs.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX) Tau_plugin_example_free_unused_vbufs.o
+	$(CXX) Tau_plugin_example_free_unused_vbufs.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX)
 
 Tau_plugin_example_free_unused_vbufs.o: Tau_plugin_example_mpit_mvapich_free_unused_vbufs.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@

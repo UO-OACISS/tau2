@@ -14120,7 +14120,7 @@ if [ $mrnet = yes ] ; then
 fi
 
 case "$machine" in
-ia64|x86_64|i386_linux|bgp|bgq|mips|mips32|ibm64linux|ppc64)
+ia64|x86_64|i386_linux|bgp|bgq|mips|mips32|ibm64linux|ppc64|arm64_linux|craycnl)
     enable_export_dynamic="yes"
     ;;
 apple)
