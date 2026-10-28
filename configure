@@ -3917,6 +3917,42 @@ EOF
 	fi
 fi
 
+#Check for rocm version 10 or newer, we drop support for rocprofiler and roctracer
+# with ROCm 10 as they have been deprecated since ROCm 7. 
+#Users should use rocprofiler-SDK. If users selected rocprofiler or roctracer
+# with ROCm 10, show an error message and fail the configuration.
+if [ "x$rocmv6" = "xyes" ]; then
+if [ "$roctracer" = "yes" ] || [ "$rocprofiler" = "yes" ]; then
+cat <<EOF > tau_rocm10_vtest.c
+#include <rocm_version.h>
+
+#if (ROCM_VERSION_MAJOR > 9)
+#error "ROCM version is 10 or higher"
+#endif
+EOF
+	if [ "x$rocmcore_dir" = "x" ]; then
+		rocmcore_dir=$rocmdir
+	fi
+	if [ -d $rocmcore_dir/include/rocm-core ]; then
+		if [ $c_compiler = default ]
+        then
+            c_compiler=cc
+        fi
+		if  $c_compiler $orig_useropt -c tau_rocm10_vtest.c -I$rocmcore_dir/include/rocm-core 1> /dev/null 2>&1
+		then
+			rm tau_rocm10_vtest.o
+		else
+            echo "Error: TAU does not support rocprofiler nor roctracer with ROCm 10 or newer"
+            echo "Error: Please use -rocprofsdk"
+			exit 1
+		fi
+	else
+		rocmv6=no
+	fi
+fi
+fi
+
+
 if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "no" ]; then
     echo "For rocprofv2 use rocm/6 or newer!"
     exit 1

@@ -2686,10 +2686,13 @@ else
           evalWithDebugMessage "$newCmd" "Linking (Together) object files"
           linkStatus=$?
 
-          if [ ! -e $passedOutputFile ] ; then
+          # A failed link can leave an older output file in place
+          if [ $linkStatus != 0 ] ; then
+              printError "$CMD" "$newCmd"
+          elif [ ! -e $passedOutputFile ] ; then
               echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
               printError "$CMD" "$newCmd"
-          elif [ $linkStatus == 0 ]; then
+          else
               run_dsymutil "$passedOutputFile"
           fi
 

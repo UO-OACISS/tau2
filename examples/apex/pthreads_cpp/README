@@ -1,0 +1,200 @@
+#This example uses APEX configured by TAU with pthreads support.
+
+Example configuration with oneAPI:
+$ ./configure -bfd=download -cc=icx -c++=icpx -level_zero -apex -zerosum -pthread
+$ make install -j
+
+To use this example:
+$ make clean
+$ make
+$ tau_exec -T serial,pthread -apex ./matmult
+  ___  ______ _______   __
+ / _ \ | ___ \  ___\ \ / /
+/ /_\ \| |_/ / |__  \ V /
+|  _  ||  __/|  __| /   \
+| | | || |   | |___/ /^\ \
+\_| |_/\_|   \____/\/   \/
+
+APEX Version: v2.7.1-2bd7ac2c-develop
+Built on: 05:08:42 Oct 28 2026 (RelWithDebInfo)
+C++ Language Standard version : 201703
+Intel Compiler version : Intel(R) oneAPI DPC++/C++ Compiler 2026.1.0 (2026.1.0.20260617)
+Configured features: Pthread, BFD, L0, OPENCL, PLUGINS
+
+Executing command line: ./matmult
+
+Spawned thread 1...
+Spawned thread 2...
+Spawned thread 3...
+Done.
+
+
+
+
+
+$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           24          269           1           1     269372 .TAU application
+ 91.1            3          245           1           3     245315 int taupreload_main(int, char **, char **)
+ 88.8        0.028          239           1           1     239126 int apex_preload_main(int, char **, char **)
+ 88.8        0.062          239           1           7     239098 main
+ 81.9        0.102          220           1          11     220498 do_work
+ 61.2          164          164           1           0     164897 compute
+ 18.4           49           49           1           0      49676 compute_interchange
+  7.7           20           20           4           0       5152 pthread_join
+  1.8            4            4           3           0       1576 allocateMatrix
+  0.4            1            1           3           0        343 initialize
+  0.1        0.179        0.179           4           0         45 pthread_create
+  0.0        0.067        0.067           3           0         22 freeMatrix
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1          3          3          3          0  1 Minute Load average
+         1          3          3          3          0  1 Minute Load average : .TAU application => int taupreload_main(int, char **, char **)
+         1          2          2          2          0  status:Threads
+         1          2          2          2          0  status:Threads : .TAU application => int taupreload_main(int, char **, char **)
+         1  1.074E+04  1.074E+04  1.074E+04          0  status:VmData kB
+         1  1.074E+04  1.074E+04  1.074E+04          0  status:VmData kB : .TAU application => int taupreload_main(int, char **, char **)
+         1         72         72         72          0  status:VmExe kB
+         1         72         72         72          0  status:VmExe kB : .TAU application => int taupreload_main(int, char **, char **)
+         1   1.42E+04   1.42E+04   1.42E+04          0  status:VmHWM kB
+         1   1.42E+04   1.42E+04   1.42E+04          0  status:VmHWM kB : .TAU application => int taupreload_main(int, char **, char **)
+         1          0          0          0          0  status:VmLck kB
+         1          0          0          0          0  status:VmLck kB : .TAU application => int taupreload_main(int, char **, char **)
+         1   2.21E+04   2.21E+04   2.21E+04          0  status:VmLib kB
+         1   2.21E+04   2.21E+04   2.21E+04          0  status:VmLib kB : .TAU application => int taupreload_main(int, char **, char **)
+         1         96         96         96          0  status:VmPTE kB
+         1         96         96         96          0  status:VmPTE kB : .TAU application => int taupreload_main(int, char **, char **)
+         1  1.854E+05  1.854E+05  1.854E+05          0  status:VmPeak kB
+         1  1.854E+05  1.854E+05  1.854E+05          0  status:VmPeak kB : .TAU application => int taupreload_main(int, char **, char **)
+         1          0          0          0          0  status:VmPin kB
+         1          0          0          0          0  status:VmPin kB : .TAU application => int taupreload_main(int, char **, char **)
+         1  1.413E+04  1.413E+04  1.413E+04          0  status:VmRSS kB
+         1  1.413E+04  1.413E+04  1.413E+04          0  status:VmRSS kB : .TAU application => int taupreload_main(int, char **, char **)
+         1  1.207E+05  1.207E+05  1.207E+05          0  status:VmSize kB
+         1  1.207E+05  1.207E+05  1.207E+05          0  status:VmSize kB : .TAU application => int taupreload_main(int, char **, char **)
+         1        140        140        140          0  status:VmStk kB
+         1        140        140        140          0  status:VmStk kB : .TAU application => int taupreload_main(int, char **, char **)
+         1          0          0          0          0  status:VmSwap kB
+         1          0          0          0          0  status:VmSwap kB : .TAU application => int taupreload_main(int, char **, char **)
+         1          2          2          2          0  status:nonvoluntary_ctxt_switches
+         1          2          2          2          0  status:nonvoluntary_ctxt_switches : .TAU application => int taupreload_main(int, char **, char **)
+         1          9          9          9          0  status:voluntary_ctxt_switches
+         1          9          9          9          0  status:voluntary_ctxt_switches : .TAU application => int taupreload_main(int, char **, char **)
+---------------------------------------------------------------------------------------
+
+NODE 0;CONTEXT 0;THREAD 1:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            2          242           1           1     242571 .TAU application
+ 99.0        0.204          240           1           1     240223 [PTHREAD] addr=<7fa3e3757da0>
+ 98.9          240          240           1           0     240019 proc_data_reader::read_proc
+
+NODE 0;CONTEXT 0;THREAD 2:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            6          234           1           1     234947 .TAU application
+ 97.1            1          228           1           1     228105 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_local_data()
+ 96.6         0.06          226           1          11     226866 do_work
+ 68.9          161          161           1           0     161894 compute
+ 20.1           47           47           1           0      47293 compute_interchange
+  7.0           16           16           3           0       5512 allocateMatrix
+  0.4            1            1           3           0        340 initialize
+  0.0        0.063        0.063           3           0         21 freeMatrix
+
+NODE 0;CONTEXT 0;THREAD 3:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            6          233           1           1     233249 .TAU application
+ 97.1        0.066          226           1           1     226469 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_local_data()
+ 97.1        0.072          226           1          11     226403 do_work
+ 69.9          163          163           1           0     163021 compute
+ 19.6           45           45           1           0      45806 compute_interchange
+  7.0           16           16           3           0       5458 allocateMatrix
+  0.5            1            1           3           0        353 initialize
+  0.0        0.071        0.071           3           0         24 freeMatrix
+
+NODE 0;CONTEXT 0;THREAD 4:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            6          236           1           1     236682 .TAU application
+ 97.2        0.052          229           1           1     229949 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_local_data()
+ 97.1        0.065          229           1          11     229897 do_work
+ 70.0          165          165           1           0     165610 compute
+ 19.8           46           46           1           0      46795 compute_interchange
+  6.9           16           16           3           0       5445 allocateMatrix
+  0.4            1            1           3           0        342 initialize
+  0.0        0.067        0.067           3           0         22 freeMatrix
+
+FUNCTION SUMMARY (total):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           46        1,216           5           5     243364 .TAU application
+ 74.3        0.299          903           4          44     225916 do_work
+ 56.3            1          684           3           3     228174 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_local_data()
+ 53.9          655          655           4           0     163856 compute
+ 20.2            3          245           1           3     245315 int taupreload_main(int, char **, char **)
+ 19.7        0.204          240           1           1     240223 [PTHREAD] addr=<7fa3e3757da0>
+ 19.7          240          240           1           0     240019 proc_data_reader::read_proc
+ 19.7        0.028          239           1           1     239126 int apex_preload_main(int, char **, char **)
+ 19.6        0.062          239           1           7     239098 main
+ 15.6          189          189           4           0      47392 compute_interchange
+  4.4           53           53          12           0       4498 allocateMatrix
+  1.7           20           20           4           0       5152 pthread_join
+  0.3            4            4          12           0        344 initialize
+  0.0        0.268        0.268          12           0         22 freeMatrix
+  0.0        0.179        0.179           4           0         45 pthread_create
+
+FUNCTION SUMMARY (mean):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            9          243           1           1     243364 .TAU application
+ 74.3       0.0598          180         0.8         8.8     225916 do_work
+ 56.3        0.271          136         0.6         0.6     228174 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_local_data()
+ 53.9          131          131         0.8           0     163855 compute
+ 20.2        0.788           49         0.2         0.6     245315 int taupreload_main(int, char **, char **)
+ 19.7       0.0408           48         0.2         0.2     240223 [PTHREAD] addr=<7fa3e3757da0>
+ 19.7           48           48         0.2           0     240019 proc_data_reader::read_proc
+ 19.7       0.0056           47         0.2         0.2     239126 int apex_preload_main(int, char **, char **)
+ 19.6       0.0124           47         0.2         1.4     239098 main
+ 15.6           37           37         0.8           0      47392 compute_interchange
+  4.4           10           10         2.4           0       4498 allocateMatrix
+  1.7            4            4         0.8           0       5152 pthread_join
+  0.3        0.827        0.827         2.4           0        344 initialize
+  0.0       0.0536       0.0536         2.4           0         22 freeMatrix
+  0.0       0.0358       0.0358         0.8           0         45 pthread_create
+
+
+
+
+
+
+
+
+# With independent APEX installation
+If you already have an APEX installation, you need to enable APEX and also provide the path
+ to the apex library.
+
+As an example:
+$ APEX_TAU=1 tau_exec -T serial -loadlib=/home/users/jalcaraz/apex/lib/libapex.so ./matmult
