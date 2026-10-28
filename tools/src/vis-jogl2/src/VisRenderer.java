@@ -135,7 +135,94 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private VisCanvasListener visCanvasListener;
     private boolean listenerInit=false;
+
+    /** Receives hover-pick results; index is -1 when nothing is under the cursor. */
+    public interface PickListener {
+        void picked(Shape shape, int index);
+    }
+
+    private static final class PickView {
+        final double[] model;
+        final double[] projection;
+        final int[] viewport;
+
+        PickView(double[] model, double[] projection, int[] viewport) {
+            this.model = model;
+            this.projection = projection;
+            this.viewport = viewport;
+        }
+    }
+
+    private static final int PICK_DELAY_MS = 150;
+    private static final double PICK_RADIUS_PX = 8.0;
+    private volatile PickListener pickListener;
+    private volatile PickView pickView;
+    private javax.swing.Timer pickTimer;
+    private int pendingPickX, pendingPickY, pendingPickW, pendingPickH;
+
     public VisRenderer() {}
+
+    /** Enables hover picking of points; pass null to disable. Picking never alters camera handling. */
+    public void setPickListener(PickListener pickListener) {
+        this.pickListener = pickListener;
+        if (pickListener == null) {
+            cancelPick();
+        }
+    }
+
+    private void cancelPick() {
+        if (pickTimer != null) {
+            pickTimer.stop();
+        }
+    }
+
+    private void clearPick() {
+        cancelPick();
+        PickListener l = pickListener;
+        if (l != null) {
+            l.picked(null, -1);
+        }
+    }
+
+    private void schedulePick(MouseEvent e) {
+        if (pickListener == null) {
+            return;
+        }
+        pendingPickX = e.getX();
+        pendingPickY = e.getY();
+        pendingPickW = Math.max(1, e.getComponent().getWidth());
+        pendingPickH = Math.max(1, e.getComponent().getHeight());
+        if (pickTimer == null) {
+            pickTimer = new javax.swing.Timer(PICK_DELAY_MS, new ActionListener() {
+                public void actionPerformed(ActionEvent ev) {
+                    doPick();
+                }
+            });
+            pickTimer.setRepeats(false);
+        }
+        pickTimer.restart();
+    }
+
+    private void doPick() {
+        PickListener l = pickListener;
+        PickView v = pickView;
+        if (l == null || v == null) {
+            return;
+        }
+        // Mouse coordinates are in AWT units; the viewport is in (possibly HiDPI-scaled) pixels.
+        double glX = v.viewport[0] + pendingPickX * (double) v.viewport[2] / pendingPickW;
+        double glY = v.viewport[1] + (pendingPickH - pendingPickY) * (double) v.viewport[3] / pendingPickH;
+        for (Shape shape : new ArrayList<Shape>(shapes)) {
+            if (shape instanceof TopoPlot) {
+                int index = ((TopoPlot) shape).pick(v.model, v.projection, v.viewport, glX, glY, PICK_RADIUS_PX);
+                if (index >= 0) {
+                    l.picked(shape, index);
+                    return;
+                }
+            }
+        }
+        l.picked(null, -1);
+    }
 
     /**
      * Set the handler for VisCanvas events.  When a canvas change is needed, 
@@ -569,6 +656,16 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
             }
 
+            if (pickListener != null) {
+                double[] model = new double[16];
+                double[] projection = new double[16];
+                int[] viewport = new int[4];
+                gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, model, 0);
+                gl.glGetDoublev(GL2.GL_PROJECTION_MATRIX, projection, 0);
+                gl.glGetIntegerv(GL2.GL_VIEWPORT, viewport, 0);
+                pickView = new PickView(model, projection, viewport);
+            }
+
             for (int i = 0; i < shapes.size(); i++) {
                 Shape shape = shapes.get(i);
                 shape.render(this);
@@ -641,13 +738,19 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     // MouseListener implementation
     public void mouseEntered(MouseEvent e) {}
 
-    public void mouseExited(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {
+        clearPick();
+    }
 
     public void mouseClicked(MouseEvent e) {}
 
-    public void mouseMoved(MouseEvent e) {}
+    // Only fires with no button down, so it cannot interfere with rotate/translate drags.
+    public void mouseMoved(MouseEvent e) {
+        schedulePick(e);
+    }
 
     public void mousePressed(MouseEvent e) {
+        clearPick();
         prevMouseX = e.getX();
         prevMouseY = e.getY();
         if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
@@ -689,6 +792,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     // Zoom in and out with the mouse wheel
     public void mouseWheelMoved(MouseWheelEvent e) {
+        clearPick();
         int scrollAmount = e.getWheelRotation();
         if (scrollAmount > 0) {
             zoomOut();

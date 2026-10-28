@@ -890,6 +890,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 				return topos;
 			}
 			boolean foundCray=false;
+			boolean foundSlurm=false;
+			boolean foundCrayName=false;
 			keys = base.getMetaData().keySet();
 			for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
 				String key = it.next().name;
@@ -903,6 +905,16 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 					foundTopo=true;
 					foundCray=true;
 				}
+				if(key.equals("SLURM_TOPOLOGY_ADDR")){
+					foundSlurm=true;
+				}
+				if(key.equals("CRAY_NODENAME")){
+					foundCrayName=true;
+				}
+			}
+			// Without Cray node names the legacy Cray source cannot be laid out; prefer the Slurm hierarchy.
+			if(foundSlurm&&!foundCrayName&&!topos.contains(SlurmTopologyLayout.SOURCE_NAME)){
+				topos.add(0,SlurmTopologyLayout.SOURCE_NAME);
 			}
 		}
 		

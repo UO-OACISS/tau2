@@ -451,6 +451,60 @@ public class TopoPlot extends ScatterPlot {
     	return true;
     }
     
+    /**
+     * Returns the index of the visible point nearest the given window position (GL pixel
+     * coordinates, origin bottom-left) within radius pixels, or -1. Ties between overlapping
+     * points go to the one nearer the camera. Matrices are column-major as returned by OpenGL.
+     */
+    public int pick(double[] model, double[] projection, int[] viewport, double winX, double winY, double radius) {
+        float[][] v = values;
+        if (v == null || !visible) {
+            return -1;
+        }
+        int best = -1;
+        double bestDist = radius * radius;
+        double bestDepth = Double.MAX_VALUE;
+        double[] win = new double[3];
+        for (int i = 0; i < v.length; i++) {
+            if (!checkCoord(i)) {
+                continue;
+            }
+            if (!project(model, projection, viewport, v[i][0], v[i][1], v[i][2], win)) {
+                continue;
+            }
+            double dx = win[0] - winX;
+            double dy = win[1] - winY;
+            double d = dx * dx + dy * dy;
+            if (d > radius * radius) {
+                continue;
+            }
+            if (best < 0 || d < bestDist - 1.0 || (d <= bestDist + 1.0 && win[2] < bestDepth)) {
+                best = i;
+                bestDist = Math.min(d, bestDist);
+                bestDepth = win[2];
+            }
+        }
+        return best;
+    }
+
+    static boolean project(double[] m, double[] p, int[] vp, double x, double y, double z, double[] out) {
+        double[] e = new double[4];
+        for (int r = 0; r < 4; r++) {
+            e[r] = m[r] * x + m[4 + r] * y + m[8 + r] * z + m[12 + r];
+        }
+        double[] c = new double[4];
+        for (int r = 0; r < 4; r++) {
+            c[r] = p[r] * e[0] + p[4 + r] * e[1] + p[8 + r] * e[2] + p[12 + r] * e[3];
+        }
+        if (c[3] <= 0) {
+            return false;
+        }
+        out[0] = vp[0] + (c[0] / c[3] + 1) * 0.5 * vp[2];
+        out[1] = vp[1] + (c[1] / c[3] + 1) * 0.5 * vp[3];
+        out[2] = (c[2] / c[3] + 1) * 0.5;
+        return true;
+    }
+
     private void privateRender(GLAutoDrawable glDrawable) {
         if (values == null)
             return;
