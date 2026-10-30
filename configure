@@ -4378,13 +4378,20 @@ configure_perfexplorer () {
             gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
             gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
             gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
+            # JOGL 2.6.0: 2.5.0 crashes in AppKit on macOS 26 when a 3D window opens
+            cp tools/src/contrib/jogl/apple/gluegen-rt.jar $JARTARGET/gluegen-rt.jar
+            cp tools/src/contrib/jogl/apple/jogl-all.jar $JARTARGET/jogl-all.jar
             cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET #/gluegen-rt-natives.jar
             cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET #/jogl-all-natives.jar
 
             ;;
 
          arm64_apple)
-            tar -xzf tools/src/contrib/jogl/arm64_apple/jogl-glob.tgz -C $JARTARGET
+            # Same universal (x86_64 and arm64) JOGL 2.6.0 jars as apple
+            cp tools/src/contrib/jogl/apple/gluegen-rt.jar $JARTARGET/gluegen-rt.jar
+            cp tools/src/contrib/jogl/apple/jogl-all.jar $JARTARGET/jogl-all.jar
+            cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET
+            cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET
 
             ;;
 

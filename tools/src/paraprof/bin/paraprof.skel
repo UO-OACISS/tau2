@@ -100,15 +100,11 @@ fi
 
 JOGL1_JARS=${JARDIR}/vis.jar:${JARDIR}/jogl.jar
 DEFAULT_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}
-ARM_OSX_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-java3d.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar
 
 JOGL_JARS=${JOGL1_JARS}
 
 if [ "$FLAGJOGL2" = "1" ]; then
 	JOGL_JARS=${DEFAULT_JOGL2_JARS}
-	if [ "$MACHINE" = "arm64_apple" ]; then
-		JOGL_JARS=${ARM_OSX_JOGL2_JARS}
-	fi 
 fi
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JOGL_JARS}:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
