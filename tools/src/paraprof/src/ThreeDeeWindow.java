@@ -534,6 +534,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	private int[][] coords = null;
 
 	private CoordMap buildSlurmMap(List<Thread> profileThreads) {
+		return buildSlurmMap(profileThreads, SlurmTopologyLayout.ParticipantLayout.FLAT);
+	}
+
+	private CoordMap buildSlurmMap(List<Thread> profileThreads,
+			SlurmTopologyLayout.ParticipantLayout participantLayout) {
 		List<SlurmTopologyLayout.Participant> participants =
 				new ArrayList<SlurmTopologyLayout.Participant>(profileThreads.size());
 		for (int i = 0; i < profileThreads.size(); i++) {
@@ -547,7 +552,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					getTopologyMetadata(thread, "SLURM_TOPOLOGY_ADDR_PATTERN"),
 					localId, thread.getNodeID(), thread.getThreadID(), i));
 		}
-		SlurmTopologyLayout.Layout layout = SlurmTopologyLayout.create(participants);
+		SlurmTopologyLayout.Layout layout = SlurmTopologyLayout.create(participants, participantLayout);
 		if (layout == null) {
 			return null;
 		}
@@ -694,13 +699,19 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		} 
 		
 		else if (prefix.equals("Map") || prefix.equals("CRAY_PMI")
-				|| SlurmTopologyLayout.SOURCE_NAME.equals(prefix)) {
+				|| SlurmTopologyLayout.SOURCE_NAME.equals(prefix)
+				|| SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(prefix)) {
 			
 			CoordMap map = null;
 			List<Thread> profileThreads = ppTrial.getDataSource().getAllThreads();
 			
-			if (SlurmTopologyLayout.SOURCE_NAME.equals(prefix)) {
-				map = buildSlurmMap(profileThreads);
+			if (SlurmTopologyLayout.SOURCE_NAME.equals(prefix)
+					|| SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(prefix)) {
+				SlurmTopologyLayout.ParticipantLayout participantLayout =
+						SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(prefix)
+								? SlurmTopologyLayout.ParticipantLayout.THREADS_ON_Z
+								: SlurmTopologyLayout.ParticipantLayout.FLAT;
+				map = buildSlurmMap(profileThreads, participantLayout);
 				if (map == null) {
 					return values;
 				}
