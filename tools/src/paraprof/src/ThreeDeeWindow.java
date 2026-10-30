@@ -144,10 +144,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		settings.setTopoMetric(ppTrial.getDefaultMetric(), 2);
 		settings.setTopoMetric(ppTrial.getDefaultMetric(), 3);
 
-		List<String> tList = ppTrial.getTopologyArray();
+		List<String> tList = TopologyLayoutOptions.forTrial(ppTrial);
 
 		String topoc = null;
-		if (tList != null && tList.size() > 0)
+		if (!tList.isEmpty())
 			topoc = tList.get(0);
 		if (topoc != null)
 			settings.setTopoCart(topoc);
@@ -718,6 +718,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			}
 			else if(prefix.equals("CRAY_PMI"))
 			{
+				{
 					CrayTopology[] ctopo = new CrayTopology[profileThreads.size()];
 					int i=0;
 					
@@ -744,18 +745,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						else{
 							coreid=0;
 						}
-						if(thread.getMetaData().containsKey("CRAY_NODENAME"));
-						{
-							String tempnodename = thread.getMetaData().get("CRAY_NODENAME");
-							if(tempnodename!=null){
-								nodename=tempnodename;
-							}
-							else {
-								//In some cases, where these values are the same for all threads, thread metadata won't return them. They need to be acquired from top level metadata.
-								tempnodename = ppTrial.getDataSource().getMetaData().get("CRAY_NODENAME");
-								if(tempnodename!=null){
-									nodename=tempnodename;
-								}
+						String tempnodename = thread.getMetaData().get("CRAY_NODENAME");
+						if (tempnodename != null) {
+							nodename = tempnodename;
+						} else if (nodename.isEmpty()) {
+							// Metadata may be stored once at trial level or only where it changes.
+							String trialNodeName = ppTrial.getDataSource().getMetaData().get("CRAY_NODENAME");
+							if (trialNodeName != null) {
+								nodename = trialNodeName;
 							}
 						}
 						String nodeids = thread.getMetaData().get("CRAY_PMI_NODEID");
@@ -792,31 +789,18 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						}
 						
 						
-						//System.out.println(mpirank);
+						int nodeMarker = nodename == null ? -1 : nodename.indexOf('n');
+						if (nodeMarker < 0 || nodeMarker + 1 >= nodename.length()) {
+							throw new IllegalStateException(
+									"Incomplete CRAY_PMI metadata at rank " + mpirank);
+						}
 						CrayTopology ct = new CrayTopology(mpirank,nodename,nodeid,x,y,z,coreid);
 						//System.out.println(ct.toString());
 						ctopo[i]=ct;
 						i++;
 					}
-					boolean haveNodeNames = true;
-					for (CrayTopology ct : ctopo) {
-						if (ct.cname == null || ct.cname.indexOf('n') < 0
-								|| ct.cname.substring(ct.cname.indexOf('n') + 1).isEmpty()) {
-							haveNodeNames = false;
-							break;
-						}
-					}
-					if (haveNodeNames) {
-						map = ThreeDeeGeneralPlotUtils.processCrayCoordinates(ctopo);
-					} else {
-						// CRAY_NODENAME is absent (e.g. Slurm systems such as Frontier); use the derived hierarchy if present.
-						map = buildSlurmMap(profileThreads);
-						if (map == null) {
-							return values;
-						}
-					}
-					
-				
+					map = ThreeDeeGeneralPlotUtils.processCrayCoordinates(ctopo);
+				}
 			}
 			else{
 			String fileLoc = settings.getTopoMapFile();

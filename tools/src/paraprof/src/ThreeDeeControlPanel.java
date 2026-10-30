@@ -729,11 +729,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     private Vector<String> getTopologyChoices() {
         Set<String> choices = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-        choices.addAll(ppTrial.getTopologyArray());
+        choices.addAll(TopologyLayoutOptions.forTrial(ppTrial));
         choices.remove(CUSTOM);
         choices.remove(MAP);
-        choices.add(SlurmTopologyLayout.SOURCE_NAME);
-        choices.add(SlurmTopologyLayout.THREADS_ON_Z_NAME);
         choices.addAll(customTopologyNames);
 
         Vector<String> ordered = new Vector<String>(choices);

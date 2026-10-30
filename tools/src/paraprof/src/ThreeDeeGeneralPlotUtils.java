@@ -498,9 +498,6 @@ public class ThreeDeeGeneralPlotUtils {
 			super();
 			this.mpirank = mpirank;
 			this.cname = cname;
-			if(cname==null||cname.length()==0) {
-				System.out.println("Warning: Cray Node Name Empty or Null on rank: "+mpirank);
-			}
 			this.nid = nid;
 			this.x = x;
 			this.y = y;
