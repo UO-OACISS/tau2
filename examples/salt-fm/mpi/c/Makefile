@@ -2,7 +2,7 @@ TAU_MAKEFILE ?=../../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
-CC = TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optSaltInst
+CC = TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optSaltInst -optNoRevert
 
 CFLAGS = -g -O2
 

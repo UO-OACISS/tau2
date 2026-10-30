@@ -1,19 +1,13 @@
 This example is f90_mpif with the mpi module (use mpi) instead of
 include "mpif.h".
 
-NOTE: As of SALT-FM v0.6.0, this example works only with the Flang that
-SALT-FM is built with. SALT-FM must read the mpi module files, so MPI must
-be built with that Flang, and TAU must be configured with that Flang and that
-MPI:
-$ ./configure -cc=clang -c++=clang++ -fortran=flang -mpi \
-    -mpiinc=<mpidir>/include -mpilib=<mpidir>/lib
-$ make install
+NOTE: As of SALT-FM v0.6.0, the only supported build is to build this example
+and the MPI implementation with the same Flang that SALT-FM uses. With any
+other compiler, this example is expected to fail. Support for "use mpi" with
+other compilers is planned for SALT-FM v0.7.0, which should be out soon.
 
-The Makefile sets SALT_BUILD_USES_SALT_FLANG=1, which tells SALT-FM to use
-the build's .mod files and MPI's. Without it, saltfm fails with:
-error: Cannot parse module file for module 'mpi': Source file 'mpi.saltmod' was not found
-
-To use it:
+The Makefile sets SALT_BUILD_USES_SALT_FLANG=1, which tells SALT-FM to read
+the .mod files from the build and from MPI. To use it:
 $ export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-clang-mpi
 $ ./run.sh
 

@@ -2,7 +2,9 @@ This directory contains examples that use SALT-FM to instrument C, C++, and
 Fortran programs. SALT-FM is an LLVM-based source instrumentor. It parses each
 source with Clang or Flang and writes an instrumented copy. With
 -optSaltInst, the TAU compiler scripts (tau_cc.sh, tau_cxx.sh, and tau_f90.sh)
-run SALT-FM and then compile its output.
+run SALT-FM and then compile its output. The Makefiles also pass
+-optNoRevert, so the build stops if SALT-FM fails instead of compiling the
+uninstrumented source.
 
 To install SALT-FM with Spack:
 $ ./install_salt.sh
@@ -35,6 +37,10 @@ mpi             - C, C++, and Fortran with MPI. TAU must be configured with
 direct          - Runs saltfm by hand and compiles its output with the flags
                   from the TAU Makefile, without the TAU compiler scripts.
 
-These examples were tested with TAU configured with:
+These examples were tested with TAU configured with Clang and Flang, and with
+GCC, G++, and GFortran:
 $ ./configure -cc=clang -c++=clang++ -fortran=flang
-and with -openmp -ompt or -mpi added, as each directory's README shows.
+$ ./configure -cc=gcc -c++=g++ -fortran=gfortran
+with -openmp -ompt or -mpi added, as each directory's README shows. With GCC,
+the TAU Makefile names have no compiler suffix (for example, Makefile.tau-mpi
+instead of Makefile.tau-clang-mpi).

@@ -2,7 +2,7 @@ TAU_MAKEFILE ?=../../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
-F90 = TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_f90.sh -optSaltInst
+F90 = TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_f90.sh -optSaltInst -optNoRevert
 
 FFLAGS = -g -O2
 

@@ -12,3 +12,6 @@ run.sh sets OMP_NUM_THREADS=4 and TAU_OMPT_SUPPORT_LEVEL=full. The
 instrumented routines are called on thread 0, so pprof shows them on thread 0.
 OMPT adds timers for the parallel regions and for each thread's share of the
 loops, so pprof shows a profile for every thread.
+
+With GCC, TAU's configure downloads LLVM's OpenMP runtime for -ompt, and the
+worker threads show only their total time, not their share of the loops.
