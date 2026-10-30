@@ -1,0 +1,40 @@
+This directory contains examples that use SALT-FM to instrument C, C++, and
+Fortran programs. SALT-FM is an LLVM-based source instrumentor. It parses each
+source with Clang or Flang and writes an instrumented copy. With
+-optSaltInst, the TAU compiler scripts (tau_cc.sh, tau_cxx.sh, and tau_f90.sh)
+run SALT-FM and then compile its output.
+
+To install SALT-FM with Spack:
+$ ./install_salt.sh
+$ spack load saltfm
+
+install_salt.sh runs "spack install saltfm". If Spack already has an LLVM
+with Clang and Flang (see "spack compiler find" and "spack external find
+llvm"), SALT-FM uses it and Spack does not build LLVM.
+
+Each example is a matrix multiply program with a Makefile and a run.sh script
+that builds the program, runs it, and calls pprof. run.sh sets TAU_CALLPATH=1
+and TAU_CALLPATH_DEPTH=100, so paraprof can show a call graph (Windows >
+Thread > Call Graph). Set TAU_MAKEFILE to the TAU configuration that the
+example needs and run run.sh in its directory:
+$ export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-clang
+$ cd serial/c
+$ ./run.sh
+
+serial          - C, C++, and Fortran. The Fortran example uses a module, a
+                  submodule, and a selective instrumentation file.
+
+openmp          - C, C++, and Fortran with OpenMP. TAU must be configured with
+                  the -openmp and -ompt options.
+
+mpi             - C, C++, and Fortran with MPI. TAU must be configured with
+                  the -mpi option. There are two Fortran examples:
+                  f90_mpif uses include "mpif.h", and f90_mpi_module uses the
+                  mpi module.
+
+direct          - Runs saltfm by hand and compiles its output with the flags
+                  from the TAU Makefile, without the TAU compiler scripts.
+
+These examples were tested with TAU configured with:
+$ ./configure -cc=clang -c++=clang++ -fortran=flang
+and with -openmp -ompt or -mpi added, as each directory's README shows.

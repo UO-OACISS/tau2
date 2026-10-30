@@ -1,0 +1,49 @@
+These examples instrument a serial matrix multiply in C (c), C++ (c++), and
+Fortran (f90) with SALT-FM. To use them, configure TAU using:
+$ ./configure -cc=clang -c++=clang++ -fortran=flang
+$ make install
+
+Then, with saltfm on your PATH (spack load saltfm):
+$ export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-clang
+$ cd c
+$ ./run.sh
+
+The Makefiles pass -optSaltInst to the TAU compiler scripts. SALT-FM writes
+matmult.inst.c, and tau_cc.sh compiles it instead of matmult.c.
+
+The Fortran example puts the interfaces in a module (matmult.f90) and the
+procedures in a submodule (matmult_impl.f90). Its Makefile also passes
+-optTauSelectFile=select.tau, which excludes the initialize routine:
+
+$ cat f90/select.tau
+BEGIN_EXCLUDE_LIST
+initialize
+END_EXCLUDE_LIST
+
+$ cd f90
+$ ./run.sh
+...
++ export TAU_CALLPATH=1
++ TAU_CALLPATH=1
++ export TAU_CALLPATH_DEPTH=100
++ TAU_CALLPATH_DEPTH=100
++ ./matmult
+ c(1,2) =  90530816.
++ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.417          456           1           1     456134 .TAU application
+ 99.9            4          455           1           2     455717 .TAU application => MATMULT
+ 99.9            4          455           1           2     455717 MATMULT
+ 76.1          347          347           1           0     347125 .TAU application => MATMULT => compute
+ 76.1          347          347           1           0     347125 compute
+ 22.8          104          104           1           0     104171 .TAU application => MATMULT => compute_interchange
+ 22.8          104          104           1           0     104171 compute_interchange
+
+Each routine appears twice: once by itself and once with its call path
+(caller => callee).

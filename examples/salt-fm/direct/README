@@ -1,0 +1,13 @@
+This example runs saltfm by hand instead of through the TAU compiler scripts.
+saltfm writes an instrumented copy of the source, and the Makefile compiles
+it with the flags from the TAU Makefile:
+
+$ saltfm matmult.c -o matmult.inst.c --
+$ clang -g -O2 $(TAU_INCLUDE) $(TAU_DEFS) -c matmult.inst.c -o matmult.o
+$ clang++ -g matmult.o -o matmult $(TAU_LIBS)
+
+Give compiler flags, such as -I and -D options, to saltfm after "--". The
+program is linked with the C++ compiler because the TAU library needs the
+C++ runtime. To use it, with saltfm on your PATH (spack load saltfm):
+$ export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-clang
+$ ./run.sh

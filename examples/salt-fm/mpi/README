@@ -1,0 +1,20 @@
+These examples instrument an MPI matrix multiply in C (c), C++ (c++), and
+Fortran (f90_mpif and f90_mpi_module) with SALT-FM. Rank 0 sends rows of A to
+the other ranks, which multiply them by B and send the results back. To use
+them, configure TAU using:
+$ ./configure -cc=clang -c++=clang++ -fortran=flang -mpi
+$ make install
+
+Then, with saltfm on your PATH (spack load saltfm):
+$ export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-clang-mpi
+$ cd c
+$ ./run.sh
+
+run.sh runs the program with "mpirun -np 4". It needs 2 or more ranks.
+Each rank writes a profile file (profile.0.0.0 to profile.3.0.0) with the
+instrumented routines and the MPI calls. run.sh also sets TAU_COMM_MATRIX=1,
+so paraprof can show the messages sent between ranks (Windows >
+Communication Matrix).
+
+f90_mpif uses include "mpif.h", which works with any Fortran compiler. For
+f90_mpi_module, which uses the mpi module, see f90_mpi_module/README.

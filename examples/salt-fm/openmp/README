@@ -1,0 +1,14 @@
+These examples instrument an OpenMP matrix multiply in C (c), C++ (c++), and
+Fortran (f90) with SALT-FM. To use them, configure TAU using:
+$ ./configure -cc=clang -c++=clang++ -fortran=flang -openmp -ompt
+$ make install
+
+Then, with saltfm on your PATH (spack load saltfm):
+$ export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-clang-ompt-openmp
+$ cd c
+$ ./run.sh
+
+run.sh sets OMP_NUM_THREADS=4 and TAU_OMPT_SUPPORT_LEVEL=full. The
+instrumented routines are called on thread 0, so pprof shows them on thread 0.
+OMPT adds timers for the parallel regions and for each thread's share of the
+loops, so pprof shows a profile for every thread.

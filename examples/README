@@ -267,3 +267,9 @@ iowrappers      - TAU can build POSIX I/O wrappers using ./configure -iowrapper.
                   To build wrappers automatically for external packages (such as 
                   HDF5), see examples/iowrappers/hdf5 and posixio. The tau_wrap tool
                   generates wrappers for a given header file.  
+
+salt-fm         - Shows how to instrument C, C++, and Fortran programs with
+                  SALT-FM, an LLVM-based source instrumentor, using the
+                  -optSaltInst option of the TAU compiler scripts. It has
+                  serial, OpenMP, and MPI examples, and a script that installs
+                  SALT-FM with Spack. See examples/salt-fm/README.
