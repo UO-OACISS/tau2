@@ -23,6 +23,12 @@ $ export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-clang
 $ cd serial/c
 $ ./run.sh
 
+To draw the call graph with gprof2dot and Graphviz, or to open it in
+KCachegrind, convert a profile with tau_prof2callgrind.py:
+$ tau_prof2callgrind.py --dot -o callgraph.dot profile.0.0.0
+$ xdot callgraph.dot
+tau_prof2callgrind.py --help lists the other tools it uses.
+
 serial          - C, C++, and Fortran. The Fortran example uses a module, a
                   submodule, and a selective instrumentation file.
 

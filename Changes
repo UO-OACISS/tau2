@@ -38,6 +38,7 @@ Version 2.35 changes (from 2.34):
 25. Added TAU_OMPT_DISABLE_OFFLOAD=1 to not register OMPT callbacks for device-side offload events.
 26. Added initial support for NCCL and RCCL.
 27. Added support for oneCCL with Ittnofity.
+28. Added tau_prof2callgrind.py utility to view call-path profiles as call graphs in KCachegrind or, with gprof2dot, Graphviz.
 
 Version 2.34 changes (from 2.33):
 1. Added support for new LLVM compilers (-c++=parascc).
