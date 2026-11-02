@@ -62,7 +62,7 @@
 #else
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
-#if LLVM_VERSION_MAJOR < 23
+#if LLVM_VERSION_MAJOR < 22
 // new pass manager
 #include "llvm/Passes/PassPlugin.h"
 #else
