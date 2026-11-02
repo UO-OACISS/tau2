@@ -38,7 +38,6 @@ rm tau.tgz tau-$1.tar.gz
 #gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl_awt.dll.gz
 #gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl_cg.dll.gz
 
-tar -zxf $ROOT/tau2/tools/src/contrib/jogl/windows-all.tgz 
 
 cp $ROOT/tau2/tools/src/windows/trace_impl.h $ROOT/tau2/utils/slogconverter
 cp $ROOT/tau2/tools/src/windows/etc/tau_config.h $ROOT/tau2/include

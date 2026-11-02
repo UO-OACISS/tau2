@@ -1,5 +1,19 @@
-TAU includes JOGL from:
+TAU ships JOGL 2 from https://jogamp.org/ (deployment/v2.6.0/jar).
 
-https://jogl.dev.java.net/
+Current platforms (JOGL 2.6.0):
+  jogl-all.jar, gluegen-rt.jar   common jars shared by every current platform
+  macosx-universal/              macOS x86_64 + arm64 natives
+  linux-amd64/                   Linux x86_64 natives
+  linux-aarch64/                 Linux AArch64 natives
+  linux-armv6hf/                 Linux 32-bit ARM hard-float natives (arm_linux); needs a hard-float JVM
+  windows-amd64/                 Windows x86_64 natives
 
-We currently ship with release JSR-231 1.0.0 (September 14, 2006)
+Common and native jars must always be the same JOGL version. Each current
+platform directory therefore contains only natives jars.
+
+legacy/ : platforms not on 2.6.0. Each directory is a self-contained set (common + natives).
+  linux-i586/                    2.3.2 (i386_linux); the common jars it was originally paired with
+  linux-ppc64/                   custom 2.4.0-rc-20171009 natives (ppc64, ibm64linux) with the 2.3.2 common jars
+                                 that were in the tree when the natives were added (commit 5b56ee2e3). JogAmp
+                                 publishes no ppc64 natives. Version-mismatched, but it is the pairing originally shipped.
+  windows-i586/                  2.4.0-rc-20210111 (packaged as bin/jogl-i586 by windows/etc/3-install.sh)

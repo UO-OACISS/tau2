@@ -15,5 +15,5 @@ java -cp "$build_dir" edu.uoregon.tau.paraprof.SlurmTopologyLayoutTest
 tools_src=$(CDPATH= cd -- "$paraprof_dir/.." && pwd)
 vis_cp="$tools_src/contrib/jogl/jogl-all.jar:$tools_src/contrib/jogl/gluegen-rt.jar:$tools_src/common/bin/tau-common.jar"
 javac -source 8 -target 8 -Xlint:-options -nowarn -cp "$vis_cp" -d "$build_dir" \
-  "$tools_src"/vis-jogl2/src/*.java "$script_dir/TopoPlotPickTest.java"
+  "$tools_src"/vis/src/*.java "$script_dir/TopoPlotPickTest.java"
 java -cp "$build_dir:$vis_cp" TopoPlotPickTest

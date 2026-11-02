@@ -23,7 +23,7 @@ echo.
 echo Warning: Unsupported Java detected. Some features may fail. Please use Sun/Oracle Java.
 echo.
 
-set JARS=%JAR_ROOT%/paraprof.jar;%JAR_ROOT%/vis-jogl2.jar;%PERFDMF_JAR%;%JAR_ROOT%/jogl-all.jar;%JAR_ROOT%/gluegen-rt.jar;%JAR_ROOT%/jgraph.jar;%JDBC_JAR%;%JAR_ROOT%/jargs.jar;%JAR_ROOT%/epsgraphics.jar;%JAR_ROOT%/batik-combined.jar;%JAR_ROOT%/tau-common.jar;%JAR_ROOT%/jfreechart-1.0.12.jar;%JAR_ROOT%/jcommon-1.0.15.jar
+set JARS=%JAR_ROOT%/paraprof.jar;%JAR_ROOT%/vis.jar;%PERFDMF_JAR%;%JAR_ROOT%/jogl-all.jar;%JAR_ROOT%/gluegen-rt.jar;%JAR_ROOT%/jogl-all-natives-windows-amd64.jar;%JAR_ROOT%/gluegen-rt-natives-windows-amd64.jar;%JAR_ROOT%/jgraph.jar;%JDBC_JAR%;%JAR_ROOT%/jargs.jar;%JAR_ROOT%/epsgraphics.jar;%JAR_ROOT%/batik-combined.jar;%JAR_ROOT%/tau-common.jar;%JAR_ROOT%/jfreechart-1.0.12.jar;%JAR_ROOT%/jcommon-1.0.15.jar
 
 set CLASSPATH=%JARS%;%JAR_ROOT%/perfexplorer.jar;%JAR_ROOT%/weka.jar;%JAR_ROOT%/antlr-2.7.6.jar;%JAR_ROOT%/commons-lang-2.1.jar;%JAR_ROOT%/drools-core-3.0.6.jar;%JAR_ROOT%/junit-3.8.1.jar;%JAR_ROOT%/antlr-3.0ea8.jar;%JAR_ROOT%/commons-logging-api-1.0.4.jar;%JAR_ROOT%/drools-decisiontables-3.0.6.jar;%JAR_ROOT%/jxl-2.4.2.jar;%JAR_ROOT%/commons-jci-core-1.0-406301.jar;%JAR_ROOT%/core-3.2.0.666.jar;%JAR_ROOT%/drools-jsr94-3.0.6.jar;%JAR_ROOT%/stringtemplate-2.3b6.jar;%JAR_ROOT%/commons-jci-eclipse-3.2.0.666.jar;%JAR_ROOT%/drools-compiler-3.0.6.jar;%JAR_ROOT%/jsr94-1.1.jar
 

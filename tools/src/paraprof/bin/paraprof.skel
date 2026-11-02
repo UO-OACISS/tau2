@@ -53,7 +53,7 @@ JAVA2D_OPENGL_FLAG=0
 
 CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
-#paraprof does not accept -64/-32/-jogl2/-jogl1. Set the flags and remove them from the parameter list before passing to paraprof. -32 (which makes no difference on non-apple platforms) and -jogl1 are the defaults on all platforms except apple.
+#paraprof does not accept -64/-32. Set the flags and remove them from the parameter list before passing to paraprof. -jogl1/-jogl2 are accepted and ignored for backward compatibility (jogl2 is the only supported 3D library).
 for arg 
 do
   shift
@@ -62,8 +62,8 @@ do
   [ "$arg" = "-enable_java2d_opengl" ] && JAVA2D_OPENGL_FLAG=1 && continue
   [ "$arg" = "-64" ] && FLAG64=1 && continue
   [ "$arg" = "-32" ] && FLAG32=1 && continue
-  [ "$arg" = "-jogl1" ] && FLAGJOGL1=1 && continue
-  [ "$arg" = "-jogl2" ] && FLAGJOGL2=1 && continue
+  [ "$arg" = "-jogl1" ] && continue
+  [ "$arg" = "-jogl2" ] && continue
   [ "$arg" = "-fix-xquartz" ] && export JAVA2D_XRENDER_FALSE="-Dsun.java2d.xrender=false" && continue
 
   # New flags for rendering control
@@ -75,12 +75,6 @@ done
 if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_apple" ] ; then
 	if [ "$FLAG32" != "1" ]; then
 		FLAG64=1
-	fi
-fi
-
-if [ "$MACHINE" = "x86_64" ] || [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ] || [ "$MACHINE" = "arm64_apple" ] || [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
-	if [ "$FLAGJOGL1" != "1" ]; then
-		FLAGJOGL2=1
 	fi
 fi
 
@@ -98,14 +92,12 @@ if [ "$JAVA2D_OPENGL_FLAG" = "1" ]; then
   JAVA2D_OPENGL_OPT="-Dsun.java2d.opengl=true"
 fi
 
-JOGL1_JARS=${JARDIR}/vis.jar:${JARDIR}/jogl.jar
-DEFAULT_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}
-
-JOGL_JARS=${JOGL1_JARS}
-
-if [ "$FLAGJOGL2" = "1" ]; then
-	JOGL_JARS=${DEFAULT_JOGL2_JARS}
-fi
+JOGL_JARS=${JARDIR}/vis.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar
+# configure installs the platform's natives jars under their canonical names
+for j in ${JARDIR}/jogl-all-natives-*.jar ${JARDIR}/gluegen-rt-natives-*.jar; do
+	[ -f "$j" ] && JOGL_JARS=${JOGL_JARS}:${j}
+done
+JOGL_JARS=${JOGL_JARS}:${JARDIR}
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JOGL_JARS}:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 
@@ -285,7 +277,6 @@ if [ $retVal -ne 0 ]; then
   echo "  -enable_java2d_opengl 	(Turns on java2d OpenGl rendering.)"
   echo "  -disable_java2d_opengl 	(Turns off java2d OpenGl rendering. Can fix title bar rendering errors on OSX. This is now the default, retained for compatability)"
   echo "  -64/-32 			(Disables/Forces 32 bit memory capacity calculation and use of -d32 flag on OSX)"
-  echo "  -jogl1/-jogl2 		(force use of old (jogl1)/new(jogl2) 3d libraries)"
   echo "  -fix-xquartz                  (Turn off java2d xrender. Fixes XQuartz black window bug.)"
   echo "  -force-software-rendering     (Manually enable llvmpipe software rendering)"
   echo "  -disable-rendering-check      (Disable automatic software rendering enforcement)"

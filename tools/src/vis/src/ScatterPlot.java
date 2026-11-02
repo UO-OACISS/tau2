@@ -12,10 +12,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.Observable;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.glu.GLU;
-import javax.media.opengl.glu.GLUquadric;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.glu.GLUquadric;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -244,11 +244,11 @@ public class ScatterPlot implements Plot {
         if (!visible)
             return;
 
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
 
         if (dirty || displayList == 0) {
             displayList = gl.glGenLists(1);
-            gl.glNewList(displayList, GL.GL_COMPILE);
+            gl.glNewList(displayList, GL2.GL_COMPILE);
             privateRender(glDrawable);
             gl.glEndList();
             dirty = false;
@@ -373,22 +373,22 @@ public class ScatterPlot implements Plot {
         if (values == null)
             return;
         
-        GL gl = glDrawable.getGL();
-        GLU glu = new GLU();
+        GL2 gl = glDrawable.getGL().getGL2();
+        GLU glu = GLU.createGLU(glDrawable.getGL());// new GLU();
 
-        gl.glShadeModel(GL.GL_SMOOTH);
+        gl.glShadeModel(GL2.GL_SMOOTH);
 
         // Set to red, in case there is no colorScale
         gl.glColor3f(1.0f, 0, 0);
 
         if (sphereSize < 0.1f||sphereDetail<3) {
-            gl.glDisable(GL.GL_LIGHTING);
+            gl.glDisable(GL2.GL_LIGHTING);
             float actualSize=2.5f;
             if(sphereSize>=0.1f){
             	actualSize=sphereSize*30;
             }
             gl.glPointSize(actualSize);
-            gl.glBegin(GL.GL_POINTS);
+            gl.glBegin(GL2.GL_POINTS);
             for (int i = 0; i < values.length; i++) {
             	//if(showCoord(i)){
                 if (colorScale != null) {
@@ -401,11 +401,11 @@ public class ScatterPlot implements Plot {
             }
             gl.glEnd();
         } else {
-            gl.glEnable(GL.GL_LIGHTING);
-            gl.glEnable(GL.GL_DEPTH_TEST);
-            gl.glFrontFace(GL.GL_CCW);
+            gl.glEnable(GL2.GL_LIGHTING);
+            gl.glEnable(GL2.GL_DEPTH_TEST);
+            gl.glFrontFace(GL2.GL_CCW);
             GLUquadric qobj = glu.gluNewQuadric();
-            gl.glEnable(GL.GL_CULL_FACE);
+            gl.glEnable(GL2.GL_CULL_FACE);
             glu.gluQuadricDrawStyle(qobj, GLU.GLU_FILL);
             glu.gluQuadricOrientation(qobj, GLU.GLU_OUTSIDE);
             glu.gluQuadricNormals(qobj, GLU.GLU_SMOOTH);

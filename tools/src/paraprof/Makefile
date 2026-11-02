@@ -15,7 +15,7 @@ TOOLS_SRC=..
 else
 TOOLS_SRC=$(TAUROOT)/tools/src
 endif
-CLASSPATH = $(TOOLS_SRC)/contrib/jogl/jogl-all.jar:$(TOOLS_SRC)/contrib/jogl/gluegen-rt.jar:$(TOOLS_SRC)/contrib/jogl-all/jogl.jar:$(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-1.0.12.jar:$(TOOLS_SRC)/contrib/jcommon-1.0.15.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis-jogl2/bin/vis-jogl2.jar:$(TOOLS_SRC)/contrib/mesp.jar:$(CUBE_JAVA_READER)
+CLASSPATH = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-1.0.12.jar:$(TOOLS_SRC)/contrib/jcommon-1.0.15.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar:$(TOOLS_SRC)/contrib/mesp.jar:$(CUBE_JAVA_READER)
 
 TARGET_JAR=$(TOOLS_SRC)/paraprof/bin/paraprof.jar
 

@@ -9,9 +9,9 @@ package edu.uoregon.tau.vis;
 import java.awt.Canvas;
 import java.awt.event.KeyListener;
 
-import javax.media.opengl.GLCanvas;
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLException;
+import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLException;
 
 /**
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
@@ -32,7 +32,7 @@ public class VisCanvas {
      */
     public VisCanvas(VisRenderer visRenderer) {
 
-        GLCapabilities caps = new GLCapabilities();
+        GLCapabilities caps = new GLCapabilities(null);
 
         //FSAA (Full Screen Anti-Aliasing)
         if (visRenderer.getFSAA()) {
@@ -58,7 +58,7 @@ public class VisCanvas {
         }
 
         glCanvas.setSize(200, 200);
-        glCanvas.addGLEventListener(visRenderer);
+        glCanvas.addGLEventListener(visRenderer.getGLEventListener());
 
         // for testing
         //canvas.addGLEventListener(new Gears.GearRenderer());

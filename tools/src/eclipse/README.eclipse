@@ -12,4 +12,4 @@ TAU.  (A script to automatically perform this procedure will be provided soon).
 
 batik-combined.jar     jfreechart-0.9.21.jar  jython.jar       tau-common.jar
 jargs.jar              jgraph.jar             paraprof.jar     vis.jar
-jcommon-0.9.6.jar      jogl.jar               perfdmf.jar
+jcommon-0.9.6.jar      jogl-all.jar               perfdmf.jar
