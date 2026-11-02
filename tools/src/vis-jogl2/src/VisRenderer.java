@@ -97,6 +97,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private float camera_focallength = 50.0f;
 
     private List<Shape> shapes = new ArrayList<Shape>(); // The list of shapes to draw
+    private List<Overlay> overlays = new ArrayList<Overlay>();
 
     private float fps; // Frames per Second
     private int framesRendered;
@@ -139,6 +140,25 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     /** Receives hover-pick results; index is -1 when nothing is under the cursor. */
     public interface PickListener {
         void picked(Shape shape, int index);
+    }
+    /** Data-agnostic drawing performed after the 3D scene. */
+    public interface Overlay {
+        void render(VisRenderer renderer, View view);
+    }
+    /** Immutable projection state for the scene currently being drawn. */
+    public static final class View {
+        private final double[] model, projection;
+        private final int[] viewport;
+        private View(double[] model, double[] projection, int[] viewport) {
+            this.model = model; this.projection = projection; this.viewport = viewport;
+        }
+        public int getX() { return viewport[0]; }
+        public int getY() { return viewport[1]; }
+        public int getWidth() { return viewport[2]; }
+        public int getHeight() { return viewport[3]; }
+        public boolean project(double x, double y, double z, double[] out) {
+            return TopoPlot.project(model, projection, viewport, x, y, z, out);
+        }
     }
 
     private static final class PickView {
@@ -310,6 +330,32 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      */
     public void removeShape(Shape shape) {
         shapes.remove(shape);
+    }
+    public void addOverlay(Overlay overlay) {
+        if (overlay != null && !overlays.contains(overlay)) overlays.add(overlay);
+    }
+    public void removeOverlay(Overlay overlay) {
+        overlays.remove(overlay);
+    }
+    private View captureView() {
+        double[] model = new double[16], projection = new double[16];
+        int[] viewport = new int[4];
+        gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, model, 0);
+        gl.glGetDoublev(GL2.GL_PROJECTION_MATRIX, projection, 0);
+        gl.glGetIntegerv(GL2.GL_VIEWPORT, viewport, 0);
+        return new View(model, projection, viewport);
+    }
+    private void drawOverlays(View view) {
+        if (view == null) return;
+        gl.glPushAttrib(GL2.GL_ENABLE_BIT | GL2.GL_CURRENT_BIT | GL2.GL_TRANSFORM_BIT);
+        gl.glMatrixMode(GL2.GL_PROJECTION); gl.glPushMatrix(); gl.glLoadIdentity();
+        gl.glOrtho(view.getX(), view.getX() + view.getWidth(),
+                view.getY(), view.getY() + view.getHeight(), -1, 1);
+        gl.glMatrixMode(GL2.GL_MODELVIEW); gl.glPushMatrix(); gl.glLoadIdentity();
+        gl.glDisable(GL2.GL_LIGHTING); gl.glDisable(GL2.GL_DEPTH_TEST); gl.glDisable(GL2.GL_CULL_FACE);
+        for (Overlay overlay : new ArrayList<Overlay>(overlays)) overlay.render(this, view);
+        gl.glPopMatrix(); gl.glMatrixMode(GL2.GL_PROJECTION); gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW); gl.glPopAttrib();
     }
 
     private void setLighting() {
@@ -718,6 +764,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
             }
 
+            View overlayView = overlays.isEmpty() ? null : captureView();
             if (pickListener != null) {
                 double[] model = new double[16];
                 double[] projection = new double[16];
@@ -732,6 +779,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 Shape shape = shapes.get(i);
                 shape.render(this);
             }
+            drawOverlays(overlayView);
 
             //        int err = gl.glGetError();
             //        if (err != GL.GL_NO_ERROR)

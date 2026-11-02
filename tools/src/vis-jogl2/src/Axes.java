@@ -73,6 +73,7 @@ public class Axes implements Shape {
 	private int labelLength = 30;
 
 	private boolean enabled = true;
+	private boolean axisTitlesVisible = true;
 	private Color highlightColor = new Color(1, 0, 0);
 
 	private int displayList;
@@ -304,6 +305,13 @@ public class Axes implements Shape {
 	 * @param color
 	 *            the color to use
 	 */
+	/** Controls axis titles without changing tick text, marks, or grid geometry. */
+	public void setAxisTitlesVisible(boolean visible) {
+		if (axisTitlesVisible != visible) {
+			axisTitlesVisible = visible;
+			dirty = true;
+		}
+	}
 	public void setHighlightColor(Color color) {
 		highlightColor = color;
 	}
@@ -896,6 +904,7 @@ public class Axes implements Shape {
 		maxPoint = (maxPoint * 0.003f)+2400/fontScale;
 
 		// Now draw the axis labels
+		if (!axisTitlesVisible) return;
 		gl.glPushMatrix();
 		if (leftJustified) {
 			gl.glTranslated(maxPoint + 3.0f, -increment * (strings.size() + 1)

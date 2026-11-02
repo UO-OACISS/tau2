@@ -16,6 +16,7 @@ import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -69,6 +70,7 @@ import edu.uoregon.tau.vis.VisCanvas;
 import edu.uoregon.tau.vis.VisCanvasListener;
 import edu.uoregon.tau.vis.VisRenderer;
 import edu.uoregon.tau.vis.VisTools;
+import edu.uoregon.tau.vis.WorldLabelOverlay;
 import edu.uoregon.tau.vis.XmasTree;
 import edu.uoregon.tau.vis.XmasTree.Ornament;
 
@@ -105,6 +107,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	private BarPlot barPlot;
 	private ScatterPlot scatterPlot;
 	private TopoPlot topoPlot;
+	private WorldLabelOverlay topologyAxisOverlay;
 	private Axes fullDataPlotAxes;
 	private Axes scatterPlotAxes;
 
@@ -295,6 +298,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	}
 
 	private void generateScatterPlot(boolean autoSize, ThreeDeeSettings settings) {
+		removeTopologyAxisOverlay();
 
 		Function[] scatterFunctions = settings.getScatterFunctions();
 
@@ -353,6 +357,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		}
 
 		setAxisStrings();
+		scatterPlotAxes.setAxisTitlesVisible(true);
 
 		axes = scatterPlotAxes;
 
@@ -522,12 +527,31 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		topoPlot.setColorScale(colorScale);
 		topoPlot.setVisRange(settings.getMinTopoRange(),
 				settings.getMaxTopoRange());
+		configureTopologyAxisOverlay();
 		plot = topoPlot;
 
 		// settings.setMinTopoShown(scatterPlot.getMinShown());
 		// settings.setMaxTopoShown(scatterPlot.getMaxShown());
 	}
 
+	private void configureTopologyAxisOverlay() {
+		removeTopologyAxisOverlay();
+		float x = restrict ? 15.0f : tsizes[0];
+		float y = restrict ? 15.0f : tsizes[1];
+		float z = restrict ? 15.0f : tsizes[2];
+		topologyAxisOverlay = new WorldLabelOverlay(Arrays.asList(
+				new WorldLabelOverlay.Label("X", x, 0, 0, 12, -6),
+				new WorldLabelOverlay.Label("Y", 0, y, 0, 0, 12),
+				new WorldLabelOverlay.Label("Z", 0, 0, z, 0, 12)));
+		visRenderer.addOverlay(topologyAxisOverlay);
+		scatterPlotAxes.setAxisTitlesVisible(false);
+	}
+	private void removeTopologyAxisOverlay() {
+		if (topologyAxisOverlay != null) {
+			visRenderer.removeOverlay(topologyAxisOverlay);
+			topologyAxisOverlay = null;
+		}
+	}
 	int[] tsizes = { 0, 0, 0 };
 	boolean restrict = false;
 	Thread[][][] threadTopo=null;
@@ -1668,6 +1692,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	}
 
 	private void generate3dModel(boolean autoSize, ThreeDeeSettings settings) {
+		removeTopologyAxisOverlay();
 
 		visRenderer.setCameraMode(VisRenderer.CAMERA_PLOT);
 		if (plot != null) {
@@ -2030,6 +2055,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		}
 
 		if (visRenderer != null) {
+			removeTopologyAxisOverlay();
 			visRenderer.setPickListener(null);
 			visRenderer.cleanUp();
 		}
