@@ -157,7 +157,23 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         public int getWidth() { return viewport[2]; }
         public int getHeight() { return viewport[3]; }
         public boolean project(double x, double y, double z, double[] out) {
-            return TopoPlot.project(model, projection, viewport, x, y, z, out);
+            double[] eye = new double[4];
+            for (int row = 0; row < 4; row++) {
+                eye[row] = model[row] * x + model[4 + row] * y
+                        + model[8 + row] * z + model[12 + row];
+            }
+            double[] clip = new double[4];
+            for (int row = 0; row < 4; row++) {
+                clip[row] = projection[row] * eye[0]
+                        + projection[4 + row] * eye[1]
+                        + projection[8 + row] * eye[2]
+                        + projection[12 + row] * eye[3];
+            }
+            if (clip[3] <= 0) return false;
+            out[0] = viewport[0] + (clip[0] / clip[3] + 1) * 0.5 * viewport[2];
+            out[1] = viewport[1] + (clip[1] / clip[3] + 1) * 0.5 * viewport[3];
+            out[2] = (clip[2] / clip[3] + 1) * 0.5;
+            return true;
         }
     }
 

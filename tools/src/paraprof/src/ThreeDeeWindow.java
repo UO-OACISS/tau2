@@ -16,7 +16,6 @@ import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -539,11 +538,27 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		float x = restrict ? 15.0f : tsizes[0];
 		float y = restrict ? 15.0f : tsizes[1];
 		float z = restrict ? 15.0f : tsizes[2];
-		topologyAxisOverlay = new WorldLabelOverlay(Arrays.asList(
-				new WorldLabelOverlay.Label("X", x, 0, 0, 12, -6),
-				new WorldLabelOverlay.Label("Y", 0, y, 0, 0, 12),
-				new WorldLabelOverlay.Label("Z", 0, 0, z, 0, 12)));
-		visRenderer.addOverlay(topologyAxisOverlay);
+		float centerX = x / 2.0f;
+		float centerY = y / 2.0f;
+		float centerZ = z / 2.0f;
+		List<WorldLabelOverlay.Label> labels =
+				new ArrayList<WorldLabelOverlay.Label>();
+		String topology = settings.getTopoCart();
+		String zLabel = SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(topology)
+				? "Z (Thread Slot)" : "Z";
+		// Anchor each title at the midpoint of its axis edge. The projected
+		// plot center still supplies the outward screen-space direction.
+		labels.add(new WorldLabelOverlay.Label("X", centerX, 0, 0,
+				centerX, centerY, centerZ, 24, 1, 0));
+		labels.add(new WorldLabelOverlay.Label("Y", 0, centerY, 0,
+				centerX, centerY, centerZ, 24, 0, 1));
+		labels.add(new WorldLabelOverlay.Label(zLabel, 0, 0, centerZ,
+				centerX, centerY, centerZ, 24, 0, 1));
+		if (!labels.isEmpty()) {
+			topologyAxisOverlay = new WorldLabelOverlay(labels);
+			visRenderer.addOverlay(topologyAxisOverlay);
+		}
+		// Slurm XY values are packing coordinates, not scheduler dimensions.
 		scatterPlotAxes.setAxisTitlesVisible(false);
 	}
 	private void removeTopologyAxisOverlay() {
