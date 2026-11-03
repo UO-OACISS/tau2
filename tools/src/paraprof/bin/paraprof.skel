@@ -192,21 +192,20 @@ if [ "x$MACHINE" = "xx86_64" ] ; then
 fi
 
 testmax=`$BINDIR/tau_javamax.sh`
-#if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
 if [ "x$testmax" != "xfailed" ] ; then
-    MEMORY="-Xmx${testmax}m"
-fi
-if [ "x$platform" = "xDarwin" ] ; then 
-   if [ $testmax -gt 819200 -a $testmax -lt 819200000 ] ; then
+  MEMORY="-Xmx${testmax}m"
+  if [ "x$platform" = "xDarwin" ] ; then
+    if [ $testmax -gt 819200 -a $testmax -lt 819200000 ] ; then
       MEMORY="-Xmx2000m"
-    if [ "$FLAG64" = "1" ]; then
-	testmax=$(($testmax/1024))
+      if [ "$FLAG64" = "1" ]; then
+        testmax=$(($testmax/1024))
         MEMORY="-Xmx"$testmax"m"
+      fi
     fi
-   fi
+  fi
+else
+  echo "ParaProf: Warning: Unable to determine maximum Java heap size; using JVM default."
 fi
-
-
 
 # locate the java bin directory so that we can add it to the java.library.path.
 # IBM JRE has libjawt.so in the bin directory and it needs to be hardcoded in
