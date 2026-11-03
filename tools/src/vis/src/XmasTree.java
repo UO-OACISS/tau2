@@ -11,10 +11,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.glu.GLU;
-import javax.media.opengl.glu.GLUquadric;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.glu.GLUquadric;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -23,7 +23,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.sun.opengl.util.GLUT;
+import  com.jogamp.opengl.util.gl2.GLUT;
 
 public class XmasTree implements Plot {
     private List<List<Ornament>> levels;
@@ -172,11 +172,11 @@ public class XmasTree implements Plot {
     public void render(VisRenderer visRenderer) {
         GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
 
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
 
         if (dirty || displayList == 0) {
             displayList = gl.glGenLists(1);
-            gl.glNewList(displayList, GL.GL_COMPILE);
+            gl.glNewList(displayList, GL2.GL_COMPILE);
             privateRender(visRenderer);
             gl.glEndList();
             dirty = false;
@@ -227,7 +227,7 @@ public class XmasTree implements Plot {
         GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
         //Vec direction = visRenderer.getViewDirection(); //TODO: No side effects?
 
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
 
         //        for (int i=0; i < 100; i++) {
         //            gl.glVertex3f(i,i,i);
@@ -263,14 +263,14 @@ public class XmasTree implements Plot {
 
         }
 
-        gl.glShadeModel(GL.GL_SMOOTH);
+        gl.glShadeModel(GL2.GL_SMOOTH);
 
-        GLU glu = new GLU();
-        gl.glEnable(GL.GL_LIGHTING);
-        gl.glEnable(GL.GL_DEPTH_TEST);
-        gl.glFrontFace(GL.GL_CCW);
+        GLU glu = GLU.createGLU(glDrawable.getGL());// new GLU();
+        gl.glEnable(GL2.GL_LIGHTING);
+        gl.glEnable(GL2.GL_DEPTH_TEST);
+        gl.glFrontFace(GL2.GL_CCW);
         GLUquadric qobj = glu.gluNewQuadric();
-        gl.glEnable(GL.GL_CULL_FACE);
+        gl.glEnable(GL2.GL_CULL_FACE);
         glu.gluQuadricDrawStyle(qobj, GLU.GLU_FILL);
         glu.gluQuadricOrientation(qobj, GLU.GLU_OUTSIDE);
         glu.gluQuadricNormals(qobj, GLU.GLU_SMOOTH);
@@ -293,12 +293,12 @@ public class XmasTree implements Plot {
                 gl.glColor3f(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f);
 
                 if (sphereSize < 0.1f) {
-                    gl.glDisable(GL.GL_LIGHTING);
+                    gl.glDisable(GL2.GL_LIGHTING);
                     gl.glPointSize(2.5f);
-                    gl.glBegin(GL.GL_POINTS);
+                    gl.glBegin(GL2.GL_POINTS);
                     gl.glVertex3f(0, 0, 0);
                     gl.glEnd();
-                    gl.glEnable(GL.GL_LIGHTING);
+                    gl.glEnable(GL2.GL_LIGHTING);
                 } else {
                     glu.gluSphere(qobj, Math.max(o.getSize(), 0.1) * sphereSize, sphereDetail, sphereDetail);
                 }
@@ -308,11 +308,11 @@ public class XmasTree implements Plot {
             }
         }
 
-        gl.glDisable(GL.GL_LIGHTING);
+        gl.glDisable(GL2.GL_LIGHTING);
 
         gl.glColor3f(108 / 255.0f, 108 / 255.0f, 108 / 255.0f);
 
-        gl.glBegin(GL.GL_LINES);
+        gl.glBegin(GL2.GL_LINES);
         for (Iterator<List<Ornament>> it = levels.iterator(); it.hasNext();) {
             List<Ornament> level = it.next();
             for (Iterator<Ornament> it2 = level.iterator(); it2.hasNext();) {
@@ -330,8 +330,8 @@ public class XmasTree implements Plot {
         gl.glEnd();
 
         if (showLabels) {
-            gl.glDisable(GL.GL_DEPTH_TEST);
-            gl.glDisable(GL.GL_LIGHTING);
+            gl.glDisable(GL2.GL_DEPTH_TEST);
+            gl.glDisable(GL2.GL_LIGHTING);
             for (Iterator<List<Ornament>> it = levels.iterator(); it.hasNext();) {
                 List<Ornament> level = it.next();
                 for (Iterator<Ornament> it2 = level.iterator(); it2.hasNext();) {

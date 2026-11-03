@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -71,7 +71,7 @@ public class BarPlot implements Plot {
 
     private float scaleZ = 1.0f;
 
-    private GL gl;
+    private GL2 gl;
     
     float maxHeightValue;
     float maxColorValue;
@@ -256,7 +256,7 @@ public class BarPlot implements Plot {
 
     }
 
-    private void generateTranslucentDisplayLists(GL gl) {
+    private void generateTranslucentDisplayLists(GL2 gl) {
 
         translucentDisplayListsXplus = gl.glGenLists(ncols);
         translucentDisplayListsYplus = gl.glGenLists(nrows);
@@ -269,8 +269,8 @@ public class BarPlot implements Plot {
         float yIncrement = ySize / (nrows + 1);
 
         for (int x = 0; x < ncols; x++) {
-            gl.glNewList(translucentDisplayListsXplus + x, GL.GL_COMPILE);
-            gl.glBegin(GL.GL_QUADS);
+            gl.glNewList(translucentDisplayListsXplus + x, GL2.GL_COMPILE);
+            gl.glBegin(GL2.GL_QUADS);
             for (int y = 0; y < nrows; y++) {
 
                 float xPosition = x * xIncrement;
@@ -288,8 +288,8 @@ public class BarPlot implements Plot {
             gl.glEnd();
             gl.glEndList();
 
-            gl.glNewList(translucentDisplayListsXminus + x, GL.GL_COMPILE);
-            gl.glBegin(GL.GL_QUADS);
+            gl.glNewList(translucentDisplayListsXminus + x, GL2.GL_COMPILE);
+            gl.glBegin(GL2.GL_QUADS);
             for (int y = nrows - 1; y >= 0; y--) {
 
                 float xPosition = x * xIncrement;
@@ -310,8 +310,8 @@ public class BarPlot implements Plot {
         }
 
         for (int y = 0; y < nrows; y++) {
-            gl.glNewList(translucentDisplayListsYplus + y, GL.GL_COMPILE);
-            gl.glBegin(GL.GL_QUADS);
+            gl.glNewList(translucentDisplayListsYplus + y, GL2.GL_COMPILE);
+            gl.glBegin(GL2.GL_QUADS);
             for (int x = 0; x < ncols; x++) {
 
                 float xPosition = x * xIncrement;
@@ -329,8 +329,8 @@ public class BarPlot implements Plot {
             gl.glEnd();
             gl.glEndList();
 
-            gl.glNewList(translucentDisplayListsYminus + y, GL.GL_COMPILE);
-            gl.glBegin(GL.GL_QUADS);
+            gl.glNewList(translucentDisplayListsYminus + y, GL2.GL_COMPILE);
+            gl.glBegin(GL2.GL_QUADS);
             for (int x = ncols - 1; x >= 0; x--) {
 
                 float xPosition = x * xIncrement;
@@ -351,7 +351,7 @@ public class BarPlot implements Plot {
 
     }
 
-    private void drawBoxesTranslucent(GL gl, Vec direction) {
+    private void drawBoxesTranslucent(GL2 gl, Vec direction) {
 
         if (dirty) {
             gl.glDeleteLists(translucentDisplayListsXminus, translucentDisplayListsXsize);
@@ -418,7 +418,7 @@ public class BarPlot implements Plot {
 
     private void renderOpaque(GLAutoDrawable glDrawable) {
 
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
 
         if (dirty || displayLists == null) {
 
@@ -435,16 +435,16 @@ public class BarPlot implements Plot {
             Integer displayList = new Integer(gl.glGenLists(1));
             displayLists.add(displayList);
 
-            gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
+            gl.glNewList(displayList.intValue(), GL2.GL_COMPILE);
 
-            gl.glEnable(GL.GL_LIGHTING);
-            gl.glFrontFace(GL.GL_CCW);
-            gl.glEnable(GL.GL_CULL_FACE);
-            //gl.glShadeModel(GL.GL_FLAT);
-            gl.glShadeModel(GL.GL_SMOOTH);
-            gl.glEnable(GL.GL_DEPTH_TEST);
-            gl.glDisable(GL.GL_BLEND);
-            gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
+            gl.glEnable(GL2.GL_LIGHTING);
+            gl.glFrontFace(GL2.GL_CCW);
+            gl.glEnable(GL2.GL_CULL_FACE);
+            //gl.glShadeModel(GL2.GL_FLAT);
+            gl.glShadeModel(GL2.GL_SMOOTH);
+            gl.glEnable(GL2.GL_DEPTH_TEST);
+            gl.glDisable(GL2.GL_BLEND);
+            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ZERO);
 
             // Experimental
             //gl.glDisable(GL.GL_FOG);
@@ -456,9 +456,9 @@ public class BarPlot implements Plot {
 
             gl.glPushMatrix();
             gl.glTranslatef(xIncrement - (xIncrement * barSize / 2), yIncrement - (yIncrement * barSize / 2), 0.05f);
-            gl.glDepthFunc(GL.GL_LESS);
+            gl.glDepthFunc(GL2.GL_LESS);
 
-            gl.glBegin(GL.GL_QUADS);
+            gl.glBegin(GL2.GL_QUADS);
 
             float lastRed = 0;
             float lastBlue = 0;
@@ -545,8 +545,8 @@ public class BarPlot implements Plot {
                         gl.glEndList();
                         displayList = new Integer(gl.glGenLists(1));
                         displayLists.add(displayList);
-                        gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
-                        gl.glBegin(GL.GL_QUADS);
+                        gl.glNewList(displayList.intValue(), GL2.GL_COMPILE);
+                        gl.glBegin(GL2.GL_QUADS);
                     }
 
                 }
@@ -572,20 +572,20 @@ public class BarPlot implements Plot {
     }
 
     private void renderTranslucent(GLAutoDrawable glDrawable, Vec direction) {
-        GL gl = glDrawable.getGL();
-        gl.glEnable(GL.GL_DEPTH_TEST);
+        GL2 gl = glDrawable.getGL().getGL2();
+        gl.glEnable(GL2.GL_DEPTH_TEST);
 
         renderSelectionForTranslucency(gl);
         //gl.glDepthMask(false);
 
         // dirty = true;
 
-        gl.glEnable(GL.GL_LIGHTING);
-        gl.glFrontFace(GL.GL_CCW);
-        gl.glEnable(GL.GL_CULL_FACE);
-        gl.glShadeModel(GL.GL_FLAT);
-        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glEnable(GL.GL_BLEND);
+        gl.glEnable(GL2.GL_LIGHTING);
+        gl.glFrontFace(GL2.GL_CCW);
+        gl.glEnable(GL2.GL_CULL_FACE);
+        gl.glShadeModel(GL2.GL_FLAT);
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        gl.glEnable(GL2.GL_BLEND);
 
         float xIncrement = xSize / (ncols + 1);
         float yIncrement = ySize / (nrows + 1);
@@ -606,7 +606,7 @@ public class BarPlot implements Plot {
         Vec direction = visRenderer.getViewDirection();
 
         axes.render(visRenderer);
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
 
         if (gl == null)
             return;
@@ -629,7 +629,7 @@ public class BarPlot implements Plot {
 
     }
 
-    private void renderSelectionForTranslucency(GL gl) {
+    private void renderSelectionForTranslucency(GL2 gl) {
 
         if (selectedRow < 0 || selectedCol < 0)
             return;
@@ -639,17 +639,17 @@ public class BarPlot implements Plot {
         gl.glPushMatrix();
         gl.glTranslatef(xIncrement - (xIncrement * barSize / 2), yIncrement - (yIncrement * barSize / 2), 0.05f);
 
-        gl.glFrontFace(GL.GL_CCW);
-        gl.glEnable(GL.GL_CULL_FACE);
+        gl.glFrontFace(GL2.GL_CCW);
+        gl.glEnable(GL2.GL_CULL_FACE);
 
         //gl.glDisable(GL.GL_LIGHTING);
 
         //gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
         //gl.glEnable(GL.GL_BLEND);
-        gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
-        gl.glDisable(GL.GL_BLEND);
+        gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ZERO);
+        gl.glDisable(GL2.GL_BLEND);
 
-        gl.glBegin(GL.GL_QUADS);
+        gl.glBegin(GL2.GL_QUADS);
 
         int x = selectedCol;
         for (int y = 0; y < nrows; y++) {
@@ -772,7 +772,7 @@ public class BarPlot implements Plot {
         gl.glPopMatrix();
     }
 
-    private void renderSelection(GL gl) {
+    private void renderSelection(GL2 gl) {
 
         if (selectedRow < 0 || selectedCol < 0)
             return;
@@ -782,23 +782,23 @@ public class BarPlot implements Plot {
         float xIncrement = xSize / (ncols + 1);
         float yIncrement = ySize / (nrows + 1);
 
-        gl.glDisable(GL.GL_LIGHTING);
+        gl.glDisable(GL2.GL_LIGHTING);
         //        
-        gl.glEnable(GL.GL_LINE_SMOOTH);
-        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
-        gl.glEnable(GL.GL_BLEND);
+        gl.glEnable(GL2.GL_LINE_SMOOTH);
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
+        gl.glEnable(GL2.GL_BLEND);
         //
         gl.glLineWidth(4.0f);
 
-        gl.glDepthFunc(GL.GL_LEQUAL);
+        gl.glDepthFunc(GL2.GL_LEQUAL);
 
-        gl.glDisable(GL.GL_CULL_FACE);
+        gl.glDisable(GL2.GL_CULL_FACE);
         float height = getHeight(selectedCol,selectedRow);
 
         gl.glTranslatef(0, 0, 0.055f);
 
-        gl.glBegin(GL.GL_QUADS);
+        gl.glBegin(GL2.GL_QUADS);
 
         float x = (selectedCol + 1) * xIncrement - xIncrement * barSize / 2;
         float y = (selectedRow + 1) * yIncrement - yIncrement * barSize / 2;
@@ -811,7 +811,7 @@ public class BarPlot implements Plot {
         gl.glEnd();
 
         gl.glTranslatef(0, 0, 0.005f);
-        gl.glBegin(GL.GL_QUADS);
+        gl.glBegin(GL2.GL_QUADS);
 
         gl.glColor4f(1, 1, 0, 0.75f);
         gl.glVertex3f(0, y, height);
@@ -821,8 +821,8 @@ public class BarPlot implements Plot {
 
         gl.glEnd();
 
-        gl.glDisable(GL.GL_LINE_SMOOTH);
-        gl.glDisable(GL.GL_BLEND);
+        gl.glDisable(GL2.GL_LINE_SMOOTH);
+        gl.glDisable(GL2.GL_BLEND);
         gl.glLineWidth(1.0f);
         gl.glPopMatrix();
 

@@ -22,7 +22,7 @@ echo Warning: Unsupported Java detected. Some features may fail. Please use Sun/
 echo.
 
 :SETJARS
-set JARS=%JAR_ROOT%/paraprof.jar;%JAR_ROOT%/vis-jogl2.jar;%PERFDMF_JAR%;%JAR_ROOT%/jogl-all.jar;%JAR_ROOT%/gluegen-rt.jar;%JAR_ROOT%/jgraph.jar;%JDBC_JAR%;%JAR_ROOT%/jargs.jar;%JAR_ROOT%/epsgraphics.jar;%JAR_ROOT%/batik-combined.jar;%JAR_ROOT%/tau-common.jar;%JAR_ROOT%/jfreechart-1.0.12.jar;%JAR_ROOT%/jcommon-1.0.15.jar;%JAR_ROOT%/xerces.jar;%JAR_ROOT%/mesp.jar;%JAR_ROOT%/CubeReader.jar
+set JARS=%JAR_ROOT%/paraprof.jar;%JAR_ROOT%/vis.jar;%PERFDMF_JAR%;%JAR_ROOT%/jogl-all.jar;%JAR_ROOT%/gluegen-rt.jar;%JAR_ROOT%/jogl-all-natives-windows-amd64.jar;%JAR_ROOT%/gluegen-rt-natives-windows-amd64.jar;%JAR_ROOT%/jgraph.jar;%JDBC_JAR%;%JAR_ROOT%/jargs.jar;%JAR_ROOT%/epsgraphics.jar;%JAR_ROOT%/batik-combined.jar;%JAR_ROOT%/tau-common.jar;%JAR_ROOT%/jfreechart-1.0.12.jar;%JAR_ROOT%/jcommon-1.0.15.jar;%JAR_ROOT%/xerces.jar;%JAR_ROOT%/mesp.jar;%JAR_ROOT%/CubeReader.jar
 echo.
 
 java -Xmx500m -Dsun.java2d.opengl=true -Djava.library.path=%JAR_ROOT% -Dderby.system.home="%HOMEPATH%/.ParaProf" -cp %JARS% edu/uoregon/tau/paraprof/ParaProf -j %JAR_ROOT% -c %ETC% %1 %2 %3 %4 %5

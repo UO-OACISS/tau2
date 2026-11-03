@@ -22,10 +22,10 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.glu.GLU;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.glu.GLU;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -36,7 +36,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.sun.opengl.util.BufferUtil;
+import com.jogamp.common.nio.Buffers;
 
 /**
  * This object manages the JOGL interface.
@@ -45,7 +45,7 @@ import com.sun.opengl.util.BufferUtil;
  * @author	Alan Morris
  * @version	$Revision: 1.11 $
  */
-public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
+public class VisRenderer implements MouseListener, MouseMotionListener, MouseWheelListener {
 
     private class VisAnimator extends Thread {
 
@@ -72,7 +72,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     }
 
     // OpenGL objects
-    private GL gl;
+    private GL2 gl;
     private GLU glu;
     private GLAutoDrawable glDrawable;
 
@@ -97,6 +97,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private float camera_focallength = 50.0f;
 
     private List<Shape> shapes = new ArrayList<Shape>(); // The list of shapes to draw
+    private List<Overlay> overlays = new ArrayList<Overlay>();
 
     private float fps; // Frames per Second
     private int framesRendered;
@@ -134,8 +135,192 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private int cameraMode = CAMERA_PLOT;
 
     private VisCanvasListener visCanvasListener;
+    private boolean listenerInit=false;
+
+    /** Receives hover-pick results; index is -1 when nothing is under the cursor. */
+    public interface PickListener {
+        void picked(Shape shape, int index);
+    }
+    /** Data-agnostic drawing performed after the 3D scene. */
+    public interface Overlay {
+        void render(VisRenderer renderer, View view);
+    }
+    /** Immutable projection state for the scene currently being drawn. */
+    public static final class View {
+        private final double[] model, projection;
+        private final int[] viewport;
+        private View(double[] model, double[] projection, int[] viewport) {
+            this.model = model; this.projection = projection; this.viewport = viewport;
+        }
+        public int getX() { return viewport[0]; }
+        public int getY() { return viewport[1]; }
+        public int getWidth() { return viewport[2]; }
+        public int getHeight() { return viewport[3]; }
+        public boolean project(double x, double y, double z, double[] out) {
+            double[] eye = new double[4];
+            for (int row = 0; row < 4; row++) {
+                eye[row] = model[row] * x + model[4 + row] * y
+                        + model[8 + row] * z + model[12 + row];
+            }
+            double[] clip = new double[4];
+            for (int row = 0; row < 4; row++) {
+                clip[row] = projection[row] * eye[0]
+                        + projection[4 + row] * eye[1]
+                        + projection[8 + row] * eye[2]
+                        + projection[12 + row] * eye[3];
+            }
+            if (clip[3] <= 0) return false;
+            out[0] = viewport[0] + (clip[0] / clip[3] + 1) * 0.5 * viewport[2];
+            out[1] = viewport[1] + (clip[1] / clip[3] + 1) * 0.5 * viewport[3];
+            out[2] = (clip[2] / clip[3] + 1) * 0.5;
+            return true;
+        }
+    }
+
+    private static final class PickView {
+        final double[] model;
+        final double[] projection;
+        final int[] viewport;
+
+        PickView(double[] model, double[] projection, int[] viewport) {
+            this.model = model;
+            this.projection = projection;
+            this.viewport = viewport;
+        }
+    }
+
+    private static final int PICK_INTERVAL_MS = 40;
+    private static final double PICK_RADIUS_PX = 8.0;
+    private volatile PickListener pickListener;
+    private volatile PickView pickView;
+    private javax.swing.Timer pickTimer;
+    private int pendingPickX, pendingPickY, pendingPickW, pendingPickH;
+    private long lastPickNanos;
+    private volatile float[] highlight;
+
+    /** Marks a point (plot coordinates) with an overlay ring; null clears it. */
+    public void setHighlight(float[] position) {
+        this.highlight = position == null ? null : position.clone();
+    }
 
     public VisRenderer() {}
+
+    /** Enables hover picking of points; pass null to disable. Picking never alters camera handling. */
+    public void setPickListener(PickListener pickListener) {
+        this.pickListener = pickListener;
+        if (pickListener == null) {
+            cancelPick();
+        }
+    }
+
+    private void cancelPick() {
+        if (pickTimer != null) {
+            pickTimer.stop();
+        }
+    }
+
+    private void clearPick() {
+        cancelPick();
+        PickListener l = pickListener;
+        if (l != null) {
+            l.picked(null, -1);
+        }
+    }
+
+    // Leading + trailing throttle: pick at once if the interval has elapsed, otherwise
+    // schedule one trailing pick that uses the most recent mouse position.
+    private void schedulePick(MouseEvent e) {
+        if (pickListener == null) {
+            return;
+        }
+        pendingPickX = e.getX();
+        pendingPickY = e.getY();
+        pendingPickW = Math.max(1, e.getComponent().getWidth());
+        pendingPickH = Math.max(1, e.getComponent().getHeight());
+        if (pickTimer == null) {
+            pickTimer = new javax.swing.Timer(PICK_INTERVAL_MS, new ActionListener() {
+                public void actionPerformed(ActionEvent ev) {
+                    doPick();
+                }
+            });
+            pickTimer.setRepeats(false);
+        }
+        if (pickTimer.isRunning()) {
+            return;
+        }
+        long elapsedMs = (System.nanoTime() - lastPickNanos) / 1000000L;
+        if (elapsedMs >= PICK_INTERVAL_MS) {
+            doPick();
+        } else {
+            pickTimer.setInitialDelay((int) Math.max(1, PICK_INTERVAL_MS - elapsedMs));
+            pickTimer.start();
+        }
+    }
+
+    // Screen-space ring: hollow and drawn last, so it hides neither the point's colour nor its neighbours.
+    private void drawHighlight(GL2 gl) {
+        float[] h = highlight;
+        PickView v = pickView;
+        if (h == null || v == null) {
+            return;
+        }
+        double[] win = new double[3];
+        if (!TopoPlot.project(v.model, v.projection, v.viewport, h[0], h[1], h[2], win)) {
+            return;
+        }
+        gl.glPushAttrib(GL2.GL_ENABLE_BIT | GL2.GL_LINE_BIT | GL2.GL_CURRENT_BIT | GL2.GL_TRANSFORM_BIT);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        gl.glOrtho(v.viewport[0], v.viewport[0] + v.viewport[2], v.viewport[1], v.viewport[1] + v.viewport[3], -1, 1);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        gl.glDisable(GL2.GL_LIGHTING);
+        gl.glDisable(GL2.GL_DEPTH_TEST);
+        gl.glDisable(GL2.GL_CULL_FACE);
+        // Dark outer ring plus light inner ring stays visible over any colour scale and background.
+        drawRing(gl, win[0], win[1], 9.0, 4.0f, 0f);
+        drawRing(gl, win[0], win[1], 9.0, 2.0f, 1f);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glPopAttrib();
+    }
+
+    private void drawRing(GL2 gl, double cx, double cy, double r, float width, float shade) {
+        gl.glLineWidth(width);
+        gl.glColor3f(shade, shade, shade);
+        gl.glBegin(GL2.GL_LINE_LOOP);
+        for (int i = 0; i < 24; i++) {
+            double a = 2 * Math.PI * i / 24;
+            gl.glVertex2d(cx + r * Math.cos(a), cy + r * Math.sin(a));
+        }
+        gl.glEnd();
+    }
+
+    private void doPick() {
+        PickListener l = pickListener;
+        PickView v = pickView;
+        if (l == null || v == null) {
+            return;
+        }
+        lastPickNanos = System.nanoTime();
+        // Mouse coordinates are in AWT units; the viewport is in (possibly HiDPI-scaled) pixels.
+        double glX = v.viewport[0] + pendingPickX * (double) v.viewport[2] / pendingPickW;
+        double glY = v.viewport[1] + (pendingPickH - pendingPickY) * (double) v.viewport[3] / pendingPickH;
+        for (Shape shape : new ArrayList<Shape>(shapes)) {
+            if (shape instanceof TopoPlot) {
+                int index = ((TopoPlot) shape).pick(v.model, v.projection, v.viewport, glX, glY, PICK_RADIUS_PX);
+                if (index >= 0) {
+                    l.picked(shape, index);
+                    return;
+                }
+            }
+        }
+        l.picked(null, -1);
+    }
 
     /**
      * Set the handler for VisCanvas events.  When a canvas change is needed, 
@@ -162,6 +347,32 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     public void removeShape(Shape shape) {
         shapes.remove(shape);
     }
+    public void addOverlay(Overlay overlay) {
+        if (overlay != null && !overlays.contains(overlay)) overlays.add(overlay);
+    }
+    public void removeOverlay(Overlay overlay) {
+        overlays.remove(overlay);
+    }
+    private View captureView() {
+        double[] model = new double[16], projection = new double[16];
+        int[] viewport = new int[4];
+        gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, model, 0);
+        gl.glGetDoublev(GL2.GL_PROJECTION_MATRIX, projection, 0);
+        gl.glGetIntegerv(GL2.GL_VIEWPORT, viewport, 0);
+        return new View(model, projection, viewport);
+    }
+    private void drawOverlays(View view) {
+        if (view == null) return;
+        gl.glPushAttrib(GL2.GL_ENABLE_BIT | GL2.GL_CURRENT_BIT | GL2.GL_TRANSFORM_BIT);
+        gl.glMatrixMode(GL2.GL_PROJECTION); gl.glPushMatrix(); gl.glLoadIdentity();
+        gl.glOrtho(view.getX(), view.getX() + view.getWidth(),
+                view.getY(), view.getY() + view.getHeight(), -1, 1);
+        gl.glMatrixMode(GL2.GL_MODELVIEW); gl.glPushMatrix(); gl.glLoadIdentity();
+        gl.glDisable(GL2.GL_LIGHTING); gl.glDisable(GL2.GL_DEPTH_TEST); gl.glDisable(GL2.GL_CULL_FACE);
+        for (Overlay overlay : new ArrayList<Overlay>(overlays)) overlay.render(this, view);
+        gl.glPopMatrix(); gl.glMatrixMode(GL2.GL_PROJECTION); gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW); gl.glPopAttrib();
+    }
 
     private void setLighting() {
         float lightPosition[] = { 0.0f, 0.0f, 1.0f, 0.0f };
@@ -177,10 +388,10 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
         float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
 
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, lightPosition, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, whiteLight, 0);
+        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, lightPosition, 0);
+        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, whiteLight, 0);
         //gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight, 0);
+        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, ambientLight, 0);
 
         //        float mat_shininess[] = { 50.0f };
         //        float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -192,11 +403,11 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight);
         //gl.glLightfv(GL.GL_LIGHT1, GL.GL_AMBIENT, ambientLight);
 
-        gl.glLightModelfv(GL.GL_LIGHT_MODEL_AMBIENT, ambientLight, 0);
-        gl.glEnable(GL.GL_COLOR_MATERIAL);
-        gl.glShadeModel(GL.GL_FLAT);
-        gl.glEnable(GL.GL_LIGHTING);
-        gl.glEnable(GL.GL_LIGHT0);
+        gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, ambientLight, 0);
+        gl.glEnable(GL2.GL_COLOR_MATERIAL);
+        gl.glShadeModel(GL2.GL_FLAT);
+        gl.glEnable(GL2.GL_LIGHTING);
+        gl.glEnable(GL2.GL_LIGHT0);
 
         //        float fogColor[] = {0.5f, 0.5f, 0.5f, 1.0f}; //set the for color to grey
         //        float density = 0.015f;
@@ -218,22 +429,22 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      * 
      * @param drawable	The drawable provided by JOGL
      */
-    public void init(GLAutoDrawable drawable) {
-        gl = drawable.getGL();
-        glu = new GLU();
+    void init(GLAutoDrawable drawable) {
+        gl = drawable.getGL().getGL2();
+        glu = GLU.createGLU(drawable.getGL());// new GLU();
         this.glDrawable = drawable;
 
         VisTools.verr(this, "Initializing OpenGL (JOGL)");
         VisTools.verr(this, "JOGL Class: " + gl.getClass().getName());
-        VisTools.verr(this, "GL_VENDOR: " + gl.glGetString(GL.GL_VENDOR));
-        VisTools.verr(this, "GL_RENDERER: " + gl.glGetString(GL.GL_RENDERER));
-        VisTools.verr(this, "GL_VERSION: " + gl.glGetString(GL.GL_VERSION));
-        glInfo_Vendor = gl.glGetString(GL.GL_VENDOR);
-        glInfo_Renderer = gl.glGetString(GL.GL_RENDERER);
-        glInfo_Version = gl.glGetString(GL.GL_VERSION);
+        VisTools.verr(this, "GL_VENDOR: " + gl.glGetString(GL2.GL_VENDOR));
+        VisTools.verr(this, "GL_RENDERER: " + gl.glGetString(GL2.GL_RENDERER));
+        VisTools.verr(this, "GL_VERSION: " + gl.glGetString(GL2.GL_VERSION));
+        glInfo_Vendor = gl.glGetString(GL2.GL_VENDOR);
+        glInfo_Renderer = gl.glGetString(GL2.GL_RENDERER);
+        glInfo_Version = gl.glGetString(GL2.GL_VERSION);
 
         byte[] bytes = new byte[1];
-        gl.glGetBooleanv(GL.GL_STEREO, bytes, 0);
+        gl.glGetBooleanv(GL2.GL_STEREO, bytes, 0);
         if (bytes[0] != 0) {
             stereo_available = true;
             VisTools.verr(this, "OpenGL Stereo is available");
@@ -246,28 +457,41 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             stereoCheckBox.setEnabled(stereo_available);
         }
 
-        gl.glEnable(GL.GL_CULL_FACE);
-        gl.glEnable(GL.GL_DEPTH_TEST);
+        gl.glEnable(GL2.GL_CULL_FACE);
+        gl.glEnable(GL2.GL_DEPTH_TEST);
 
         setLighting();
 
         computeEye();
 
         if (System.getProperty("vis.polyline") != null) {
-            gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE);
+            gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
         }
 
         if (System.getProperty("vis.polyfill") != null) {
-            gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
+            gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
         }
 
         if (System.getProperty("vis.polypoint") != null) {
-            gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_POINT);
+            gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_POINT);
         }
 
-        drawable.addMouseListener(this);
-        drawable.addMouseMotionListener(this);
-        drawable.addMouseWheelListener(this);
+                 
+                 if(!listenerInit){
+                 	Object o = drawable.getUpstreamWidget();
+                 	if(o instanceof com.jogamp.opengl.awt.GLCanvas){
+                 		com.jogamp.opengl.awt.GLCanvas glc = (com.jogamp.opengl.awt.GLCanvas)o;
+                 		glc.addMouseListener(this);
+                 		glc.addMouseMotionListener(this);
+                 		glc.addMouseWheelListener(this);
+                 	}
+                 	//TODO: Set listenerInit?
+                 }
+         //        drawable.addMouseListener(this);
+         //        drawable.addMouseMotionListener(this);
+         //        drawable.addMouseWheelListener(this);
+
+
     }
 
     // computes the eye's position based on the viewAngle, viewDirection and aim vector
@@ -424,7 +648,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      * This method is called by JOGL, do not use.
      * @see net.java.games.jogl.GLEventListener#reshape(net.java.games.jogl.GLAutoDrawable, int, int, int, int)
      */
-    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+    void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
         this.width = width;
         this.height = height;
 
@@ -432,10 +656,10 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         camera_near = 1.0f;
         camera_far = 500.0f;
 
-        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
         glu.gluPerspective(camera_aperture, (float) width / (float) height, camera_near, camera_far);
-        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
     }
 
@@ -445,26 +669,42 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      *
      * @see net.java.games.jogl.GLEventListener#display(net.java.games.jogl.GLAutoDrawable)
      */
-    public void display(GLAutoDrawable drawable) {
+    void display(GLAutoDrawable drawable) {
 
         reshape(drawable, 0, 0, this.getWidth(), this.getHeight());
 
         int n = 1;
+        int err=0;
         if (stereo) {
             n = 2;
         }
 
         for (int frame = 0; frame < n; frame++) {
 
+        	err = gl.glGetError();
+            if (err != GL2.GL_NO_ERROR)
+            {
+                System.out.println("first err = " + glu.gluErrorString(err));
+            }
+
+        	
             if (stereo) {
                 if (frame == 0) {
-                    gl.glDrawBuffer(GL.GL_BACK_LEFT);
+                    gl.glDrawBuffer(GL2.GL_BACK_LEFT);
                 } else {
-                    gl.glDrawBuffer(GL.GL_BACK_RIGHT);
+                    gl.glDrawBuffer(GL2.GL_BACK_RIGHT);
                 }
             } else {
-                gl.glDrawBuffer(GL.GL_BACK);
+                //gl.glDrawBuffer(GL2.GL_BACK); //TODO: Removed this to fix an error
             }
+            
+            err = gl.glGetError();
+            if (err != GL2.GL_NO_ERROR)
+            {
+                System.out.println("postbuf err = " + glu.gluErrorString(err));
+            }
+
+            
             //        gl = new DebugGL(drawable.getGL());
             //        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -474,7 +714,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             } else {
                 gl.glClearColor(0, 0, 0, 0);
             }
-            gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+            gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
             gl.glPushMatrix();
             gl.glTranslated(0, 0, -viewDistance);
@@ -519,7 +759,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
                 // create a parallel axis asymmetric frustum perspective projection
                 float left, right, top, bottom;
-                gl.glMatrixMode(GL.GL_PROJECTION);
+                gl.glMatrixMode(GL2.GL_PROJECTION);
                 gl.glLoadIdentity();
                 float ndfl = camera_near / camera_focallength;
                 left = (float) (-ratio * wd2 + leftRightFrustumShift * eyesep * ndfl);
@@ -527,7 +767,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 top = wd2;
                 bottom = -wd2;
                 gl.glFrustum(left, right, bottom, top, camera_near, camera_far);
-                gl.glMatrixMode(GL.GL_MODELVIEW);
+                gl.glMatrixMode(GL2.GL_MODELVIEW);
 
                 if (frame == 0) {
                     glu.gluLookAt(aim.x() - crossRight.x(), aim.y() - crossRight.y(), aim.z() - crossRight.z(), eye.x()
@@ -540,14 +780,28 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
             }
 
+            View overlayView = overlays.isEmpty() ? null : captureView();
+            if (pickListener != null) {
+                double[] model = new double[16];
+                double[] projection = new double[16];
+                int[] viewport = new int[4];
+                gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, model, 0);
+                gl.glGetDoublev(GL2.GL_PROJECTION_MATRIX, projection, 0);
+                gl.glGetIntegerv(GL2.GL_VIEWPORT, viewport, 0);
+                pickView = new PickView(model, projection, viewport);
+            }
+
             for (int i = 0; i < shapes.size(); i++) {
                 Shape shape = shapes.get(i);
                 shape.render(this);
             }
+            drawOverlays(overlayView);
 
             //        int err = gl.glGetError();
             //        if (err != GL.GL_NO_ERROR)
             //            System.out.println("err = " + glu.gluErrorString(err));
+
+            drawHighlight(gl);
 
             gl.glPopMatrix();
             framesRendered++;
@@ -564,22 +818,22 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private void makeScreenShot(GLAutoDrawable drawable) {
 
-        int width = drawable.getWidth();
-        int height = drawable.getHeight();
+        int width = drawable.getSurfaceWidth();
+        int height = drawable.getSurfaceHeight();
 
-        ByteBuffer pixelsRGB = BufferUtil.newByteBuffer(width * height * 3);
+        ByteBuffer pixelsRGB = Buffers.newDirectByteBuffer(width * height * 3); 
 
-        GL gl = drawable.getGL();
+        GL2 gl = drawable.getGL().getGL2();
 
-        gl.glReadBuffer(GL.GL_BACK);
-        gl.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1);
+        gl.glReadBuffer(GL2.GL_BACK);
+        gl.glPixelStorei(GL2.GL_PACK_ALIGNMENT, 1);
 
         gl.glReadPixels(0, // GLint x
                 0, // GLint y
                 width, // GLsizei width
                 height, // GLsizei height
-                GL.GL_RGB, // GLenum format
-                GL.GL_UNSIGNED_BYTE, // GLenum type
+                GL2.GL_RGB, // GLenum format
+                GL2.GL_UNSIGNED_BYTE, // GLenum type
                 pixelsRGB); // GLvoid *pixels
 
         int[] pixelInts = new int[width * height];
@@ -607,18 +861,24 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         screenShot.setRGB(0, 0, width, height, pixelInts, 0, width);
     }
 
-    public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {}
+    void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {}
 
     // MouseListener implementation
     public void mouseEntered(MouseEvent e) {}
 
-    public void mouseExited(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {
+        clearPick();
+    }
 
     public void mouseClicked(MouseEvent e) {}
 
-    public void mouseMoved(MouseEvent e) {}
+    // Only fires with no button down, so it cannot interfere with rotate/translate drags.
+    public void mouseMoved(MouseEvent e) {
+        schedulePick(e);
+    }
 
     public void mousePressed(MouseEvent e) {
+        clearPick();
         prevMouseX = e.getX();
         prevMouseY = e.getY();
         if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
@@ -660,6 +920,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     // Zoom in and out with the mouse wheel
     public void mouseWheelMoved(MouseWheelEvent e) {
+        clearPick();
         int scrollAmount = e.getWheelRotation();
         if (scrollAmount > 0) {
             zoomOut();
@@ -934,7 +1195,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      * Returns the <tt>GLAutoDrawable</tt> for this <tt>VisRenderer</tt>.
      * @return the <tt>GLAutoDrawable</tt> for this <tt>VisRenderer</tt>.
      */
-    public GLAutoDrawable getGLAutoDrawable() {
+    GLAutoDrawable getGLAutoDrawable() {
         return glDrawable;
     }
 
@@ -1011,6 +1272,21 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
             redraw();
         }
+    }
+
+	void dispose(GLAutoDrawable arg0) {
+	}
+
+    /** JOGL callback adapter; keeps JOGL types out of the public API. */
+    private final GLEventListener glEventListener = new GLEventListener() {
+        public void init(GLAutoDrawable d) { VisRenderer.this.init(d); }
+        public void dispose(GLAutoDrawable d) { VisRenderer.this.dispose(d); }
+        public void display(GLAutoDrawable d) { VisRenderer.this.display(d); }
+        public void reshape(GLAutoDrawable d, int x, int y, int w, int h) { VisRenderer.this.reshape(d, x, y, w, h); }
+    };
+
+    GLEventListener getGLEventListener() {
+        return glEventListener;
     }
 
 }

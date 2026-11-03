@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -53,7 +53,7 @@ public class TriangleMeshPlot implements Plot {
 
     private ColorScale colorScale;
     private Axes axes;
-    private GL gl;
+    private GL2 gl;
 
     private int selectedRow = -1;
     private int selectedCol = -1;
@@ -240,7 +240,7 @@ public class TriangleMeshPlot implements Plot {
 
         //    public void render(GLAutoDrawable glDrawable, Vec direction) {
 
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
         if (gl == null)
             return;
 
@@ -271,16 +271,16 @@ public class TriangleMeshPlot implements Plot {
     }
 
     // either nrows == 0 or ncols == 0
-    private void renderLine(GL gl) {
+    private void renderLine(GL2 gl) {
 
-        gl.glDisable(GL.GL_LIGHTING);
-        gl.glEnable(GL.GL_LINE_SMOOTH);
-        gl.glShadeModel(GL.GL_SMOOTH);
+        gl.glDisable(GL2.GL_LIGHTING);
+        gl.glEnable(GL2.GL_LINE_SMOOTH);
+        gl.glShadeModel(GL2.GL_SMOOTH);
 
         if (nrows == 1) {
             float xIncrement = xSize / (ncols - 1);
 
-            gl.glBegin(GL.GL_LINE_STRIP);
+            gl.glBegin(GL2.GL_LINE_STRIP);
             for (int x = 0; x < nrows; x++) {
 
                 float c1 = colorValues[0][x];
@@ -293,7 +293,7 @@ public class TriangleMeshPlot implements Plot {
         } else {
             float yIncrement = ySize / (nrows - 1);
 
-            gl.glBegin(GL.GL_LINE_STRIP);
+            gl.glBegin(GL2.GL_LINE_STRIP);
             for (int y = 0; y < nrows; y++) {
 
                 float c1 = colorValues[y][0];
@@ -306,7 +306,7 @@ public class TriangleMeshPlot implements Plot {
 
     }
 
-    private void renderDL(GL gl) {
+    private void renderDL(GL2 gl) {
 
         if (dirty || displayLists == null) {
 
@@ -323,24 +323,24 @@ public class TriangleMeshPlot implements Plot {
             Integer displayList = new Integer(gl.glGenLists(1));
             displayLists.add(displayList);
 
-            gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
+            gl.glNewList(displayList.intValue(), GL2.GL_COMPILE);
 
-            gl.glFrontFace(GL.GL_CW);
-            gl.glEnable(GL.GL_LIGHTING);
+            gl.glFrontFace(GL2.GL_CW);
+            gl.glEnable(GL2.GL_LIGHTING);
 
-            gl.glEnable(GL.GL_CULL_FACE);
-            gl.glDisable(GL.GL_CULL_FACE);
+            gl.glEnable(GL2.GL_CULL_FACE);
+            gl.glDisable(GL2.GL_CULL_FACE);
 
             gl.glPushMatrix();
 
-            gl.glShadeModel(GL.GL_SMOOTH);
+            gl.glShadeModel(GL2.GL_SMOOTH);
 
             if (translucent) {
-                gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-                gl.glEnable(GL.GL_BLEND);
+                gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+                gl.glEnable(GL2.GL_BLEND);
             } else {
-                gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
-                gl.glDisable(GL.GL_BLEND);
+                gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ZERO);
+                gl.glDisable(GL2.GL_BLEND);
             }
 
             float xIncrement = xSize / (ncols - 1);
@@ -349,7 +349,7 @@ public class TriangleMeshPlot implements Plot {
             int vertexCount = 0;
 
             for (int y = 0; y < nrows - 1; y++) {
-                gl.glBegin(GL.GL_TRIANGLE_STRIP);
+                gl.glBegin(GL2.GL_TRIANGLE_STRIP);
                 //gl.glBegin(GL.GL_LINES);
 
                 for (int x = 0; x < ncols; x++) {
@@ -387,15 +387,15 @@ public class TriangleMeshPlot implements Plot {
                     gl.glEndList();
                     displayList = new Integer(gl.glGenLists(1));
                     displayLists.add(displayList);
-                    gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
+                    gl.glNewList(displayList.intValue(), GL2.GL_COMPILE);
                 }
             }
 
             gl.glPopMatrix();
 
-            gl.glShadeModel(GL.GL_FLAT);
-            gl.glDisable(GL.GL_BLEND);
-            gl.glDisable(GL.GL_LIGHTING);
+            gl.glShadeModel(GL2.GL_FLAT);
+            gl.glDisable(GL2.GL_BLEND);
+            gl.glDisable(GL2.GL_LIGHTING);
 
             gl.glEndList();
 
@@ -512,14 +512,14 @@ public class TriangleMeshPlot implements Plot {
 //        }
 //    }
 
-    private void renderSelectionTranslucent(GL gl) {
+    private void renderSelectionTranslucent(GL2 gl) {
         if (selectedRow < 0 || selectedCol < 0)
             return;
 
-        gl.glFrontFace(GL.GL_CW);
-        gl.glDisable(GL.GL_LIGHTING);
+        gl.glFrontFace(GL2.GL_CW);
+        gl.glDisable(GL2.GL_LIGHTING);
 
-        gl.glDisable(GL.GL_CULL_FACE);
+        gl.glDisable(GL2.GL_CULL_FACE);
 
         //gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
         //gl.glEnable(GL.GL_NORMALIZE);
@@ -528,13 +528,13 @@ public class TriangleMeshPlot implements Plot {
         //gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
         //gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
 
-        gl.glShadeModel(GL.GL_SMOOTH);
-        gl.glDisable(GL.GL_BLEND);
+        gl.glShadeModel(GL2.GL_SMOOTH);
+        gl.glDisable(GL2.GL_BLEND);
 
         float xIncrement = xSize / (ncols - 1);
         float yIncrement = ySize / (nrows - 1);
 
-        gl.glBegin(GL.GL_TRIANGLE_STRIP);
+        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
 
         for (int y = 0; y < nrows; y++) {
             //gl.glBegin(GL.GL_LINES);
@@ -565,7 +565,7 @@ public class TriangleMeshPlot implements Plot {
         }
         gl.glEnd();
 
-        gl.glBegin(GL.GL_TRIANGLE_STRIP);
+        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
         for (int x = 0; x < ncols; x++) {
             //gl.glBegin(GL.GL_LINES);
 
@@ -594,11 +594,11 @@ public class TriangleMeshPlot implements Plot {
         }
         gl.glEnd();
 
-        gl.glDisable(GL.GL_LIGHTING);
+        gl.glDisable(GL2.GL_LIGHTING);
 
         gl.glLineWidth(4.0f);
         gl.glColor3f(1.0f, 0, 0);
-        gl.glBegin(GL.GL_LINE_STRIP);
+        gl.glBegin(GL2.GL_LINE_STRIP);
 
         for (int y = 0; y < nrows; y++) {
             //gl.glBegin(GL.GL_LINES);
@@ -628,7 +628,7 @@ public class TriangleMeshPlot implements Plot {
         }
         gl.glEnd();
 
-        gl.glBegin(GL.GL_LINE_STRIP);
+        gl.glBegin(GL2.GL_LINE_STRIP);
         for (int x = 0; x < ncols; x++) {
             //gl.glBegin(GL.GL_LINES);
 
@@ -659,7 +659,7 @@ public class TriangleMeshPlot implements Plot {
 
     }
 
-    private void renderSelectionRegular(GL gl) {
+    private void renderSelectionRegular(GL2 gl) {
 
         if (selectedRow < 0 || selectedCol < 0)
             return;
@@ -682,11 +682,11 @@ public class TriangleMeshPlot implements Plot {
             yIncrement = ySize / (nrows - 1);
         }
 
-        gl.glDisable(GL.GL_DEPTH_TEST);
-        gl.glEnable(GL.GL_LINE_SMOOTH);
-        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
-        gl.glEnable(GL.GL_BLEND);
+        gl.glDisable(GL2.GL_DEPTH_TEST);
+        gl.glEnable(GL2.GL_LINE_SMOOTH);
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
+        gl.glEnable(GL2.GL_BLEND);
         gl.glLineWidth(4.0f);
 
         float targetX = selectedCol * xIncrement;
@@ -700,7 +700,7 @@ public class TriangleMeshPlot implements Plot {
         if (ncols == 1) {
             targetX += xIncrement;
         }
-        gl.glBegin(GL.GL_LINES);
+        gl.glBegin(GL2.GL_LINES);
 
         gl.glColor4f(0, 1, 0, 0.75f);
         gl.glVertex3f(targetX, 0, targetZ);
@@ -716,7 +716,7 @@ public class TriangleMeshPlot implements Plot {
 
         gl.glEnd();
 
-        gl.glEnable(GL.GL_DEPTH_TEST);
+        gl.glEnable(GL2.GL_DEPTH_TEST);
         //gl.glDisable(GL.GL_LINE_SMOOTH);
         //gl.glDisable(GL.GL_BLEND);
         gl.glLineWidth(1.0f);

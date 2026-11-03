@@ -11,7 +11,7 @@ set PERFDMF_JAR=%JAR_ROOT%/perfdmf.jar
 set JARGS_JAR=%JAR_ROOT%/jargs.jar
 set JDBC_JAR=%JAR_ROOT%/postgresql.jar;%JAR_ROOT%/mysql.jar;%JAR_ROOT%/oracle.jar;%JAR_ROOT%/derby.jar
 set COMMON_JAR=%JAR_ROOT%/tau-common.jar
-set JARS=%JAR_ROOT%/paraprof.jar;%JAR_ROOT%/vis.jar;%PERFDMF_JAR%;%JAR_ROOT%/jogl.jar;%JAR_ROOT%/jgraph.jar;%JDBC_JAR%;%JAR_ROOT%/jargs.jar;%JAR_ROOT%/epsgraphics.jar;%JAR_ROOT%/batik-combined.jar;%JAR_ROOT%/tau-common.jar;%JAR_ROOT%/jfreechart-1.0.12.jar;%JAR_ROOT%/jcommon-1.0.15.jar
+set JARS=%JAR_ROOT%/paraprof.jar;%JAR_ROOT%/vis.jar;%PERFDMF_JAR%;%JAR_ROOT%/jogl-all.jar;%JAR_ROOT%/gluegen-rt.jar;%JAR_ROOT%/jogl-all-natives-windows-amd64.jar;%JAR_ROOT%/gluegen-rt-natives-windows-amd64.jar;%JAR_ROOT%/jgraph.jar;%JDBC_JAR%;%JAR_ROOT%/jargs.jar;%JAR_ROOT%/epsgraphics.jar;%JAR_ROOT%/batik-combined.jar;%JAR_ROOT%/tau-common.jar;%JAR_ROOT%/jfreechart-1.0.12.jar;%JAR_ROOT%/jcommon-1.0.15.jar
 
 set CLASSPATH=%JARS%;%JAR_ROOT%/perfexplorer.jar;%JAR_ROOT%/weka.jar
 

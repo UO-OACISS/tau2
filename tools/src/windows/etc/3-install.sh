@@ -56,7 +56,7 @@ cp tools/src/perfdmf/bin/perfdmf.jar $ROOT/tau-windows/bin
 cp tools/src/perfexplorer/perfexplorer.jar $ROOT/tau-windows/bin
 cp tools/src/common/bin/tau-common.jar $ROOT/tau-windows/bin
 cp tools/src/paraprof/bin/*.jar $ROOT/tau-windows/bin
-cp tools/src/vis-jogl2/bin/*.jar $ROOT/tau-windows/bin
+cp tools/src/vis/bin/*.jar $ROOT/tau-windows/bin
 
 #cp tools/src/contrib/jogl/jogl.jar $ROOT/tau-windows/bin/jogl32
 #cp tools/src/contrib/jogl/windows/jogl.dll $ROOT/tau-windows/bin/jogl32
@@ -72,7 +72,12 @@ cp tools/src/vis-jogl2/bin/*.jar $ROOT/tau-windows/bin
 #
 
 #cp tools/src/contrib/jogl
-cp $ROOT/windows-all/* $ROOT/tau-windows/bin
+# JOGL 2.6.0 common jars plus the Windows AMD64 natives
+cp tools/src/contrib/jogl/jogl-all.jar tools/src/contrib/jogl/gluegen-rt.jar $ROOT/tau-windows/bin
+cp tools/src/contrib/jogl/windows-amd64/*.jar $ROOT/tau-windows/bin
+# Legacy 32-bit Windows: self-contained JOGL 2.4.0-rc set (common + i586 natives); not used by the default launchers
+mkdir -p $ROOT/tau-windows/bin/jogl-i586
+cp tools/src/contrib/jogl/legacy/windows-i586/*.jar $ROOT/tau-windows/bin/jogl-i586
 
 cp tools/src/contrib/slog2sdk/lib/jumpshot.jar $ROOT/tau-windows/bin
 cp win32/lib/*.* $ROOT/tau-windows/lib

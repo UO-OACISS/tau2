@@ -11,7 +11,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
 
-import javax.media.opengl.GL;
+import com.jogamp.opengl.GL2;
 
 /**
  * Various utility methods for the vis package.
@@ -35,7 +35,7 @@ public class VisTools {
      * @param gl GL object to use.
      * @param c Color to use.
      */
-    public static void glSetColor(GL gl, Color c) {
+    static void glSetColor(GL2 gl, Color c) {
         // no alpha for now
         gl.glColor3f(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f);
     }
@@ -48,9 +48,9 @@ public class VisTools {
      */
     public static void glApplyInvertableColor(VisRenderer visRenderer, Color c) {
         if (visRenderer.getReverseVideo()) {
-            glSetColor(visRenderer.getGLAutoDrawable().getGL(), invert(c));
+            glSetColor(visRenderer.getGLAutoDrawable().getGL().getGL2(), invert(c));
         } else {
-            glSetColor(visRenderer.getGLAutoDrawable().getGL(), c);
+            glSetColor(visRenderer.getGLAutoDrawable().getGL().getGL2(), c);
         }
     }
 

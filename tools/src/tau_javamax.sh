@@ -38,7 +38,7 @@ fi
 if [ $(uname) = "Darwin" ]; then
     # memtotal=`java -XX:+PrintFlagsFinal -version 2>&1 | grep MaxHeapSize | awk '{print $4}'`
     memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
-    trymem=$(($memtotal/(1024*1024)))
+    trymem=$(($memtotal/(1024*1024)*7/8))
 #	echo "$trymem" > $cached
 #	echo $trymem
 #	exit
@@ -49,9 +49,9 @@ else
 	     memtotal="2300000"
           fi
         fi
+        trymem=$(($memtotal/1000*7/8))
 fi
 
-trymem=$(($memtotal/1000*7/8))
 while [ $trymem -gt 250 ] ; do
     oldmem=$trymem
     trymem=$(($trymem*3/4))

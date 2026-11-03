@@ -11,6 +11,7 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -23,6 +24,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
@@ -719,246 +721,222 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         return panel;
     }
 
-    private SteppedComboBox topoComboBox;// = new SteppedComboBox();
-    private int customTopoDex=-1;
+    private SteppedComboBox topoComboBox;
     private int selectedTopoDex=0;
-    
-    private void updateTopoList(){
-    	int maxDex = topoComboBox.getItemCount()-1;
-    	for(int i=maxDex;i>customTopoDex+1;i--)
-    	{
-    		topoComboBox.removeItemAt(i);
-    	}
-    	
-    	String defFile = settings.getTopoDefFile();
-    	if(defFile!=null){
-    		List<String> tnames = ThreeDeeGeneralPlotUtils.getCustomTopoNames(defFile);
-    		for(int i =0;i<tnames.size();i++){
-    			topoComboBox.addItem(tnames.get(i));
-    		}
-    	}
+    private boolean updatingTopologyList;
+    private final Set<String> customTopologyNames = new HashSet<String>();
+    private JButton mapFileButton;
+
+    private Vector<String> getTopologyChoices() {
+        Set<String> choices = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        choices.addAll(TopologyLayoutOptions.forTrial(ppTrial));
+        choices.remove(CUSTOM);
+        choices.remove(MAP);
+        choices.addAll(customTopologyNames);
+
+        Vector<String> ordered = new Vector<String>(choices);
+        ordered.add(CUSTOM);
+        ordered.add(MAP);
+        return ordered;
     }
-    
+
+    private void updateTopoList() {
+        String selected = topoComboBox == null ? settings.getTopoCart()
+                : (String) topoComboBox.getSelectedItem();
+        customTopologyNames.clear();
+        String defFile = settings.getTopoDefFile();
+        if (defFile != null) {
+            customTopologyNames.addAll(ThreeDeeGeneralPlotUtils.getCustomTopoNames(defFile));
+        }
+
+        updatingTopologyList = true;
+        if (topoComboBox != null) {
+            topoComboBox.removeAllItems();
+            for (String topology : getTopologyChoices()) {
+                topoComboBox.addItem(topology);
+            }
+            if (selected != null) {
+                topoComboBox.setSelectedItem(selected);
+            }
+            if (topoComboBox.getSelectedIndex() < 0 && topoComboBox.getItemCount() > 0) {
+                topoComboBox.setSelectedIndex(0);
+            }
+            selectedTopoDex = topoComboBox.getSelectedIndex();
+            topoComboBox.setPopupWidth(topoComboBox.getPreferredSize().width);
+        }
+        updatingTopologyList = false;
+    }
+
     private boolean checkDisableTopoWidgets(String topo){
-    	boolean b = (topo.equals(CUSTOM)||topo.equals("BGQ")||topo.equals(MAP)||topo.startsWith("Topo"));
-    	return !b;
-    	
+        boolean b = (topo.equals(CUSTOM) || topo.equals("BGQ") || topo.equals(MAP)
+                || topo.equals(SlurmTopologyLayout.SOURCE_NAME)
+                || topo.equals(SlurmTopologyLayout.THREADS_ON_Z_NAME) || topo.startsWith("Topo"));
+        return !b;
     }
-    
+
     private void switchTopoSelectPanels(boolean active){
-    	for(int i =0;i<3;i++){
-    		if(topoSelectPanels[i]!=null)
-    		{
-    			topoSelectPanels[i].setEnabled(active);
-    			Component[] ca = topoSelectPanels[i].getComponents();
-    			for(int j=0;j<ca.length;j++){
-    				ca[j].setEnabled(active);
-    				if(ca[j] instanceof JPanel){
-    					Component[] cb=((JPanel)ca[j]).getComponents();
-    					for(int k=0;k<cb.length;k++){
-    						cb[k].setEnabled(active);
-    					}
-    				}
-    			}
-    		}
-    		
-    	}
+        for(int i =0;i<3;i++){
+            if(topoSelectPanels[i]!=null)
+            {
+                topoSelectPanels[i].setEnabled(active);
+                Component[] ca = topoSelectPanels[i].getComponents();
+                for(int j=0;j<ca.length;j++){
+                    ca[j].setEnabled(active);
+                    if(ca[j] instanceof JPanel){
+                        Component[] cb=((JPanel)ca[j]).getComponents();
+                        for(int k=0;k<cb.length;k++){
+                            cb[k].setEnabled(active);
+                        }
+                    }
+                }
+            }
+        }
     }
-    
+
     private static final String CUSTOM="Custom";
     private static final String MAP="Map";
+
+    private boolean chooseMapFile() {
+        JFileChooser dialog = new JFileChooser();
+        dialog.setDialogTitle("Select a topology map file");
+        dialog.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        if (dialog.showOpenDialog(window) != JFileChooser.APPROVE_OPTION) {
+            return false;
+        }
+        File file = dialog.getSelectedFile();
+        if (file == null || !file.isFile() || !file.canRead()) {
+            JOptionPane.showMessageDialog(window, "The selected map file is not readable.",
+                    "Topology Map File", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        settings.setTopoMapFile(file.getAbsolutePath());
+        return true;
+    }
+
     private JPanel createTopoSelectionPanel(String name) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
-        //        panel.setBorder(BorderFactory.createLoweredBevelBorder());
         GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0.1;
-        gbc.weighty = 0.1;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        //addCompItem(panel, new JLabel(name), gbc, 0, 0, 1, 2);
+        gbc.insets = new Insets(5, 5, 5, 5);
 
-       
-
-        Dimension d;
-        
-        Vector<String> topos = ppTrial.getTopologyArray();
-        
-        //String[] a = new String[topos.size()];
-        topos.add(CUSTOM);
-        customTopoDex=topos.size()-1;
-        topos.add(MAP);
-		//return topos;//topos.toArray(a);
-        
-        topoComboBox = new SteppedComboBox(topos);
-        
-
-        //topoComboBox.addItem("Custom");
-        //valueBox.addItem("Sphere");
-        if(selectedTopoDex<topoComboBox.getItemCount())
-        	topoComboBox.setSelectedIndex(selectedTopoDex);
-        d = topoComboBox.getPreferredSize();
+        topoComboBox = new SteppedComboBox(getTopologyChoices());
+        topoComboBox.setToolTipText("Select the coordinate layout used for the topology view.");
         topoComboBox.setMinimumSize(new Dimension(100, topoComboBox.getMinimumSize().height));
-        topoComboBox.setPopupWidth(d.width);
-        
         updateTopoList();
-        
+        if (selectedTopoDex < topoComboBox.getItemCount()) {
+            topoComboBox.setSelectedIndex(selectedTopoDex);
+        }
         settings.setTopoCart((String)topoComboBox.getSelectedItem());
 
-        //topoComboBox.setSelectedItem(settings.getTopoValueType());gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        mapFileButton = new JButton("Map File...");
+        mapFileButton.setToolTipText("Choose the coordinate map file used by the Map topology.");
+        mapFileButton.setEnabled(MAP.equals(topoComboBox.getSelectedItem()));
+        mapFileButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                    if (chooseMapFile() && MAP.equals(topoComboBox.getSelectedItem())) {
+                        window.redraw();
+                    }
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        });
 
         ActionListener topoSelector = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
+                if (updatingTopologyList || topoComboBox.getSelectedItem() == null) {
+                    return;
+                }
                 try {
-                    settings.setTopoCart((String)topoComboBox.getSelectedItem());//TODO: Reset topo labels when this changes!
-                    boolean useCustom=topoComboBox.getSelectedIndex()>customTopoDex+1;
-                    settings.setCustomTopo(useCustom);
-                    
-                    switchTopoSelectPanels(checkDisableTopoWidgets((String)topoComboBox.getSelectedItem()));
-                    
-                    boolean useMap=topoComboBox.getSelectedIndex()==customTopoDex+1;
-                    if(useMap){
-                    	String s = settings.getTopoMapFile();
-                    	if(s==null){
-                    		topoComboBox.setSelectedIndex(selectedTopoDex);
-                    		System.out.println("Select a valid map file");//TODO: use a real error message.
-                    		return;
-                    	}
+                    String selectedTopology = (String) topoComboBox.getSelectedItem();
+                    if (MAP.equals(selectedTopology)) {
+                        String mapFile = settings.getTopoMapFile();
+                        if (mapFile == null && !chooseMapFile()) {
+                            updatingTopologyList = true;
+                            topoComboBox.setSelectedIndex(selectedTopoDex);
+                            updatingTopologyList = false;
+                            return;
+                        }
+                        if (mapFile != null) {
+                            // getTopoMapFile() clears the reload flag, so restore it.
+                            settings.setTopoMapFile(mapFile);
+                        }
                     }
-                    
-                    
+
+                    settings.setTopoCart(selectedTopology);
+                    settings.setCustomTopo(customTopologyNames.contains(selectedTopology));
+                    switchTopoSelectPanels(checkDisableTopoWidgets(selectedTopology));
+                    mapFileButton.setEnabled(MAP.equals(selectedTopology));
                     selectedTopoDex=topoComboBox.getSelectedIndex();
                     resetTopoAxisSliders(true);
                     window.redraw();
                     resetTopoAxisSliders(true);
-                    
-                    //Loop through axis spinners (3 of each) and activate or deactivate as needed.
-                    for(int i=0;i<3;i++)
-                    {
-                    	if(customAxisSpinners[i]!=null)
-                    		customAxisSpinners[i].setEnabled(settings.getTopoCart().equals(CUSTOM));
-//                    	if(customCoreAxisSpinners[i]!=null)
-//                    		customCoreAxisSpinners[i].setEnabled(settings.getTopoCart().equals(MAP));
+
+                    for(int i=0;i<3;i++) {
+                        if(customAxisSpinners[i]!=null) {
+                            customAxisSpinners[i].setEnabled(CUSTOM.equals(selectedTopology));
+                        }
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
             }
         };
-
         topoComboBox.addActionListener(topoSelector);
-        if(selectedTopoDex<topoComboBox.getItemCount())
-        	topoComboBox.setSelectedIndex(selectedTopoDex);
-        
-        JButton topoFileButton = new JButton("...");
-        
-        ActionListener topoFileSelector = new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                try {
-                	JFileChooser tsDialog = new JFileChooser("Select a topology definition file");
-                	if(ParaProf.schemaLocation!=null){
-                		File topoDir = new File(ParaProf.schemaLocation+File.separatorChar+"topology");
-                		if (topoDir.canRead()){
-                			tsDialog.setCurrentDirectory(topoDir);
-                		}
-                	}
-                	//tsDialog.setVisible(true);
-                    tsDialog.showOpenDialog(window);
-                    File dFile = tsDialog.getSelectedFile();
-                    if(dFile!=null&&dFile.exists()&&dFile.canRead()){
-                    String path = dFile.getAbsolutePath();
-                    settings.setTopoDefFile(path);
-                    updateTopoList();}
-                } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
-                }
-            }
-        };
-        
-        topoFileButton.addActionListener(topoFileSelector);
 
-        
-        JButton mapFileButton = new JButton(MAP);
-        
-        ActionListener mapFileSelector = new ActionListener() {
+        JButton topoFileButton = new JButton("Definitions...");
+        topoFileButton.setToolTipText(
+                "Load a file containing named expression-based topology definitions.");
+        topoFileButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                	JFileChooser tsDialog = new JFileChooser("Select a topology map file");
-//                	if(ParaProf.schemaLocation!=null){
-//                		File topoDir = new File(ParaProf.schemaLocation+File.separatorChar+"topology");
-//                		if (topoDir.canRead()){
-//                			tsDialog.setCurrentDirectory(topoDir);
-//                		}
-//                	}
-                	//tsDialog.setVisible(true);
-                	tsDialog.setCurrentDirectory(new File(System.getProperty("user.dir")));
-                    tsDialog.showOpenDialog(window);
-                    File dFile = tsDialog.getSelectedFile();
-                    if(dFile!=null&&dFile.exists()&&dFile.canRead()){
-                    String path = dFile.getAbsolutePath();
-                    settings.setTopoMapFile(path);
-                    //updateTopoList();
+                    JFileChooser dialog = new JFileChooser();
+                    dialog.setDialogTitle("Select a topology definition file");
+                    if(ParaProf.schemaLocation!=null){
+                        File topoDir = new File(ParaProf.schemaLocation+File.separatorChar+"topology");
+                        if (topoDir.canRead()){
+                            dialog.setCurrentDirectory(topoDir);
+                        }
+                    }
+                    if (dialog.showOpenDialog(window) == JFileChooser.APPROVE_OPTION) {
+                        File file = dialog.getSelectedFile();
+                        if(file != null && file.isFile() && file.canRead()){
+                            settings.setTopoDefFile(file.getAbsolutePath());
+                            updateTopoList();
+                        }
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
             }
-        };
-        
-        mapFileButton.addActionListener(mapFileSelector);
-        
-        
-        JPanel subPanel = new JPanel();
-        subPanel.setLayout(new GridBagLayout());
+        });
 
-        gbc.insets = new Insets(1, 1, 1, 1);
-
-
-
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        gbc.weightx = 0.5;
-        gbc.weighty = 0.5;
-
-        addCompItem(panel, new JLabel("Topology"), gbc, 0, 1, 1, 1);
-        gbc.weighty = 1.0;
+        gbc.weightx = 0.0;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        addCompItem(panel, new JLabel("Topology"), gbc, 0, 0, 1, 1);
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        addCompItem(panel, topoComboBox, gbc, 1, 1, 1, 1);
-        gbc.weighty = 0.0;
+        addCompItem(panel, topoComboBox, gbc, 1, 0, 1, 1);
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
-        addCompItem(panel, topoFileButton, gbc, 2, 1, 1, 1);
-        addCompItem(panel, mapFileButton, gbc, 3, 1, 1, 1);
-        
+        addCompItem(panel, mapFileButton, gbc, 2, 0, 1, 1);
+
+        // Definition files add choices to the selector, so keep this action visually
+        // separate from the Map-specific file chooser.
+        addCompItem(panel, new JLabel("Additional layouts"), gbc, 0, 1, 1, 1);
+        addCompItem(panel, topoFileButton, gbc, 1, 1, 1, 1);
+
         gbc.weighty = 0;
         gbc.weightx = 0;
         addCompItem(panel, customAxisLabels [0]=new JLabel("X Axis"), gbc, 0, 3, 1, 1);
         addCompItem(panel, createTopoCustomAxisSpinnerPanel(0, this.customAxisSpinners), gbc, 1, 3, 1, 1);
-        gbc.weightx = 0;
         addCompItem(panel, customAxisLabels [1]=new JLabel("Y Axis"), gbc, 0, 4, 1, 1);
         addCompItem(panel, createTopoCustomAxisSpinnerPanel(1, this.customAxisSpinners), gbc, 1, 4, 1, 1);
-        gbc.weightx = 0;
         addCompItem(panel, customAxisLabels [2]=new JLabel("Z Axis"), gbc, 0, 5, 1, 1);
         addCompItem(panel, createTopoCustomAxisSpinnerPanel(2, this.customAxisSpinners), gbc, 1, 5, 1, 1);
-        
-        
-//        addCompItem(panel, customCoreAxisLabels [0]=new JLabel("Core X Axis"), gbc, 0, 6, 1, 1);
-//        addCompItem(panel, createTopoCustomCoreAxisSpinnerPanel(0, this.customCoreAxisSpinners), gbc, 1, 6, 1, 1);
-//        gbc.weightx = 0;
-//        addCompItem(panel, customCoreAxisLabels [1]=new JLabel("Core Y Axis"), gbc, 0, 7, 1, 1);
-//        addCompItem(panel, createTopoCustomCoreAxisSpinnerPanel(1, this.customCoreAxisSpinners), gbc, 1, 7, 1, 1);
-//        gbc.weightx = 0;
-//        addCompItem(panel, customCoreAxisLabels [2]=new JLabel("Core Z Axis"), gbc, 0, 8, 1, 1);
-//        addCompItem(panel, createTopoCustomCoreAxisSpinnerPanel(2, this.customCoreAxisSpinners), gbc, 1, 8, 1, 1);
-
         return panel;
     }
     

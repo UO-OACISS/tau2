@@ -18,6 +18,7 @@ import java.awt.EventQueue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -45,6 +46,8 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UserEvent;
 
 public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObject {
+
+    public static final String SLURM_TOPOLOGY_SOURCE = "SLURM_TOPOLOGY";
 
     private Function highlightedFunction = null;
     private Group highlightedGroup = null;
@@ -843,78 +846,63 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
 	public Vector<String> getTopologyArray() {
-		Set<MetaDataKey> keys = getDataSource().getMetaData().keySet();
-		Vector<String> topos = new Vector<String>();
-		boolean foundTopo=false;
-		for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
-			String key = it.next().name;
-			if(key.contains(" isTorus")||key.contains(" Period")||key.contains(" Dimension")){
-				int lastSpace=key.lastIndexOf(' ');
-				topos.add(key.substring(0,lastSpace));
-				//topos.add(key.split(" ")[0]);
-				foundTopo=true;
-			}
-			
-		}
-		
-		if(!foundTopo){
-			Thread base =getDataSource().getThread(0, 0, 0);
-			if(base==null){
-				/*
-				 * If we don't have 0,0,0 get a list of all the threads. If any thread has more metadata than the first we assume that's the one with the core metadata. If any has less than the first we assume the first has the core metadata.
-				 */
-				List<Thread> threads = getDataSource().getThreads();
-				
-				Iterator<Thread> threadIt = threads.iterator();
-				if(!threadIt.hasNext()){
-					return topos;
-				}
-				Thread currentThread=threadIt.next();
-				base = currentThread;
-				int num=currentThread.getMetaData().keySet().size();
-				while(threadIt.hasNext()){
-					
-					currentThread=threadIt.next();
-					
-					int tmp =currentThread.getMetaData().keySet().size();
-					if(tmp>num){
-						base=currentThread;
-						break;
-					}else if(tmp<num){
-						
-						break;
-					}
-				}
-			}
-			if(base==null){
-				return topos;
-			}
-			boolean foundCray=false;
-			keys = base.getMetaData().keySet();
-			for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
-				String key = it.next().name;
-				if((key.startsWith("Cray")&&key.contains("Nodename")))
-				{
-					topos.add(key.split(" ")[0]);
-					foundTopo=true;
-				}
-				if(!foundCray&&key.startsWith("CRAY_PMI")){
-					topos.add("CRAY_PMI");
-					foundTopo=true;
-					foundCray=true;
+		LinkedHashSet<String> topologies = new LinkedHashSet<String>();
+
+		// Cartesian topology definitions are stored at trial scope.
+		for (MetaDataKey metadataKey : getDataSource().getMetaData().keySet()) {
+			String key = metadataKey.name;
+			if (key.contains(" isTorus") || key.contains(" Period")
+					|| key.contains(" Dimension")) {
+				int lastSpace = key.lastIndexOf(' ');
+				if (lastSpace > 0) {
+					topologies.add(key.substring(0, lastSpace));
 				}
 			}
 		}
-		
-//		if(topos.size()==0){
-//			return new String[]{null};
-//		}
-		
-//		topos.add("Sphere");
-//		topos.add("Custom");
-		
-		//String[] a = new String[topos.size()];
-		return topos;//topos.toArray(a);
+
+		// Topology metadata is normally available on thread 0. Use one
+		// representative thread for inexpensive discovery; rendering validates
+		// the metadata it consumes.
+		Thread base = getDataSource().getThread(0, 0, 0);
+		if (base == null) {
+			List<Thread> threads = getDataSource().getThreads();
+			if (!threads.isEmpty()) {
+				base = threads.get(0);
+			}
+		}
+		if (base == null) {
+			return new Vector<String>(topologies);
+		}
+
+		for (MetaDataKey metadataKey : base.getMetaData().keySet()) {
+			String key = metadataKey.name;
+			if (key.startsWith("Cray") && key.contains("Nodename")) {
+				topologies.add(key.split(" ")[0]);
+			}
+		}
+
+		if (hasRepresentativeMetadata(base, "CRAY_NODENAME")
+				&& hasRepresentativeMetadata(base, "CRAY_PMI_NODEID")
+				&& hasRepresentativeMetadata(base, "CRAY_PMI_X")
+				&& hasRepresentativeMetadata(base, "CRAY_PMI_Y")
+				&& hasRepresentativeMetadata(base, "CRAY_PMI_Z")) {
+			topologies.add("CRAY_PMI");
+		}
+
+		if (hasRepresentativeMetadata(base, "SLURM_TOPOLOGY_ADDR")
+				&& hasRepresentativeMetadata(base, "SLURM_TOPOLOGY_ADDR_PATTERN")) {
+			topologies.add(SLURM_TOPOLOGY_SOURCE);
+		}
+
+		return new Vector<String>(topologies);
+	}
+
+	private boolean hasRepresentativeMetadata(Thread thread, String key) {
+		String value = thread.getMetaData().get(key);
+		if (value == null) {
+			value = getDataSource().getMetaData().get(key);
+		}
+		return value != null && !value.isEmpty();
 	}
 
 }

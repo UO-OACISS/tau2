@@ -187,12 +187,8 @@ do
      FLAG32=1
      shift
      ;;
-   -jogl1|--jogl1)
-     FLAGJOGL1=1
-     shift
-     ;;
-   -jogl2|--jogl2)
-     FLAGJOGL2=1
+   -jogl1|--jogl1|-jogl2|--jogl2)
+     # accepted and ignored for backward compatibility
      shift
      ;;
    -fix-xquartz)
@@ -221,17 +217,11 @@ do
 done
 
 
-# --- JOGL / Architecture Logic (Parity with Paraprof) ---
+# --- JOGL / Architecture Logic ---
 
 if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_apple" ] ; then
 	if [ "$FLAG32" != "1" ]; then
 		FLAG64=1
-	fi
-fi
-
-if [ "$MACHINE" = "x86_64" ] || [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ] || [ "$MACHINE" = "arm64_apple" ] || [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
-	if [ "$FLAGJOGL1" != "1" ]; then
-		FLAGJOGL2=1
 	fi
 fi
 
@@ -249,14 +239,12 @@ if [ "$JAVA2D_OPENGL_FLAG" = "1" ]; then
   JAVA2D_OPENGL_OPT="-Dsun.java2d.opengl=true"
 fi
 
-JOGL1_JARS=${JARDIR}/vis.jar:${JARDIR}/jogl.jar
-DEFAULT_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}
-
-JOGL_JARS=${JOGL1_JARS}
-
-if [ "$FLAGJOGL2" = "1" ]; then
-	JOGL_JARS=${DEFAULT_JOGL2_JARS}
-fi
+JOGL_JARS=${JARDIR}/vis.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar
+# configure installs the platform's natives jars under their canonical names
+for j in ${JARDIR}/jogl-all-natives-*.jar ${JARDIR}/gluegen-rt-natives-*.jar; do
+	[ -f "$j" ] && JOGL_JARS=${JOGL_JARS}:${j}
+done
+JOGL_JARS=${JOGL_JARS}:${JARDIR}
 # --- End JOGL Logic ---
 
 # get the jdbc jar file from the configuration file

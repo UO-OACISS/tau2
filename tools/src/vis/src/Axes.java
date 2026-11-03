@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -29,7 +29,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.sun.opengl.util.GLUT;
+import com.jogamp.opengl.util.gl2.GLUT;
 
 //import edu.uoregon.tau.paraprof.ParaProfUtils;
 
@@ -73,6 +73,7 @@ public class Axes implements Shape {
 	private int labelLength = 30;
 
 	private boolean enabled = true;
+	private boolean axisTitlesVisible = true;
 	private Color highlightColor = new Color(1, 0, 0);
 
 	private int displayList;
@@ -304,6 +305,13 @@ public class Axes implements Shape {
 	 * @param color
 	 *            the color to use
 	 */
+	/** Controls axis titles without changing tick text, marks, or grid geometry. */
+	public void setAxisTitlesVisible(boolean visible) {
+		if (axisTitlesVisible != visible) {
+			axisTitlesVisible = visible;
+			dirty = true;
+		}
+	}
 	public void setHighlightColor(Color color) {
 		highlightColor = color;
 	}
@@ -528,13 +536,13 @@ public class Axes implements Shape {
 			return;
 		}
 
-		GL gl = glDrawable.getGL();
+		GL2 gl = glDrawable.getGL().getGL2();
 
 		if (dirty || displayList == 0) {
 			if (displayList == 0) {
 				displayList = gl.glGenLists(1);
 			}
-			gl.glNewList(displayList, GL.GL_COMPILE);
+			gl.glNewList(displayList, GL2.GL_COMPILE);
 			privateRender(visRenderer);
 			gl.glEndList();
 			dirty = false;
@@ -602,10 +610,10 @@ public class Axes implements Shape {
 
 	private void drawGrid(VisRenderer visRenderer, int numx, int numy,
 			float xSize, float ySize, int xLabelSkip, int yLabelSkip) {
-		GL gl = visRenderer.getGLAutoDrawable().getGL();
+		GL2 gl = visRenderer.getGLAutoDrawable().getGL().getGL2();
 		applyMinorColor(visRenderer);
 
-		gl.glBegin(GL.GL_LINES);
+		gl.glBegin(GL2.GL_LINES);
 		int xOffset = 0;
 		int yOffset = 0;
 		if (onEdge) {
@@ -648,7 +656,7 @@ public class Axes implements Shape {
 		if (!enabled)
 			return;
 
-		GL gl = visRenderer.getGLAutoDrawable().getGL();
+		GL2 gl = visRenderer.getGLAutoDrawable().getGL().getGL2();
 
 		// don't highlight on if they're not both on
 		if (selectedRow < 0 || selectedCol < 0) {
@@ -671,16 +679,16 @@ public class Axes implements Shape {
 
 		// int zOffset = 0;
 
-		gl.glDisable(GL.GL_LIGHTING);
+		gl.glDisable(GL2.GL_LIGHTING);
 
 		if (visRenderer.getAntiAliasedLines()) {
-			gl.glEnable(GL.GL_LINE_SMOOTH);
-			gl.glEnable(GL.GL_BLEND);
-			gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-			gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
+			gl.glEnable(GL2.GL_LINE_SMOOTH);
+			gl.glEnable(GL2.GL_BLEND);
+			gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+			gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
 		} else {
-			gl.glDisable(GL.GL_LINE_SMOOTH);
-			gl.glDisable(GL.GL_BLEND);
+			gl.glDisable(GL2.GL_LINE_SMOOTH);
+			gl.glDisable(GL2.GL_BLEND);
 		}
 
 		gl.glLineWidth(1.0f);
@@ -806,7 +814,7 @@ public class Axes implements Shape {
 						|| orientation == Orientation.SW, -1);
 		gl.glPopMatrix();
 
-		gl.glEnable(GL.GL_LIGHTING);
+		gl.glEnable(GL2.GL_LIGHTING);
 	}
 
 	private void drawLabels(VisRenderer visRenderer, String label,
@@ -814,7 +822,7 @@ public class Axes implements Shape {
 			boolean leftJustified, int selected) {
 		// Draw the strings for an axis
 
-		GL gl = visRenderer.getGLAutoDrawable().getGL();
+		GL2 gl = visRenderer.getGLAutoDrawable().getGL().getGL2();
 		double maxPoint = 0;
 
 		applyTextColor(visRenderer);
@@ -832,7 +840,7 @@ public class Axes implements Shape {
 
 				gl.glPushMatrix();
 
-				gl.glBegin(GL.GL_LINES);
+				gl.glBegin(GL2.GL_LINES);
 				if (leftJustified) {
 					gl.glVertex3f(0.0f, 0.0f, 0.0f);
 					gl.glVertex3f(1.0f, 0.0f, 0.0f);
@@ -870,7 +878,7 @@ public class Axes implements Shape {
 				gl.glPopMatrix();
 			} else {
 				if (i % (tickSkip + 1) == 0) {
-					gl.glBegin(GL.GL_LINES);
+					gl.glBegin(GL2.GL_LINES);
 					if (leftJustified) {
 						gl.glVertex3f(0.0f, 0.0f, 0.0f);
 						gl.glVertex3f(0.5f, 0.0f, 0.0f);
@@ -896,6 +904,7 @@ public class Axes implements Shape {
 		maxPoint = (maxPoint * 0.003f)+2400/fontScale;
 
 		// Now draw the axis labels
+		if (!axisTitlesVisible) return;
 		gl.glPushMatrix();
 		if (leftJustified) {
 			gl.glTranslated(maxPoint + 3.0f, -increment * (strings.size() + 1)

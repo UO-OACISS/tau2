@@ -22,8 +22,8 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.StringTokenizer;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -35,7 +35,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.sun.opengl.util.GLUT;
+import com.jogamp.opengl.util.gl2.GLUT;
 
 /**
  * Draws a colorscale and also provides services to other vis components.
@@ -388,7 +388,7 @@ public class ColorScale extends Observable implements Shape {
         return controlPanel;
     }
 
-    private float getTextWidth(GL gl, String text) {
+    private float getTextWidth(GL2 gl, String text) {
         if (text == null) {
             return 0;
         }
@@ -402,7 +402,7 @@ public class ColorScale extends Observable implements Shape {
         return (float) (maxWidth * fontScale);
     }
 
-    private void drawText(GL gl, double x, double y, String text, boolean growDown) {
+    private void drawText(GL2 gl, double x, double y, String text, boolean growDown) {
         if (text == null)
             return;
 
@@ -493,22 +493,22 @@ public class ColorScale extends Observable implements Shape {
             return;
         }
 
-        int width = (int) glDrawable.getWidth();
-        int height = (int) glDrawable.getHeight();
+        int width = (int) glDrawable.getSurfaceWidth();
+        int height = (int) glDrawable.getSurfaceHeight();
         if (width != oldWidth || height != oldHeight) {
             dirty = true;
             oldWidth = width;
             oldHeight = height;
         }
 
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
 
         if (dirty || displayList == 0) {
             if (displayList != 0) {
                 gl.glDeleteLists(displayList, 1);
             }
             displayList = gl.glGenLists(1);
-            gl.glNewList(displayList, GL.GL_COMPILE);
+            gl.glNewList(displayList, GL2.GL_COMPILE);
             privateRender(visRenderer);
             gl.glEndList();
             dirty = false;
@@ -519,34 +519,34 @@ public class ColorScale extends Observable implements Shape {
     private void privateRender(VisRenderer visRenderer) {
         GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
 
-        GL gl = glDrawable.getGL();
+        GL2 gl = glDrawable.getGL().getGL2();
         if (enabled == false)
             return;
 
-        int glWidth = (int) glDrawable.getWidth();
-        int glHeight = (int) glDrawable.getHeight();
-        gl.glMatrixMode(GL.GL_PROJECTION);
+        int glWidth = (int) glDrawable.getSurfaceWidth();
+        int glHeight = (int) glDrawable.getSurfaceHeight();
+        gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();
         gl.glOrtho(0, glWidth, 0, glHeight, -1.0f, 1.0f);
 
-        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glPushMatrix();
 
         gl.glLoadIdentity();
 
-        gl.glDisable(GL.GL_LIGHTING);
-        gl.glDisable(GL.GL_DEPTH_TEST);
+        gl.glDisable(GL2.GL_LIGHTING);
+        gl.glDisable(GL2.GL_DEPTH_TEST);
         gl.glLineWidth(1.0f);
 
         if (visRenderer.getAntiAliasedLines()) {
-            gl.glEnable(GL.GL_LINE_SMOOTH);
-            gl.glEnable(GL.GL_BLEND);
-            gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-            gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
+            gl.glEnable(GL2.GL_LINE_SMOOTH);
+            gl.glEnable(GL2.GL_BLEND);
+            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
         } else {
-            gl.glDisable(GL.GL_LINE_SMOOTH);
-            gl.glDisable(GL.GL_BLEND);
+            gl.glDisable(GL2.GL_LINE_SMOOTH);
+            gl.glDisable(GL2.GL_BLEND);
         }
 
         int pixelHeight = Math.min(height, height - topBottomMargin);
@@ -555,9 +555,9 @@ public class ColorScale extends Observable implements Shape {
         gl.glTranslated(leftMargin, (glHeight / 2) - (pixelHeight / 2), 0);
 
         // draw the actual scale as a set of 10 blended quads
-        gl.glShadeModel(GL.GL_SMOOTH);
-        gl.glFrontFace(GL.GL_CW);
-        gl.glBegin(GL.GL_QUADS);
+        gl.glShadeModel(GL2.GL_SMOOTH);
+        gl.glFrontFace(GL2.GL_CW);
+        gl.glBegin(GL2.GL_QUADS);
 
         int nBlocks = 10;
         float increment = pixelHeight / 10.0f;
@@ -614,12 +614,12 @@ public class ColorScale extends Observable implements Shape {
 
         gl.glPopMatrix();
 
-        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPopMatrix();
-        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
 
-        gl.glEnable(GL.GL_LIGHTING);
-        gl.glEnable(GL.GL_DEPTH_TEST);
+        gl.glEnable(GL2.GL_LIGHTING);
+        gl.glEnable(GL2.GL_DEPTH_TEST);
     }
 
     public double getFontScale() {

@@ -28,11 +28,11 @@ public class HeatLegend extends JPanel implements ImageObserver {
 		int height = 100;
 		
 		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		int i = 0;
+		//int i = 0;
 		for (int x = 0 ; x < width ; x++) {
 			for (int y = 0 ; y < height ; y++) {
 				img.setRGB(x, y, scale.getColor(((float)(99-y))/100.0f).getRGB());
-				i++;
+				//i++;
 			}
 		}
 		this.setPreferredSize(new Dimension(15,100));

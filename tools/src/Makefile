@@ -3,7 +3,7 @@
 # Works with or without running tau configure
 #
 # Usage:  make [JAVA_RELEASE=8|17|21|none] [target]
-# Targets: all  common  vis  vis-jogl2  perfdmf  paraprof  perfexplorer  clean
+# Targets: all  common  vis  perfdmf  paraprof  perfexplorer  clean
 
 JAVA_RELEASE ?= 8
 
@@ -35,9 +35,9 @@ EXTDEPS_ROOT  ?= $(realpath $(TOOLS_SRC)/../..)
 EXTDEPS_SRC   := $(EXTDEPS_ROOT)/external_dependencies
 _EXTDEPS_DONE := $(CONTRIB)/.pe-extdeps-done
 
-.PHONY: all common vis vis-jogl2 perfdmf paraprof perfexplorer extdeps clean
+.PHONY: all common vis perfdmf paraprof perfexplorer extdeps clean
 
-all: common vis vis-jogl2 perfdmf paraprof perfexplorer
+all: common vis perfdmf paraprof perfexplorer
 
 common:
 	$(MAKE) -C $(TOOLS_SRC)/common $(_SUB_FLAGS)
@@ -45,13 +45,10 @@ common:
 vis: common
 	$(MAKE) -C $(TOOLS_SRC)/vis $(_SUB_FLAGS)
 
-vis-jogl2: common
-	$(MAKE) -C $(TOOLS_SRC)/vis-jogl2 $(_SUB_FLAGS)
-
 perfdmf: common
 	$(MAKE) -C $(TOOLS_SRC)/perfdmf $(_SUB_FLAGS)
 
-paraprof: perfdmf vis vis-jogl2
+paraprof: perfdmf vis
 	$(MAKE) -C $(TOOLS_SRC)/paraprof $(_SUB_FLAGS)
 
 # Setup bypass of tau configure to process perfexplorer/Makefile.skel
@@ -101,7 +98,6 @@ perfexplorer: perfdmf vis $(TOOLS_SRC)/perfexplorer/Makefile extdeps
 clean:
 	$(MAKE) -C $(TOOLS_SRC)/common   clean $(_SUB_FLAGS)
 	$(MAKE) -C $(TOOLS_SRC)/vis      clean $(_SUB_FLAGS)
-	$(MAKE) -C $(TOOLS_SRC)/vis-jogl2 clean $(_SUB_FLAGS)
 	$(MAKE) -C $(TOOLS_SRC)/perfdmf  clean $(_SUB_FLAGS)
 	$(MAKE) -C $(TOOLS_SRC)/paraprof clean $(_SUB_FLAGS)
 	-$(MAKE) -C $(TOOLS_SRC)/perfexplorer clean 2>/dev/null

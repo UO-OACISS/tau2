@@ -25,6 +25,7 @@ import java.util.Observer;
 import java.util.Stack;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
@@ -68,6 +69,7 @@ import edu.uoregon.tau.vis.VisCanvas;
 import edu.uoregon.tau.vis.VisCanvasListener;
 import edu.uoregon.tau.vis.VisRenderer;
 import edu.uoregon.tau.vis.VisTools;
+import edu.uoregon.tau.vis.WorldLabelOverlay;
 import edu.uoregon.tau.vis.XmasTree;
 import edu.uoregon.tau.vis.XmasTree.Ornament;
 
@@ -104,6 +106,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	private BarPlot barPlot;
 	private ScatterPlot scatterPlot;
 	private TopoPlot topoPlot;
+	private WorldLabelOverlay topologyAxisOverlay;
 	private Axes fullDataPlotAxes;
 	private Axes scatterPlotAxes;
 
@@ -143,10 +146,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		settings.setTopoMetric(ppTrial.getDefaultMetric(), 2);
 		settings.setTopoMetric(ppTrial.getDefaultMetric(), 3);
 
-		List<String> tList = ppTrial.getTopologyArray();
+		List<String> tList = TopologyLayoutOptions.forTrial(ppTrial);
 
 		String topoc = null;
-		if (tList != null && tList.size() > 0)
+		if (!tList.isEmpty())
 			topoc = tList.get(0);
 		if (topoc != null)
 			settings.setTopoCart(topoc);
@@ -215,6 +218,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		visRenderer.addShape(plot);
 		visRenderer.addShape(colorScale);
 		visRenderer.setVisCanvasListener(this);
+		visRenderer.setPickListener(new VisRenderer.PickListener() {
+			public void picked(edu.uoregon.tau.vis.Shape shape, int index) {
+				showPickedPoint(shape, index);
+			}
+		});
 		visCanvas = new VisCanvas(visRenderer);
 
 		visCanvas.addKeyListener(this);
@@ -243,6 +251,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		gbc.gridwidth = 1;
 		gbc.gridheight = 1;
 		panel.add(visCanvas.getActualCanvas(), gbc);
+		gbc.weighty = 0.0;
+		gbc.gridy = 1;
+		panel.add(pickLabel, gbc);
 		panel.setPreferredSize(new Dimension(5, 5));
 
 		controlPanel = new ThreeDeeControlPanel(this, settings, ppTrial,
@@ -286,6 +297,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	}
 
 	private void generateScatterPlot(boolean autoSize, ThreeDeeSettings settings) {
+		removeTopologyAxisOverlay();
 
 		Function[] scatterFunctions = settings.getScatterFunctions();
 
@@ -344,6 +356,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		}
 
 		setAxisStrings();
+		scatterPlotAxes.setAxisTitlesVisible(true);
 
 		axes = scatterPlotAxes;
 
@@ -359,6 +372,51 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		scatterPlot.setValues(values);
 		scatterPlot.setColorScale(colorScale);
 		plot = scatterPlot;
+	}
+
+	private final JLabel pickLabel = new JLabel(" ");
+
+	// Describes the hovered topology point; index follows the thread order used to build the plot values.
+	private int lastPickedIndex = -1;
+
+	private void showPickedPoint(edu.uoregon.tau.vis.Shape shape, int index) {
+		int effective = (shape != null && shape == topoPlot) ? index : -1;
+		if (effective == lastPickedIndex) {
+			return;
+		}
+		lastPickedIndex = effective;
+		String text = " ";
+		if (shape != null && shape == topoPlot && index >= 0) {
+			try {
+				List<Thread> threads = ppTrial.getDataSource().getAllThreads();
+				if (index < threads.size()) {
+					Thread thread = threads.get(index);
+					StringBuilder sb = new StringBuilder();
+					sb.append("Rank ").append(thread.getNodeID()).append(", thread ")
+							.append(thread.getThreadID());
+					String addr = getTopologyMetadata(thread, "SLURM_TOPOLOGY_ADDR");
+					if (addr == null || addr.isEmpty()) {
+						addr = getTopologyMetadata(thread, "Node Name");
+					}
+					if (addr != null && !addr.isEmpty()) {
+						sb.append("  |  ").append(addr);
+					}
+					float value = getColorValue(thread);
+					if (!Float.isNaN(value)) {
+						sb.append("  |  value: ").append(value);
+					}
+					text = sb.toString();
+				}
+			} catch (RuntimeException e) {
+				text = " ";
+			}
+		}
+		pickLabel.setText(text);
+		if (visRenderer != null) {
+			float[] pos = (shape != null && shape == topoPlot) ? topoPlot.getPointPosition(index) : null;
+			visRenderer.setHighlight(pos);
+			visRenderer.redraw();
+		}
 	}
 
 	private float getColorValue(Thread thread) {
@@ -468,18 +526,152 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		topoPlot.setColorScale(colorScale);
 		topoPlot.setVisRange(settings.getMinTopoRange(),
 				settings.getMaxTopoRange());
+		configureTopologyAxisOverlay();
 		plot = topoPlot;
 
 		// settings.setMinTopoShown(scatterPlot.getMinShown());
 		// settings.setMaxTopoShown(scatterPlot.getMaxShown());
 	}
 
+	private void configureTopologyAxisOverlay() {
+		removeTopologyAxisOverlay();
+		float x = restrict ? 15.0f : tsizes[0];
+		float y = restrict ? 15.0f : tsizes[1];
+		float z = restrict ? 15.0f : tsizes[2];
+		float centerX = x / 2.0f;
+		float centerY = y / 2.0f;
+		float centerZ = z / 2.0f;
+		List<WorldLabelOverlay.Label> labels =
+				new ArrayList<WorldLabelOverlay.Label>();
+		String topology = settings.getTopoCart();
+		String zLabel = SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(topology)
+				? "Z (Thread Slot)" : "Z";
+		// Anchor each title at the midpoint of its axis edge. The projected
+		// plot center still supplies the outward screen-space direction.
+		labels.add(new WorldLabelOverlay.Label("X", centerX, 0, 0,
+				centerX, centerY, centerZ, 24, 1, 0));
+		labels.add(new WorldLabelOverlay.Label("Y", 0, centerY, 0,
+				centerX, centerY, centerZ, 24, 0, 1));
+		labels.add(new WorldLabelOverlay.Label(zLabel, 0, 0, centerZ,
+				centerX, centerY, centerZ, 24, 0, 1));
+		if (!labels.isEmpty()) {
+			topologyAxisOverlay = new WorldLabelOverlay(labels);
+			visRenderer.addOverlay(topologyAxisOverlay);
+		}
+		// Slurm XY values are packing coordinates, not scheduler dimensions.
+		scatterPlotAxes.setAxisTitlesVisible(false);
+	}
+	private void removeTopologyAxisOverlay() {
+		if (topologyAxisOverlay != null) {
+			visRenderer.removeOverlay(topologyAxisOverlay);
+			topologyAxisOverlay = null;
+		}
+	}
 	int[] tsizes = { 0, 0, 0 };
 	boolean restrict = false;
 	Thread[][][] threadTopo=null;
 	private int[][] coords = null;
 
+	private CoordMap buildSlurmMap(List<Thread> profileThreads) {
+		return buildSlurmMap(profileThreads, SlurmTopologyLayout.ParticipantLayout.FLAT);
+	}
+
+	private CoordMap buildSlurmMap(List<Thread> profileThreads,
+			SlurmTopologyLayout.ParticipantLayout participantLayout) {
+		List<SlurmTopologyLayout.Participant> participants =
+				new ArrayList<SlurmTopologyLayout.Participant>(profileThreads.size());
+		for (int i = 0; i < profileThreads.size(); i++) {
+			Thread thread = profileThreads.get(i);
+			String localId = getTopologyMetadata(thread, "SLURM_LOCALID");
+			if (localId == null || localId.isEmpty()) {
+				localId = getTopologyMetadata(thread, "CRAY_PMI_LOCAL_RANK");
+			}
+			participants.add(new SlurmTopologyLayout.Participant(
+					getTopologyMetadata(thread, "SLURM_TOPOLOGY_ADDR"),
+					getTopologyMetadata(thread, "SLURM_TOPOLOGY_ADDR_PATTERN"),
+					localId, thread.getNodeID(), thread.getThreadID(), i));
+		}
+		SlurmTopologyLayout.Layout layout = SlurmTopologyLayout.create(participants, participantLayout);
+		if (layout == null) {
+			return null;
+		}
+		return new CoordMap(layout.getMin(), layout.getMax(), layout.getCoordinates());
+	}
+
+	/**
+	 * Never throws: any failure to derive the selected topology falls back to a
+	 * plain rectangular rank x thread layout.
+	 */
 	private float[][] defaultTopology(int numThreads) {
+		float[][] values = null;
+		try {
+			values = selectedTopology(numThreads);
+		} catch (RuntimeException e) {
+			System.err.println("Warning: topology layout failed (" + e
+					+ "); using default rectangular layout.");
+		}
+		if (values == null || !topologyHasExtent(values)) {
+			values = rectangularTopology(numThreads);
+		}
+		return values;
+	}
+
+	private boolean topologyHasExtent(float[][] values) {
+		if (values.length < 2) {
+			return true;
+		}
+		for (int i = 1; i < values.length; i++) {
+			if (values[i][0] != values[0][0] || values[i][1] != values[0][1]
+					|| values[i][2] != values[0][2]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Ranks wrap into rows of roughly square shape; threads extend along z.
+	private float[][] rectangularTopology(int numThreads) {
+		float[][] values = new float[numThreads][4];
+		List<Thread> threads = ppTrial.getDataSource().getAllThreads();
+		int maxRank = 0;
+		for (Thread t : threads) {
+			maxRank = Math.max(maxRank, t.getNodeID());
+		}
+		int width = Math.max(1, (int) Math.ceil(Math.sqrt(maxRank + 1)));
+		float[] max = new float[3];
+		for (int f = 0; f < 4; f++) {
+			minScatterValues[f] = Float.MAX_VALUE;
+			maxScatterValues[f] = Float.MIN_VALUE;
+		}
+		int i = 0;
+		for (Thread t : threads) {
+			if (i >= numThreads) {
+				break;
+			}
+			int rank = Math.max(0, t.getNodeID());
+			values[i][0] = rank % width;
+			values[i][1] = rank / width;
+			values[i][2] = Math.max(0, t.getThreadID());
+			for (int f = 0; f < 3; f++) {
+				max[f] = Math.max(max[f], values[i][f]);
+			}
+			float color = getColorValue(t);
+			if (!Float.isNaN(color)) {
+				values[i][3] = color;
+				maxScatterValues[3] = Math.max(maxScatterValues[3], color);
+				minScatterValues[3] = Math.min(minScatterValues[3], color);
+			}
+			i++;
+		}
+		for (int f = 0; f < 3; f++) {
+			minScatterValues[f] = 0;
+			maxScatterValues[f] = (int) max[f];
+			tsizes[f] = (int) max[f];
+		}
+		return values;
+	}
+
+	private float[][] selectedTopology(int numThreads) {
 		float[][] values = new float[numThreads][4];
 		
 		//Thread[][][] threadTopo=null;
@@ -545,13 +737,28 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		} 
 		
-		else if (prefix.equals("Map")||prefix.equals("CRAY_PMI")) {
+		else if (prefix.equals("Map") || prefix.equals("CRAY_PMI")
+				|| SlurmTopologyLayout.SOURCE_NAME.equals(prefix)
+				|| SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(prefix)) {
 			
 			CoordMap map = null;
+			List<Thread> profileThreads = ppTrial.getDataSource().getAllThreads();
 			
-			if(prefix.equals("CRAY_PMI"))
+			if (SlurmTopologyLayout.SOURCE_NAME.equals(prefix)
+					|| SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(prefix)) {
+				SlurmTopologyLayout.ParticipantLayout participantLayout =
+						SlurmTopologyLayout.THREADS_ON_Z_NAME.equals(prefix)
+								? SlurmTopologyLayout.ParticipantLayout.THREADS_ON_Z
+								: SlurmTopologyLayout.ParticipantLayout.FLAT;
+				map = buildSlurmMap(profileThreads, participantLayout);
+				if (map == null) {
+					return values;
+				}
+			}
+			else if(prefix.equals("CRAY_PMI"))
 			{
-					CrayTopology[] ctopo = new CrayTopology[ppTrial.getDataSource().getNumThreads()];
+				{
+					CrayTopology[] ctopo = new CrayTopology[profileThreads.size()];
 					int i=0;
 					
 					//This metadata only shows up where it changes from the previous rank, so we need to check for it and use the previous value if it is absent.
@@ -563,9 +770,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					int y=0; 
 					int z=0;
 					
-					for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
-							.iterator(); it.hasNext();) {
-						Thread thread = it.next();
+					for (Thread thread : profileThreads) {
 
 						int mpirank = thread.getNodeID();
 						int threadID = thread.getThreadID();
@@ -579,18 +784,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						else{
 							coreid=0;
 						}
-						if(thread.getMetaData().containsKey("CRAY_NODENAME"));
-						{
-							String tempnodename = thread.getMetaData().get("CRAY_NODENAME");
-							if(tempnodename!=null){
-								nodename=tempnodename;
-							}
-							else {
-								//In some cases, where these values are the same for all threads, thread metadata won't return them. They need to be acquired from top level metadata.
-								tempnodename = ppTrial.getDataSource().getMetaData().get("CRAY_NODENAME");
-								if(tempnodename!=null){
-									nodename=tempnodename;
-								}
+						String tempnodename = thread.getMetaData().get("CRAY_NODENAME");
+						if (tempnodename != null) {
+							nodename = tempnodename;
+						} else if (nodename.isEmpty()) {
+							// Metadata may be stored once at trial level or only where it changes.
+							String trialNodeName = ppTrial.getDataSource().getMetaData().get("CRAY_NODENAME");
+							if (trialNodeName != null) {
+								nodename = trialNodeName;
 							}
 						}
 						String nodeids = thread.getMetaData().get("CRAY_PMI_NODEID");
@@ -627,15 +828,18 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						}
 						
 						
-						//System.out.println(mpirank);
+						int nodeMarker = nodename == null ? -1 : nodename.indexOf('n');
+						if (nodeMarker < 0 || nodeMarker + 1 >= nodename.length()) {
+							throw new IllegalStateException(
+									"Incomplete CRAY_PMI metadata at rank " + mpirank);
+						}
 						CrayTopology ct = new CrayTopology(mpirank,nodename,nodeid,x,y,z,coreid);
 						//System.out.println(ct.toString());
 						ctopo[i]=ct;
 						i++;
 					}
 					map = ThreeDeeGeneralPlotUtils.processCrayCoordinates(ctopo);
-					
-				
+				}
 			}
 			else{
 			String fileLoc = settings.getTopoMapFile();
@@ -671,9 +875,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			// int maxVix=settings.getMaxTopoRange();
 
 			int threadIndex = 0;
-			for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
-					.iterator(); it.hasNext();) {
-				Thread thread = it.next();
+			for (Thread thread : profileThreads) {
 
 				// String coord = thread.getMetaData().get(coord_key);
 				// if(coord==null){
@@ -1093,6 +1295,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		return values;
 	}
+
+	private String getTopologyMetadata(Thread thread, String key) {
+		String value = thread.getMetaData().get(key);
+		if (value == null) {
+			value = ppTrial.getDataSource().getMetaData().get(key);
+		}
+		return value;
+	}
 	
 	private void calculateTSize(int[] tempSize, int offset){
 		
@@ -1497,6 +1707,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	}
 
 	private void generate3dModel(boolean autoSize, ThreeDeeSettings settings) {
+		removeTopologyAxisOverlay();
 
 		visRenderer.setCameraMode(VisRenderer.CAMERA_PLOT);
 		if (plot != null) {
@@ -1859,6 +2070,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		}
 
 		if (visRenderer != null) {
+			removeTopologyAxisOverlay();
+			visRenderer.setPickListener(null);
 			visRenderer.cleanUp();
 		}
 		// animator.stop();
@@ -2703,6 +2916,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		gbc.gridwidth = 1;
 		gbc.gridheight = 1;
 		panel.add(visCanvas.getActualCanvas(), gbc);
+		gbc.weighty = 0.0;
+		gbc.gridy = 1;
+		panel.add(pickLabel, gbc);
 		panel.setPreferredSize(new Dimension(5, 5));
 
 		jSplitPane.setLeftComponent(panel);

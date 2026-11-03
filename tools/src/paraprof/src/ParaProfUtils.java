@@ -475,17 +475,10 @@ public class ParaProfUtils {
     
     private static void printLibjoglError(JFrame parentFrame, Error e){
     	
-    	String lowerOS = System.getProperty("os.name").toLowerCase();
-    	String macline="";
-    	if(lowerOS.indexOf("mac")>=0){
-    		macline="You are on a 64 bit Mac and thus need to install 32 bit compatable Java 6, available here:\n http://tau.uoregon.edu/java.dmg\n\n";
-    	}
-    	
-    	String text = "Unable to load jogl library.  Possible reasons:\n"
-    			+ macline
-                + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
-                + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
-                + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage();
+    	String text = "Unable to load the JOGL 3D library.  Possible reasons:\n"
+                + "JOGL 2 (jogl-all.jar, gluegen-rt.jar and the matching natives jars) is not on the classpath.\n"
+                + "JOGL is not available for this platform.\nOpenGL is not installed or no display is available.\n\n"
+                + "Message : " + e.getMessage();
     	
     	JTextArea area = new JTextArea(text);
     	 JOptionPane.showMessageDialog(parentFrame, area);

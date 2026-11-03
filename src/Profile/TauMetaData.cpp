@@ -963,7 +963,47 @@ int Tau_metadata_fillOpenMPMetaData(void) {
   return 0;
 }
 
+static bool hasMetadataValue(const char *name, int tid) {
+  char *value = Tau_metadata_get(name, tid);
+  if (value == NULL) {
+    return false;
+  }
+  free(value);
+  return true;
+}
+
+static void registerSlurmEnvironmentMetadata(const char *name, int tid) {
+  const char *value = getenv(name);
+  if (value == NULL || value[0] == '\0' || hasMetadataValue(name, tid)) {
+    return;
+  }
+  Tau_metadata_register_task(name, value, tid);
+}
+
+static void collectSlurmMetadata(int tid) {
+  static std::mutex slurm_metadata_mutex;
+  std::lock_guard<std::mutex> guard(slurm_metadata_mutex);
+
+  registerSlurmEnvironmentMetadata("SLURM_TOPOLOGY_ADDR", tid);
+  registerSlurmEnvironmentMetadata("SLURM_TOPOLOGY_ADDR_PATTERN", tid);
+  if (!hasMetadataValue("CRAY_PMI_LOCAL_RANK", tid)) {
+    registerSlurmEnvironmentMetadata("SLURM_LOCALID", tid);
+  }
+}
+
+class SlurmMetadataCollector {
+public:
+  explicit SlurmMetadataCollector(int tid) : tid(tid) {}
+  ~SlurmMetadataCollector() {
+    collectSlurmMetadata(tid);
+  }
+
+private:
+  int tid;
+};
+
 extern "C" int writeMetaDataAfterMPI_Init(void) {
+  SlurmMetadataCollector slurm_metadata_collector(RtsLayer::myThread());
 
 #if (defined(TAU_FUJITSU) && defined(TAU_MPI) && !defined(TAU_FX_AARCH64))
   int xrank, yrank, zrank, xshape, yshape, zshape;
@@ -1457,4 +1497,3 @@ char * Tau_metadata_get(const char * name, int tid) {
     free(key.name);
     return returnval;
 }
-
