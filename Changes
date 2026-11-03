@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2025						   **
+**    Copyright 1997-2027						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,17 @@
 
 Change log:
 ------------
+Version 2.36 changes (from 2.35):
+1. Updates for initial support of ROCm 10. 
+2. Improved Rocprofiler-SDK support and reduced TAU overhead. 
+3. Improved support for PC sampling for Intel, AMD, and NIVIDIA GPUs. 
+4. Fixed an issue with OMPT. 
+5. Updated APEX and ZeroSum. 
+6. Improved JOGL support in ParaProf. 
+7. Updated support for NCCL, RCCL, and oneCCL. 
+8. Updated support and examples for SALT [https://github.com/ParaToolsInc/SALT-FM] for source code instrumentation. 
+
+
 Version 2.35 changes (from 2.34):
 1. Updates for Grace-Blackwell and Blackwell+x86_64 with CUDA 13. 
 2. Fixes for overflows with Level Zero. 
