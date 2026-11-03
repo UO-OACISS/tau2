@@ -16,9 +16,26 @@ Version 2.36 changes (from 2.35):
 3. Improved support for PC sampling for Intel, AMD, and NIVIDIA GPUs. 
 4. Fixed an issue with OMPT. 
 5. Updated APEX and ZeroSum. 
-6. Improved JOGL support in ParaProf. 
-7. Updated support for NCCL, RCCL, and oneCCL. 
-8. Updated support and examples for SALT [https://github.com/ParaToolsInc/SALT-FM] for source code instrumentation. 
+6. Updated support for NCCL, RCCL, and oneCCL. 
+7. Updated support and examples for SALT [https://github.com/ParaToolsInc/SALT-FM] for source code instrumentation. 
+8. Added LLVM-plugin-based Julia instrumentor for lower-overhead instrumentation.
+9. Made LLVM Julia instrumentor default; the previous instrumentor is available with `-julia_legacy`.
+10. Added Julia BLAS wrapper to instrument BLAS worker threads.
+11. Added Julia GC wrapper to instrument Julia garbage collection.
+12. Added Julia TimerOutputs wrapper to instrument applications already instrumented with TimerOutputs.jl.
+13. Updated Julia support for Julia 1.13.
+14. Julia function names can now be resolved without ITTNotify.
+15. External debug symbol tables are now searched when resolving samples in Julia.
+16. Samples can now be resolved in PIE executables in Julia.
+17. Added SLURM topology metadata collection.
+18. Added SLURM topology options to 3D Topology view in ParaProf.
+19. Improved 3D Topology Control Panel and Topology Rendering in ParaProf.
+20. Added thread selection/highlighting in 3D topology view in ParaProf.
+21. Removed JOGL1 support from TAU Java tools and updated JOGL2 to 2.6.0 on supported platforms 
+    (32 and 64 bit arm, apple, 64 bit linux, 64 bit windows). Legacy platforms use archival JOGL2 builds 
+    and may lose support. (ppc64, 32 bit Windows, 32 bit Linux)
+
+
 
 
 Version 2.35 changes (from 2.34):
