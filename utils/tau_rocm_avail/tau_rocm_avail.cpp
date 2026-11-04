@@ -40,6 +40,7 @@
 #include <shared_mutex>
 #include <sstream>
 #include <vector>
+#include <cstring>
 
 /**
  * Tests the collection of all counters on the agent the test is run on.
