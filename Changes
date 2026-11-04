@@ -34,6 +34,10 @@ Version 2.36 changes (from 2.35):
 21. Removed JOGL1 support from TAU Java tools and updated JOGL2 to 2.6.0 on supported platforms 
     (32 and 64 bit arm, apple, 64 bit linux, 64 bit windows). Legacy platforms use archival JOGL2 builds 
     and may lose support. (ppc64, 32 bit Windows, 32 bit Linux)
+22. Updated tau_prof2json converter for fully merged, compact json files from TAU profiles
+23. Added PMI2 Metadata collection
+24. Improved selective instrumentation file consistency across instrumentation tools
+
 
 
 
