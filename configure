@@ -982,11 +982,11 @@ for arg in "$@"; do
         echo "-rocprofsdk[=<dir>] ................................Enable rocprof-sdk."
         echo "                      -elfutils is required to Enable ROCm PC Sampling."
         echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
-        echo "-rocm-core=<dir> ...... Specify location of ROCm Core to detect rocmv6."
+        echo "-rocm-core=<dir> ....................... Specify location of ROCm Core."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
-        echo "-rocm-core=<dir> ....... Specify location of ROCm Core to detect rocmv6"
+        echo "-rocm-core=<dir> ....................... Specify location of ROCm Core."
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
         echo "-level_zero[=<dir>]  ................ Specify path to Intel Level Zero."
         echo "-level_metrics[=<dir>] .. Specify path to Level Zero Metrics Discovery."
@@ -1480,7 +1480,7 @@ level_zero_legacy=no
 level_zero_new=no
 mdisc_dir=""
 rocm=no
-rocmv6=no
+rocmlegacy=no
 rocmcore_dir=""
 rocprofiler=no
 rocprofv2=no
@@ -3553,7 +3553,7 @@ for arg in "$@"; do
               echo  "Error: Cannot access roctracer directory $roctracerdir"
               exit 1
             else
-              fixmakeargs="$fixmakeargs roctracerdir=$roctracerdir ROCTRACER TAU_USE_GPU"
+              fixmakeargs="$fixmakeargs roctracerdir=$roctracerdir TAU_USE_GPU"
               roctracer=yes
               tauoptions="${tauoptions}-roctracer"
               # Check the roctracerlib directory. Is it in build or lib? Source/installed package?
@@ -3565,10 +3565,6 @@ for arg in "$@"; do
                 if [ -r $tryroctracerlib/libroctracer64.so ]; then
                   fixmakeargs="$fixmakeargs roctracerlibdir=$tryroctracerlib"
                 fi
-              fi
-              # Check the hsa header in roctracer. Sometimes it is not installed correctly.
-              if [ -r $roctracerdir/inc/roctracer_hsa.h -o -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
-                  fixmakeargs="$fixmakeargs ROCTRACER_HSA"
               fi
             fi
             shift
@@ -3904,16 +3900,18 @@ EOF
 		if  $c_compiler $orig_useropt -c tau_rocm6_vtest.c -I$rocmcore_dir/include/rocm-core 1> /dev/null 2>&1
 		then
 			rm tau_rocm6_vtest.o
-			rocmv6=yes
+			rocmlegacy=no
 			fixmakeargs="$fixmakeargs TAU_USE_GPU"
-            		pthread=yes
-            		tauoptions="${tauoptions}-rocmv6"
+            pthread=yes
+            		
 		else
-			rocmv6=no
+			rocmlegacy=yes
+            tauoptions="${tauoptions}-rocmlegacy"
 		fi
 		rm tau_rocm6_vtest.c
 	else
-		rocmv6=no
+		rocmlegacy=yes
+        tauoptions="${tauoptions}-rocmlegacy"
 	fi
 fi
 
@@ -3921,7 +3919,7 @@ fi
 # with ROCm 10 as they have been deprecated since ROCm 7. 
 #Users should use rocprofiler-SDK. If users selected rocprofiler or roctracer
 # with ROCm 10, show an error message and fail the configuration.
-if [ "x$rocmv6" = "xyes" ]; then
+if [ "$rocmlegacy" = "no" ]; then
 if [ "$roctracer" = "yes" ] || [ "$rocprofiler" = "yes" ]; then
 cat <<EOF > tau_rocm10_vtest.c
 #include <rocm_version.h>
@@ -3946,25 +3944,21 @@ EOF
             echo "Error: Please use -rocprofsdk"
 			exit 1
 		fi
-	else
-		rocmv6=no
 	fi
 fi
 fi
 
-
-if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "no" ]; then
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmlegacy" = "yes" ]; then
     echo "For rocprofv2 use rocm/6 or newer!"
     exit 1
 fi
 
-
-if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "no" ]; then
+if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmlegacy" = "yes" ]; then
     echo "For rocprof-sdk use rocm/6 or newer!"
     exit 1
 fi
 
-if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "yes" ]; then
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" ]; then
     pthread=yes
     if [ "x$rocprofilerdir" = "x" ]; then
         rocprofilerdir=$rocmdir
@@ -3977,7 +3971,7 @@ if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "yes" ]; then
     fi
 fi
 
-if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
+if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" ]; then
     pthread=yes
     if [ "x$rocprofsdk_dir" = "x" ]; then
         rocprofsdk_dir=$rocmdir
@@ -4001,11 +3995,11 @@ if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
     fi
 fi
 
-if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofsdk" = no ] ; then
+if [ "$rocmlegacy" = "no" -a "$rocprofv2" = "no" -a "$rocprofsdk" = no ] ; then
     if [ "$roctracer" = yes ]; then
-        fixmakeargs="$fixmakeargs ROCTRACERROCM6"
+        fixmakeargs="$fixmakeargs ROCTRACER"
         if [ -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
-            fixmakeargs="$fixmakeargs ROCTRACERROCM6_HSA"
+            fixmakeargs="$fixmakeargs ROCTRACER_HSA"
         fi
 
     fi
@@ -4029,16 +4023,16 @@ if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofsdk" = no ] ; then
     fi
 fi
 
-if [ "$rocmv6" = "no" ] ; then
+if [ "$rocmlegacy" = "yes" ] ; then
 
     if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
       rocprofilerdir=$rocmdir/rocprofiler
-      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
+      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILERLEGACY TAU_USE_GPU"
       rocprofiler=yes
       tauoptions="${tauoptions}-rocprofiler"
       pthread=yes
     elif [ "x$rocprofiler" = "xyes" ]; then
-      fixmakeargs="$fixmakeargs ROCPROFILER"
+      fixmakeargs="$fixmakeargs ROCPROFILERLEGACY"
     fi
     if [ "x$rocm" = "xyes" -a "x$rocmsmi" = "xno" ]; then
       if [ -r $rocmdir/include/rocm_smi/rocm_smi.h ]; then
@@ -4064,6 +4058,13 @@ if [ "$rocmv6" = "no" ] ; then
          rocprofilerinc="$rocprofilerdir/inc"
          fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
        fi
+    fi
+    if [ "$roctracer" = yes ]; then
+        fixmakeargs="$fixmakeargs ROCTRACERLEGACY"
+        # Check the hsa header in roctracer. Sometimes it is not installed correctly.
+        if [ -r $roctracerdir/inc/roctracer_hsa.h -o -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
+            fixmakeargs="$fixmakeargs ROCTRACERLEGACY_HSA"
+        fi
     fi
 fi
 

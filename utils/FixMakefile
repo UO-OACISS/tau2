@@ -1252,16 +1252,16 @@ case $1 in
         echo "NOTE: Using the TAU's ROCm ROCPROFILER SDK PC Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     ROCPROFILERROCM6)
-        echo "NOTE: Using TAU's ROCm v6 ROCPROFILER Interface"
+     ROCPROFILERLEGACY)
+        echo "NOTE: Using TAU's ROCm ROCPROFILER Legacy Interface"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     ROCTRACERROCM6)
-        echo "NOTE: Using the TAU's ROCm ROCTRACER v6 Interface "
+     ROCTRACERLEGACY)
+        echo "NOTE: Using the TAU's ROCm ROCTRACER Legacy Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     ROCTRACERROCM6_HSA)
-        echo "NOTE: Using the TAU's ROCm v6 ROCTRACER HSA Interface "
+     ROCTRACERLEGACY_HSA)
+        echo "NOTE: Using the TAU's ROCm ROCTRACER HSA Legacy Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      HIP)

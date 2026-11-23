@@ -1657,8 +1657,8 @@ if [ $track_rocm = "true" ] ; then
       $dryrun export TAU_USE_ROCPROFILERSDK=1
 	  fi
   else
-    isRocmv6=`echo $theBinding | grep rocmv6`
-    if [ ! "x$isRocmv6" == "x"  ]; then
+    isRocmlegacy=`echo $theBinding | grep rocmlegacy`
+    if [ "x$isRocmlegacy" == "x"  ]; then
       options=`echo $theBinding | sed -e 's/shared-//g' `
   	  mk=$BASEDIR/lib/Makefile.tau-$options
   	  rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`

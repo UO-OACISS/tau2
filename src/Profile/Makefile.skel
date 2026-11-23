@@ -154,8 +154,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 # ROCPROFILER OBJECTS
 #############################################
+#ROCPROFILERLEGACY#ROCPROFILER_O = TauRocProfiler.o #ENDIF#
 #ROCPROFILER#ROCPROFILER_O = TauRocProfiler.o #ENDIF#
-#ROCPROFILERROCM6#ROCPROFILER_O = TauRocProfiler.o #ENDIF#
 #ROCPROFILERV2#ROCPROFILERV2_O = TauRocProfilerV2.o #ENDIF#
 #ROCPROFILERSDK#ROCPROFILERSDK_O = TauRocProfilerSDK.o #ENDIF#
 #ROCPROFILERSDK#ROCPROFILERSDK_O += TauRocProfilerSDK_hc.o #ENDIF#
@@ -166,8 +166,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #LEVEL_ZERO_LEGACY#TAU_LEVEL_ZERO_O = TauLevelZero.o #ENDIF#
 #LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero_new.o #ENDIF#
 #L0_IGA#TAU_LEVEL_ZERO_O += Pti_elf_parser.o #ENDIF#
+#ROCTRACERLEGACY#ROCTRACER_O = TauRocTracer.o #ENDIF#
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
-#ROCTRACERROCM6#ROCTRACER_O = TauRocTracer.o #ENDIF#
 
 #############################################
 # CUPTI SAMPLING OBJECTS
