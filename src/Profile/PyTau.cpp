@@ -26,6 +26,7 @@
 
 
 #include <Python.h>
+#include <stdio.h>
 
 #include "Profile/PyBindings.h"
 #include "Profile/PyExceptions.h"
@@ -63,6 +64,17 @@ initpytau()
 {
 // create the module and add the functions
 #if PY_MAJOR_VERSION >= 3
+    {
+        int rt_major = 0, rt_minor = 0;
+        if (sscanf(Py_GetVersion(), "%d.%d", &rt_major, &rt_minor) == 2 &&
+            (rt_major != PY_MAJOR_VERSION || rt_minor != PY_MINOR_VERSION)) {
+            PyErr_Format(PyExc_ImportError,
+                         "TAU Python extension (pytau) was compiled for Python %d.%d, "
+                         "cannot be loaded into Python %d.%d.",
+                         PY_MAJOR_VERSION, PY_MINOR_VERSION, rt_major, rt_minor);
+            return NULL;
+        }
+    }
     PyObject * m = PyModule_Create(&pytau_moduledef);
 #else
     PyObject * m =

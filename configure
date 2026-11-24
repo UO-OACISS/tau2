@@ -1525,13 +1525,53 @@ handle_python_option() {
             echo "Error: Specified Python interpreter '$pythonintv' is not executable or does not exist."
             exit 1
         fi
-    else
-        pythonintv=$(command -v "$default_interpreter")
-
-        # If -python was given and 'python' doesn't exist, fallback to python3
-        if [[ -z "$pythonintv" && "$default_interpreter" == "python" ]]; then
-            pythonintv=$(command -v python3)
+    elif [[ "$default_interpreter" == "python" ]]; then
+        local py py3
+        py=$(command -v python 2>/dev/null || true)
+        py3=$(command -v python3 2>/dev/null || true)
+        if [[ -n "$py" && -n "$py3" ]]; then
+            local py_dir py3_dir py_idx=-1 py3_idx=-1 idx=0 d
+            local -a _path_dirs
+            py_dir=$(dirname "$py")
+            py3_dir=$(dirname "$py3")
+            IFS=':' read -ra _path_dirs <<< "$PATH"
+            for d in "${_path_dirs[@]}"; do
+                if [[ -z "$d" ]]; then
+                    d="."
+                elif [[ "$d" != "/" ]]; then
+                    d="${d%/}"
+                fi
+                [[ $py_idx -lt 0 && "$d" == "$py_dir" ]] && py_idx=$idx
+                [[ $py3_idx -lt 0 && "$d" == "$py3_dir" ]] && py3_idx=$idx
+                idx=$((idx + 1))
+            done
+            # Respect PATH precedence: if python3 comes from an earlier PATH
+            # directory than python (e.g. a loaded module/venv with only python3
+            # ahead of /usr/bin/python), pick python3 instead of falling through.
+            if [[ $py3_idx -ge 0 && ( $py_idx -lt 0 || $py3_idx -lt $py_idx ) ]]; then
+                pythonintv="$py3"
+            else
+                pythonintv="$py"
+            fi
+            local py_ver py3_ver
+            py_ver=$("$py" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || true)
+            py3_ver=$("$py3" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || true)
+            if [[ -n "$py_ver" && -n "$py3_ver" && "$py_ver" != "$py3_ver" ]]; then
+                echo "WARNING: 'python' ($py, Python $py_ver) and 'python3' ($py3, Python $py3_ver) differ in PATH."
+                echo "         Selected $pythonintv based on PATH order. Use -python=<path> to override."
+            fi
+        elif [[ -n "$py" ]]; then
+            pythonintv="$py"
+        else
+            pythonintv="$py3"
         fi
+
+        if [[ -z "$pythonintv" ]]; then
+            echo "Error: No suitable Python interpreter found for '$default_interpreter'."
+            exit 1
+        fi
+    else
+        pythonintv=$(command -v "$default_interpreter" 2>/dev/null || true)
 
         if [[ -z "$pythonintv" ]]; then
             echo "Error: No suitable Python interpreter found for '$default_interpreter'."
@@ -3799,7 +3839,7 @@ if [ "x$python3"  = "xyes" ] ; then
     if [ "x$pythoninc" = "x" ] ; then
         echo "Checking for Python include paths relative to ${pythonbin}..."
         # If that fails, fall back to searching relative to the interpreter
-        pythoninc=`echo ${pythonbin}../include/python3* | sed -e 's/ .*//g'`
+        pythoninc=`echo ${pythonbin}/../include/python3* | sed -e 's/ .*//g'`
     fi
     if [ -d $pythoninc ] ; then
         echo "Using Python3 include files from: $pythoninc"
@@ -3817,7 +3857,7 @@ if [ "x$python3"  = "xyes" ] ; then
         echo "Checking for Python library path relative to ${pythonbin}..."
         # If that fails, fall back to searching relative to the interpreter
         for libdir in "lib64" "lib32" "lib" ; do
-        pythonlib=`echo ${pythonbin}../${libdir}/python3* | sed -e 's/ .*//g'`
+        pythonlib=`echo ${pythonbin}/../${libdir}/python3* | sed -e 's/ .*//g'`
         if [ -d "$pythonlib" ] ; then
             echo "Using Python3 library files from: $pythonlib"
             break
@@ -3841,7 +3881,7 @@ if [ "x$python"  = "xyes" ] ; then
     if [ "x$pythoninc" = "x" ] ; then
         # If that fails, fall back to searching relative to the interpreter
         echo "Checking for Python include paths relative to ${pythonbin}..."
-        pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
+        pythoninc=`echo ${pythonbin}/../include/python* | sed -e 's/ .*//g'`
     fi
     if [ -d $pythoninc ] ; then
         echo "Using Python include files from: $pythoninc"
@@ -3859,7 +3899,7 @@ if [ "x$python"  = "xyes" ] ; then
         # If that fails, fall back to searching relative to the interpreter
         echo "Checking for Python library path relative to ${pythonbin}..."
         for libdir in "lib64" "lib32" "lib" ; do
-        pythonlib=`echo ${pythonbin}../${libdir}/python* | sed -e 's/ .*//g'`
+        pythonlib=`echo ${pythonbin}/../${libdir}/python* | sed -e 's/ .*//g'`
         if [ -d "$pythonlib" ] ; then
             echo "Using Python library files from: $pythonlib"
             break
@@ -12042,7 +12082,7 @@ if [ $python = yes ] ; then
     if [ $use_python_classic = no -a $use_pstubs = no ] ; then
         echo "ERROR: Python support was requested (-python) but cannot be built:"
         echo "  - No shared libpython found (required for ctau_impl/pytau instrumentation)"
-        echo "  - Python ${python_major}.${python_minor} < 3.12 (pstubsrequires Python >= 3.12)"
+        echo "  - Python ${python_major}.${python_minor} < 3.12 (pstubs requires Python >= 3.12)"
         echo "Please use a Python installation with a shared libpython, or upgrade to Python >= 3.12."
         exit 1
     fi

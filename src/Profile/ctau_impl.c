@@ -445,24 +445,31 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
 
   if (frame != NULL) {
       PyCodeObject * codeObj = PyFrame_GetCode(frame);
-      co_name = PyString_AsString(codeObj->co_name);
-      if(codeObj->co_filename != NULL) {
-        co_filename = PyString_AsString(codeObj->co_filename);
-        if(co_filename == NULL) {
-            co_filename = "";
+      if (codeObj != NULL) {
+        co_name = (codeObj->co_name != NULL) ? PyString_AsString(codeObj->co_name) : NULL;
+        if (co_name == NULL) {
+          PyErr_Clear();
+          co_name = "<unknown>";
         }
-      } else {
-        co_filename = "";
+        if (codeObj->co_filename != NULL) {
+          co_filename = PyString_AsString(codeObj->co_filename);
+          if (co_filename == NULL) {
+            PyErr_Clear();
+            co_filename = "";
+          }
+        } else {
+          co_filename = "";
+        }
+        while (strchr(co_filename,'/')) {
+          co_filename = strchr(co_filename,'/')+1;
+        }
+        co_firstlineno = codeObj->co_firstlineno;
+        snprintf (routine, sizeof(routine), "%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
+        if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
+          TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
+        }
+        Py_DECREF(codeObj);
       }
-      while (strchr(co_filename,'/')) {
-	    co_filename = strchr(co_filename,'/')+1;
-      }
-      co_firstlineno = codeObj->co_firstlineno;
-      snprintf (routine, sizeof(routine), "%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
-      if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
-	    TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
-      }
-      Py_DECREF(codeObj);
   } else {
     if (strcmp (cname, "profileTimer") && strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
       snprintf (routine, sizeof(routine), "%s", cname);
@@ -979,6 +986,17 @@ initctau_impl(void)
 {
   PyObject *module, *d;
 #if PY_MAJOR_VERSION >= 3
+  {
+    int rt_major = 0, rt_minor = 0;
+    if (sscanf(Py_GetVersion(), "%d.%d", &rt_major, &rt_minor) == 2 &&
+        (rt_major != PY_MAJOR_VERSION || rt_minor != PY_MINOR_VERSION)) {
+      PyErr_Format(PyExc_ImportError,
+                   "TAU Python extension (ctau_impl) was compiled for Python %d.%d, "
+                   "cannot be loaded into Python %d.%d.",
+                   PY_MAJOR_VERSION, PY_MINOR_VERSION, rt_major, rt_minor);
+      return NULL;
+    }
+  }
   module = PyModule_Create(&ctau_impl_moduledef);
 #else
   module = Py_InitModule3("ctau_impl", moduleMethods, "TAU Fast profiler");

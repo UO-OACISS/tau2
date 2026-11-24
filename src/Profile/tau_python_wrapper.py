@@ -53,9 +53,9 @@ except:
   dieInFlames("Unknown exception while importing tau: %s" % sys.exc_info()[0])
 
 compile_time_python_ver = tau.get_ctau_python_version()
-runtime_python_ver = sys.version_info[0:3]
-if compile_time_python_ver != runtime_python_ver:
-    dieInFlames("TAU Error: TAU was compiled against Python {}.{}.{}, but version {}.{}.{} was used at runtime. The compile and runtime versions of Python must be identical.".format(compile_time_python_ver[0], compile_time_python_ver[1], compile_time_python_ver[2], runtime_python_ver[0], runtime_python_ver[1], runtime_python_ver[2]))
+runtime_python_ver = sys.version_info[0:2]
+if compile_time_python_ver[:2] != runtime_python_ver:
+    dieInFlames("TAU Error: TAU was compiled against Python {}.{}, but version {}.{} was used at runtime. The compile and runtime Python major.minor versions must match.".format(compile_time_python_ver[0], compile_time_python_ver[1], runtime_python_ver[0], runtime_python_ver[1]))
 
 if sys.argv[1] == '-c':
   # tau_python -c 'some python commmand'
