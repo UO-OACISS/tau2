@@ -77,6 +77,7 @@ extern "C" {
 // 1 will perform output diagnostic information
 // 10 will output all counter values, for each retrieval
 //#define TAU_PAPI_DEBUG 1
+//#define TAU_PAPI_NEGATIVE_DEBUG 1
 
 bool PapiLayer::papiInitialized = false;
 double PapiLayer::scalingFactor = 0.0;
@@ -489,6 +490,23 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   }
 
   PapiThreadValue* localThreadValue=getThreadValue(tid);
+  *numValues = numCounters;
+
+  /* Never initialize or read another thread's PAPI EventSet.
+   * PAPI EventSets are bound to the thread that creates and starts them, so
+   * initializing or reading tid's EventSet from a different thread (e.g.,
+   * during cross-thread timer shutdown or deferred EBS initialization) binds
+   * to or reads the wrong thread's counters. Return the target thread's last
+   * cached values, or zeros (rather than NULL, which leaves caller arrays
+   * untouched) if it has not yet initialized PAPI. */
+  if (tid != RtsLayer::unsafeThreadId()) {
+    if (localThreadValue != NULL) {
+      return localThreadValue->CounterValues;
+    }
+    static long long zeroCounters[MAX_PAPI_COUNTERS] = {0};
+    return zeroCounters;
+  }
+
   if (localThreadValue==NULL) {
     if(initializeThread(tid)) {
       return NULL;
@@ -496,22 +514,12 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     localThreadValue=getThreadValue(tid);
   }
 
-  *numValues = numCounters;
-  //ThreadValue* localThreadValue=getThreadValue(tid);
-  
 #ifdef TAU_PAPI_DEBUG
   long long previousCounters[MAX_PAPI_COUNTERS];
   for (int i=0; i<numCounters; i++) {
     previousCounters[i] = localThreadValue->CounterValues[i];
   }
 #endif
-
-#ifdef PTHREADS
-  if (tid != RtsLayer::myThread() ) {
-    //printf("Returning values for %d instead of %d\n", tid, RtsLayer::myThread());
-    return localThreadValue->CounterValues;
-  }
-#endif /* PTHREADS */
 
   /* Shared (read) lock: multiple threads may read their own EventSets
    * concurrently, but we must block if another thread is currently
@@ -524,15 +532,35 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   } readerLock(&papiRWLock);
   for (int comp=0; comp<TAU_PAPI_MAX_COMPONENTS; comp++) {
     if (localThreadValue->NumEvents[comp] > 0) { // if there were active counters for this component
-      // read eventset for this component and reset counters
       if (PAPI_read(localThreadValue->EventSet[comp], tmpCounters) != PAPI_OK)
         break;
+#if defined(TAU_BGQ) || !defined(PAPI_VERSION)
+      /* Legacy PAPI 2 and BG/Q L2Unit counters require reset-and-accumulate. */
       if (PAPI_reset(localThreadValue->EventSet[comp]) != PAPI_OK)
         break;
+#endif
       // map back to original indices
       for (int j=0; j<localThreadValue->NumEvents[comp]; j++) {
         int index = localThreadValue->Comp2Metric[comp][j];
+#ifdef TAU_PAPI_NEGATIVE_DEBUG
+        if (tmpCounters[j] < 0) {
+          char event_name[PAPI_MAX_STR_LEN];
+          PAPI_event_code_to_name(counterList[index], event_name);
+          fprintf(stderr, "TAU PAPI DEBUG: Negative raw value from PAPI_read: "
+                  "tid=%d, comp=%d, event=%s, value=%lld, multiplexing=%d\n",
+                  tid, comp, event_name, tmpCounters[j],
+                  TauEnv_get_papi_multiplexing());
+        }
+#endif
+#if defined(TAU_BGQ) || !defined(PAPI_VERSION)
         localThreadValue->CounterValues[index] += tmpCounters[j];
+#else
+        /* PAPI_read() returns 64-bit cumulative counts since PAPI_start().
+         * Reading cumulatively without PAPI_reset() avoids per-read reset
+         * overhead, works with components whose reset is a no-op, and keeps
+         * multiplexed time-scaling continuous. */
+        localThreadValue->CounterValues[index] = tmpCounters[j];
+#endif
         dmesg(10, "ThreadList[%d]->CounterValues[%d] = %lld\n", tid, index, localThreadValue->CounterValues[index]);
       }
     }
@@ -550,26 +578,6 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     }
   }
 #endif
-
-//#define TAU_PAPI_NEGATIVE_DEBUG 1
-
-//#ifdef TAU_PAPI_NEGATIVE_DEBUG
-for (int comp=0; comp<TAU_PAPI_MAX_COMPONENTS; comp++) {
-    if (localThreadValue->NumEvents[comp] > 0) {
-      for (int j=0; j<localThreadValue->NumEvents[comp]; j++) {
-        int index = localThreadValue->Comp2Metric[comp][j];
-        if (tmpCounters[j] < 0) {
-          char event_name[PAPI_MAX_STR_LEN];
-          PAPI_event_code_to_name(counterList[index], event_name);
-          fprintf(stderr, "TAU PAPI DEBUG: Negative raw value from PAPI_read: "
-                  "tid=%d, comp=%d, event=%s, value=%lld, multiplexing=%d\n",
-                  tid, comp, event_name, tmpCounters[j],
-                  TauEnv_get_papi_multiplexing());
-        }
-      }
-    }
-  }
-//#endif
 
 
   if (rc != PAPI_OK) {

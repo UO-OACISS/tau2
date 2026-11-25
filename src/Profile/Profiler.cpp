@@ -1272,6 +1272,8 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics()
 }
 
 // This is a very important function, it must be called before writing function data to disk.
+static int negativeProfileWarningPrinted = 0;
+
 // This function fills in the values that will be dumped to disk.
 // It performs the calculations for timers that are still on the stack.
 int TauProfiler_updateIntermediateStatistics(int tid)
@@ -1376,6 +1378,41 @@ int TauProfiler_updateIntermediateStatistics(int tid)
       //fi->SetExclTime(tid, ExclTime);
       //free(InclTime);
       //free(ExclTime);
+    }
+
+    if (!negativeProfileWarningPrinted && fi->GetCalls(tid) > 0) {
+      for (c = 0; c < Tau_Global_numCounters; c++) {
+        if (excltime[c] < 0.0 || incltime[c] < 0.0) {
+          if (!TauMetrics_getMetricUsed(c) ||
+              TauMetrics_getIsCuptiMetric(c) == TAU_METRIC_CUPTI_METRIC ||
+              TauMetrics_getIsCuptiMetric(c) == TAU_METRIC_CUPTI_EVENT) {
+            continue;
+          }
+          const char *metricName = RtsLayer::getCounterName(c);
+          negativeProfileWarningPrinted = 1;
+          fprintf(stderr,
+            "TAU: Warning: Negative profile value detected (metric=%s, function=\"%s\", "
+            "tid=%d, excl=%.16G, incl=%.16G).\n",
+            metricName ? metricName : "unknown",
+            fi->GetName() ? fi->GetName() : "unknown",
+            tid, excltime[c], incltime[c]);
+          if (TauEnv_get_papi_multiplexing()) {
+            fprintf(stderr,
+              "TAU: Warning: Hardware counter multiplexing (TAU_PAPI_MULTIPLEXING=1) is enabled. "
+              "Multiplexing time-slice rescaling and derived-event subtraction can produce small "
+              "negative counts on short or low-count routines. If exact non-negative per-function "
+              "counts are required, measure fewer simultaneous PAPI counters (without multiplexing) "
+              "or throttle short routines.\n");
+          } else {
+            fprintf(stderr,
+              "TAU: Warning: This is unexpected for monotonic counters without multiplexing "
+              "and may indicate counter overflow, clock/counter skew, non-monotonic derived "
+              "metrics, or a PAPI/kernel/runtime issue.\n");
+          }
+          fprintf(stderr, "TAU: Warning: Suppressing further negative profile value warnings for this process.\n");
+          break;
+        }
+      }
     }
   }
   RtsLayer::UnLockDB();
@@ -1676,6 +1713,7 @@ extern "C" int Tau_profiler_initialization()
     setProfileWriteCount(i,0);
   }
   profileWriteWarningPrinted = 0;
+  negativeProfileWarningPrinted = 0;
   return 0;
 }
 

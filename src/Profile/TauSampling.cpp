@@ -388,7 +388,7 @@ struct tau_sampling_flags {
   long long samplesDroppedSuspended;
   // save the previous timestamp so that we can increment the accumulator
   // each time we get a sample
-  x_uint64 previousTimestamp[TAU_MAX_COUNTERS];
+  double previousTimestamp[TAU_MAX_COUNTERS];
   /* The trace for this node, mulithreaded execution currently not supported? */
   FILE *ebsTrace;
 
